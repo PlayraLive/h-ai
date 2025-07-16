@@ -84,7 +84,27 @@ npm run dev
 
 ## 🚀 Деплой
 
-Платформа готова для деплоя на Vercel, Netlify, Railway или DigitalOcean.
+### Vercel (рекомендуется)
+
+1. **Подключите GitHub репозиторий** к Vercel
+2. **Добавьте environment variables** из `.env.local`
+3. **Настройте Appwrite домены**:
+   - Откройте [Appwrite Console](https://cloud.appwrite.io)
+   - Перейдите в ваш проект → Settings → Platforms
+   - Добавьте новую Web Platform:
+     - **Name**: Vercel Production
+     - **Hostname**: `your-app-name.vercel.app` (замените на ваш домен)
+   - Сохраните изменения
+
+4. **Deploy** - Vercel автоматически соберет и задеплоит проект
+
+### Важно для Appwrite
+Если получаете ошибку `Invalid URI. Register your new client`, добавьте домен Vercel в Appwrite:
+- Appwrite Console → Project → Settings → Platforms → Add Platform → Web
+- Hostname: `your-vercel-domain.vercel.app`
+
+### Другие платформы
+Платформа также готова для деплоя на Netlify, Railway или DigitalOcean.
 
 ---
 
