@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, Zap, Github, Chrome } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingButton } from '@/components/Loading';
 
 export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -37,12 +39,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        window.location.href = '/en/dashboard';
+        // Redirect to dashboard after successful login
+        router.push('/en/dashboard');
       } else {
         console.error('Login failed:', result.error);
+        alert('Login failed: ' + result.error);
       }
     } catch (error) {
       console.error('Login error:', error);
+      alert('Login error: ' + error);
     } finally {
       setLoading(false);
     }

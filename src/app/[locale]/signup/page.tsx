@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, User, Zap, Github, Chrome, Briefcase, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingButton } from '@/components/Loading';
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<'client' | 'freelancer'>('freelancer');
@@ -34,10 +36,15 @@ export default function SignupPage() {
     try {
       const result = await register(formData.email, formData.password, formData.name);
       if (result.success) {
-        // Redirect to login or dashboard
+        // Redirect to dashboard after successful registration
+        router.push('/en/dashboard');
+      } else {
+        console.error('Registration failed:', result.error);
+        alert('Registration failed: ' + result.error);
       }
     } catch (error) {
       console.error('Signup error:', error);
+      alert('Registration error: ' + error);
     } finally {
       setLoading(false);
     }
