@@ -13,28 +13,11 @@ export class AuthService {
       const account_response = await account.create(ID.unique(), email, password, name);
       console.log('Account created:', account_response);
       
-      // TODO: Create user profile in database (temporarily disabled)
-      // Skip database profile creation for now to test basic auth
-      const userProfile = {
-        $id: account_response.$id,
-        name: account_response.name,
-        email: account_response.email,
-        userType: userType,
-        verified: false,
-        online: true,
-        rating: 0,
-        reviewCount: 0,
-        completedJobs: 0,
-        totalEarnings: 0,
-        successRate: 0,
-        responseTime: '24 hours',
-        memberSince: new Date().toISOString(),
-        skills: [],
-        languages: ['English'],
-        badges: [],
-        portfolioItems: []
-      };
-      console.log('Using simplified user profile:', userProfile);
+      // Create user profile in database
+      const profile = await createUserProfile(account_response, userType);
+      console.log('Profile created in database:', profile);
+
+      const userProfile = profile;
 
       // Create session
       console.log('Creating email/password session...');
