@@ -38,11 +38,28 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('useAuth.login called with:', { email, password: password ? '***' : 'MISSING' });
+
+      // Validate inputs
+      if (!email || !password) {
+        const errorMsg = 'Email and password are required';
+        console.error('Validation error:', errorMsg);
+        error('Login failed', errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      console.log('Calling appwriteAuth.login...');
       const result = await appwriteAuth.login(email, password);
+      console.log('appwriteAuth.login result:', result);
+
       if (result.success) {
+        console.log('Login successful, getting current user...');
         const userResult = await appwriteAuth.getCurrentUser();
+        console.log('getCurrentUser result:', userResult);
+
         if (userResult.success) {
           setUser(userResult.user);
+          setIsAuthenticated(true);
           success('Welcome back!', 'You have successfully logged in.');
           return { success: true, user: userResult.user };
         } else {
@@ -50,12 +67,13 @@ export function useAuth() {
           return { success: false, error: 'Could not get user information' };
         }
       } else {
+        console.error('Login failed:', result.error);
         error('Login failed', result.error || 'Please check your credentials.');
         return { success: false, error: result.error };
       }
     } catch (err: any) {
-      console.error('Login error:', err);
-      error('Login failed', 'An unexpected error occurred.');
+      console.error('Login error in hook:', err);
+      error('Login failed', err.message || 'An unexpected error occurred.');
       return { success: false, error: err.message };
     }
   };

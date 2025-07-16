@@ -7,135 +7,34 @@ import {
   Menu,
   X,
   Search,
-  Bell,
   User,
   Globe,
   Zap,
   MessageCircle,
   Briefcase,
   Users,
-  Settings,
   LogOut,
-  Plus,
-  BarChart3,
-  CreditCard,
-  Star,
-  Filter,
-  Check,
-  Trash2,
-  Eye,
-  ChevronDown
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/Toast';
+
 import { useAuth } from '@/hooks/useAuth';
 import UserAvatar from '@/components/UserAvatar';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
-// Mock notifications data
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'project',
-    title: 'New Project Proposal',
-    message: 'John Doe submitted a proposal for your AI Chatbot project',
-    time: '2 minutes ago',
-    read: false,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-  },
-  {
-    id: '2',
-    type: 'payment',
-    title: 'Payment Received',
-    message: 'You received $500 for AI Image Generator project',
-    time: '1 hour ago',
-    read: false,
-    avatar: null
-  },
-  {
-    id: '3',
-    type: 'message',
-    title: 'New Message',
-    message: 'Sarah Wilson sent you a message about the ML model',
-    time: '3 hours ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
-  },
-  {
-    id: '4',
-    type: 'review',
-    title: 'New Review',
-    message: 'You received a 5-star review from Alex Chen',
-    time: '1 day ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face'
-  },
-  {
-    id: '5',
-    type: 'system',
-    title: 'Account Verified',
-    message: 'Your freelancer account has been successfully verified',
-    time: '2 days ago',
-    read: true,
-    avatar: null
-  }
-];
+
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
 
-  const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const [notificationFilter, setNotificationFilter] = useState('all');
   const pathname = usePathname();
   const locale = 'en';
-  const { success, info } = useToast();
-  const { user, isAuthenticated, login, logout } = useAuth();
 
-  // Notification functions
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { user, isAuthenticated, logout } = useAuth();
 
-  const filteredNotifications = notifications.filter(notification => {
-    if (notificationFilter === 'all') return true;
-    return notification.type === notificationFilter;
-  });
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'project': return <Briefcase className="w-4 h-4" />;
-      case 'payment': return <CreditCard className="w-4 h-4" />;
-      case 'message': return <MessageCircle className="w-4 h-4" />;
-      case 'review': return <Star className="w-4 h-4" />;
-      case 'system': return <Settings className="w-4 h-4" />;
-      default: return <Bell className="w-4 h-4" />;
-    }
-  };
-
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'project': return 'bg-blue-500';
-      case 'payment': return 'bg-green-500';
-      case 'message': return 'bg-purple-500';
-      case 'review': return 'bg-yellow-500';
-      case 'system': return 'bg-gray-500';
-      default: return 'bg-blue-500';
-    }
-  };
 
   // Простые переводы
   const t = (key: string) => {
@@ -153,7 +52,6 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = () => {
       setShowLangMenu(false);
-      setShowNotifications(false);
     };
 
     document.addEventListener('click', handleClickOutside);
@@ -161,7 +59,8 @@ export default function Navbar() {
   }, []);
 
   const handleLogin = async () => {
-    await login('google');
+    // Redirect to login page
+    window.location.href = '/en/login';
   };
 
   const handleLogout = async () => {
@@ -245,166 +144,11 @@ export default function Navbar() {
             </form>
 
             {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowNotifications(!showNotifications);
-                }}
-                className="p-2 text-gray-400 hover:text-white transition-colors relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium animate-pulse">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
+            {isAuthenticated && user && (
+              <NotificationDropdown userId={user.$id} />
+            )}
 
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-96 glass-card border border-white/10 rounded-xl shadow-2xl z-50">
-                  {/* Header */}
-                  <div className="p-4 border-b border-gray-700">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-white font-semibold">Notifications</h3>
-                      <div className="flex items-center space-x-2">
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={markAllAsRead}
-                            className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setShowNotifications(false)}
-                          className="text-gray-400 hover:text-white transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
 
-                    {/* Filter Tags */}
-                    <div className="flex items-center space-x-2 mt-3">
-                      <Filter className="w-4 h-4 text-gray-400" />
-                      <div className="flex space-x-1">
-                        {['all', 'project', 'payment', 'message', 'review', 'system'].map((filter) => (
-                          <button
-                            key={filter}
-                            onClick={() => setNotificationFilter(filter)}
-                            className={cn(
-                              'px-2 py-1 rounded-full text-xs font-medium transition-all duration-200',
-                              notificationFilter === filter
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            )}
-                          >
-                            {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notifications List */}
-                  <div className="max-h-80 overflow-y-auto">
-                    {filteredNotifications.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                        <p className="text-gray-400">No notifications</p>
-                      </div>
-                    ) : (
-                      filteredNotifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={cn(
-                            'p-4 hover:bg-white/5 transition-colors border-b border-gray-700/50 group',
-                            !notification.read && 'bg-purple-500/5'
-                          )}
-                        >
-                          <div className="flex items-start space-x-3">
-                            {/* Avatar or Icon */}
-                            <div className="flex-shrink-0">
-                              {notification.avatar ? (
-                                <img
-                                  src={notification.avatar}
-                                  alt=""
-                                  className="w-8 h-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className={cn(
-                                  'w-8 h-8 rounded-full flex items-center justify-center text-white',
-                                  getNotificationColor(notification.type)
-                                )}>
-                                  {getNotificationIcon(notification.type)}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <p className={cn(
-                                    'text-sm font-medium',
-                                    notification.read ? 'text-gray-300' : 'text-white'
-                                  )}>
-                                    {notification.title}
-                                  </p>
-                                  <p className="text-sm text-gray-400 mt-1">
-                                    {notification.message}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-2">
-                                    {notification.time}
-                                  </p>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  {!notification.read && (
-                                    <button
-                                      onClick={() => markAsRead(notification.id)}
-                                      className="p-1 text-gray-400 hover:text-green-400 transition-colors"
-                                      title="Mark as read"
-                                    >
-                                      <Check className="w-3 h-3" />
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => deleteNotification(notification.id)}
-                                    className="p-1 text-gray-400 hover:text-red-400 transition-colors"
-                                    title="Delete"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Unread indicator */}
-                              {!notification.read && (
-                                <div className="w-2 h-2 bg-purple-500 rounded-full absolute right-4 top-6"></div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="p-3 border-t border-gray-700">
-                    <Link
-                      href="/en/notifications"
-                      className="block text-center text-sm text-purple-400 hover:text-purple-300 transition-colors"
-                      onClick={() => setShowNotifications(false)}
-                    >
-                      View all notifications
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Language Switcher */}
             <div className="relative">

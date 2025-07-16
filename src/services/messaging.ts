@@ -160,7 +160,13 @@ class MessagingService {
     metadata?: MessageMetadata;
   }): Promise<Message> {
     try {
-      console.log('Sending message:', data);
+      console.log('📤 Sending message:', data);
+      console.log('📊 Database config:', { DATABASE_ID, endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT });
+
+      // Validate required data
+      if (!data.conversationId || !data.senderId || !data.receiverId || !data.content) {
+        throw new Error('Missing required message data');
+      }
 
       const messageData = {
         senderId: data.senderId,
@@ -182,6 +188,9 @@ class MessagingService {
         metadata: data.metadata ? JSON.stringify(data.metadata) : undefined
       };
 
+      console.log('📝 Message data prepared:', messageData);
+
+      console.log('🗄️ Creating document in database...');
       const message = await databases.createDocument(
         DATABASE_ID,
         'messages',
@@ -189,16 +198,26 @@ class MessagingService {
         messageData
       );
 
+      console.log('✅ Document created:', message);
+
       // Обновляем последнее сообщение в конверсации
+      console.log('🔄 Updating conversation last message...');
       await this.updateConversationLastMessage(data.conversationId, message);
 
       // Увеличиваем счетчик непрочитанных для получателя
+      console.log('📊 Incrementing unread count...');
       await this.incrementUnreadCount(data.conversationId, data.receiverId);
 
-      console.log('Message sent successfully:', message);
+      console.log('🎉 Message sent successfully:', message);
       return this.parseMessage(message);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        type: error.type
+      });
       throw error;
     }
   }
