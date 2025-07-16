@@ -34,9 +34,12 @@ export function useAuth() {
         const userResult = await appwriteAuth.getCurrentUser();
         if (userResult.success) {
           setUser(userResult.user);
+          success('Welcome back!', 'You have successfully logged in.');
+          return { success: true, user: userResult.user };
+        } else {
+          error('Login failed', 'Could not get user information.');
+          return { success: false, error: 'Could not get user information' };
         }
-        success('Welcome back!', 'You have successfully logged in.');
-        return { success: true };
       } else {
         error('Login failed', result.error || 'Please check your credentials.');
         return { success: false, error: result.error };
@@ -59,11 +62,13 @@ export function useAuth() {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, userType: 'freelancer' | 'client' = 'freelancer') => {
     try {
-      const result = await appwriteAuth.register(email, password, name);
+      const result = await appwriteAuth.register(email, password, name, userType);
       if (result.success) {
-        success('Account created!', 'Please sign in with your new account.');
+        // Set user after successful registration
+        setUser(result.user);
+        success('Account created!', 'Welcome to AI Freelance Platform!');
         return { success: true, user: result.user };
       } else {
         error('Registration failed', result.error || 'Please try again.');

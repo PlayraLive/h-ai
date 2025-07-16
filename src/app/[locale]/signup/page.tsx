@@ -34,8 +34,11 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const result = await register(formData.email, formData.password, formData.name);
+      const result = await register(formData.email, formData.password, formData.name, userType);
+      console.log('Registration result:', result);
+
       if (result.success) {
+        console.log('Registration successful, redirecting to dashboard...');
         // Redirect to dashboard after successful registration
         router.push('/en/dashboard');
       } else {

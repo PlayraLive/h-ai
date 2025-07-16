@@ -38,7 +38,10 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
 
     try {
       const result = await login(formData.email, formData.password);
+      console.log('Login result:', result);
+
       if (result.success) {
+        console.log('Login successful, redirecting to dashboard...');
         // Redirect to dashboard after successful login
         router.push('/en/dashboard');
       } else {
