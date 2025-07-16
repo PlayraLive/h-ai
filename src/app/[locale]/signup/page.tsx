@@ -39,8 +39,8 @@ export default function SignupPage() {
 
       if (result.success) {
         console.log('Registration successful, redirecting to dashboard...');
-        // Redirect to dashboard after successful registration
-        router.push('/en/dashboard');
+        // Force redirect to dashboard
+        window.location.href = '/en/dashboard';
       } else {
         console.error('Registration failed:', result.error);
         alert('Registration failed: ' + result.error);

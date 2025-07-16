@@ -6,40 +6,45 @@ export class AuthService {
   // Register new user
   async register(email: string, password: string, name: string, userType: 'freelancer' | 'client') {
     try {
+      console.log('AuthService.register called with:', { email, name, userType });
+
       // Create account
+      console.log('Creating Appwrite account...');
       const account_response = await account.create(ID.unique(), email, password, name);
+      console.log('Account created:', account_response);
       
-      // Create user profile in database
-      const userProfile = await databases.createDocument(
-        DATABASE_ID,
-        USERS_COLLECTION_ID,
-        ID.unique(),
-        {
-          userId: account_response.$id,
-          name,
-          email,
-          userType,
-          verified: false,
-          online: false,
-          rating: 0,
-          reviewCount: 0,
-          completedJobs: 0,
-          totalEarnings: 0,
-          successRate: 0,
-          responseTime: '24 hours',
-          memberSince: new Date().toISOString(),
-          skills: [],
-          languages: ['English'],
-          badges: [],
-          portfolioItems: []
-        }
-      );
+      // TODO: Create user profile in database (temporarily disabled)
+      // Skip database profile creation for now to test basic auth
+      const userProfile = {
+        $id: account_response.$id,
+        name: account_response.name,
+        email: account_response.email,
+        userType: userType,
+        verified: false,
+        online: true,
+        rating: 0,
+        reviewCount: 0,
+        completedJobs: 0,
+        totalEarnings: 0,
+        successRate: 0,
+        responseTime: '24 hours',
+        memberSince: new Date().toISOString(),
+        skills: [],
+        languages: ['English'],
+        badges: [],
+        portfolioItems: []
+      };
+      console.log('Using simplified user profile:', userProfile);
 
       // Create session
+      console.log('Creating email/password session...');
       await account.createEmailPasswordSession(email, password);
-      
+      console.log('Session created successfully');
+
+      console.log('Registration completed successfully');
       return { success: true, user: userProfile };
     } catch (error: any) {
+      console.error('Registration error:', error);
       return { success: false, error: error.message };
     }
   }
@@ -77,18 +82,29 @@ export class AuthService {
     try {
       const account_user = await account.get();
 
-      // Get user profile from database
-      const userProfiles = await databases.listDocuments(
-        DATABASE_ID,
-        USERS_COLLECTION_ID,
-        [Query.equal('userId', account_user.$id)]
-      );
+      // TODO: Get user profile from database (temporarily using account data)
+      // Return simplified user object for now
+      const simpleUser = {
+        $id: account_user.$id,
+        name: account_user.name,
+        email: account_user.email,
+        userType: 'freelancer', // Default for now
+        verified: account_user.emailVerification,
+        online: true,
+        rating: 0,
+        reviewCount: 0,
+        completedJobs: 0,
+        totalEarnings: 0,
+        successRate: 0,
+        responseTime: '24 hours',
+        memberSince: account_user.$createdAt,
+        skills: [],
+        languages: ['English'],
+        badges: [],
+        portfolioItems: []
+      };
 
-      if (userProfiles.documents.length === 0) {
-        throw new Error('User profile not found');
-      }
-
-      return userProfiles.documents[0] as User;
+      return simpleUser as User;
     } catch (error: any) {
       throw new Error(error.message);
     }
