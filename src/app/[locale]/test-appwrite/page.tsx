@@ -104,12 +104,59 @@ export default function TestAppwritePage() {
         </div>
 
         <div className="glass-card p-6 rounded-2xl">
-          <h2 className="text-xl font-semibold text-white mb-4">Next Steps</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Quick Fix for Vercel Error 400</h2>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+            <h3 className="text-red-400 font-semibold mb-2">Error: Invalid URI</h3>
+            <p className="text-gray-300 text-sm">
+              If you see "Register your new client (h-ai-lime.vercel.app)" error on Vercel:
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+              <div>
+                <p className="text-white font-medium">Open Appwrite Console</p>
+                <a
+                  href="https://cloud.appwrite.io/console/project-687759fb003c8bd76b93/settings/platforms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300 text-sm underline"
+                >
+                  Direct link to Platforms →
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+              <div>
+                <p className="text-white font-medium">Add Platform</p>
+                <p className="text-gray-400 text-sm">
+                  Click "Add Platform" → "Web App" → Name: "Vercel Production" → Hostname: "h-ai-lime.vercel.app"
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">✓</div>
+              <div>
+                <p className="text-green-400 font-medium">Done!</p>
+                <p className="text-gray-400 text-sm">Refresh Vercel page - error will be gone</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-6 rounded-2xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Setup Progress</h2>
           <div className="text-gray-300 space-y-2">
-            <p>1. ✅ Add web platform in Appwrite Console</p>
-            <p>2. ⏳ Create database collections</p>
-            <p>3. ⏳ Set up Google OAuth</p>
-            <p>4. ⏳ Configure storage buckets</p>
+            <p>1. ✅ Project configured with correct endpoint</p>
+            <p>2. ✅ API key added</p>
+            <p>3. ⏳ Add web platforms (localhost + Vercel)</p>
+            <p>4. ⏳ Create database collections</p>
+            <p>5. ⏳ Set up Google OAuth</p>
+            <p>6. ⏳ Configure storage buckets</p>
           </div>
         </div>
       </div>
