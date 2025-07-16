@@ -83,7 +83,7 @@ const mockNotifications = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState(mockNotifications);
@@ -153,7 +153,6 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = () => {
       setShowLangMenu(false);
-      setShowProfileMenu(false);
       setShowNotifications(false);
     };
 
@@ -443,149 +442,23 @@ export default function Navbar() {
                   Post Job
                 </Link>
 
-                {/* Profile Menu */}
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowProfileMenu(!showProfileMenu);
-                    }}
-                    className="flex items-center space-x-2 p-1 rounded-full hover:bg-white/10 transition-all duration-200 group"
-                  >
-                    <UserAvatar
-                      src={user?.avatar}
-                      alt={user?.name}
-                      size="md"
-                      fallbackText={user?.name}
-                      className="ring-2 ring-transparent group-hover:ring-purple-500/50 transition-all duration-200"
-                    />
-                    <ChevronDown className={cn(
-                      'w-4 h-4 text-gray-400 transition-all duration-200',
-                      showProfileMenu ? 'rotate-180 text-purple-400' : 'group-hover:text-white'
-                    )} />
-                  </button>
-
-                  {showProfileMenu && (
-                    <div className="absolute right-0 mt-3 w-64 glass-card border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-                      {/* User Info Header */}
-                      <div className="p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-b border-gray-700">
-                        <div className="flex items-center space-x-3">
-                          <UserAvatar
-                            src={user?.avatar}
-                            alt={user?.name}
-                            size="lg"
-                            fallbackText={user?.name}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-semibold truncate">{user?.name || 'User'}</div>
-                            <div className="text-gray-300 text-sm truncate">{user?.email}</div>
-                            <div className="flex items-center space-x-1 mt-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-green-400">Online</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick Stats */}
-                      <div className="p-3 border-b border-gray-700">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div>
-                            <div className="text-white font-semibold text-sm">12</div>
-                            <div className="text-gray-400 text-xs">Projects</div>
-                          </div>
-                          <div>
-                            <div className="text-white font-semibold text-sm">4.9</div>
-                            <div className="text-gray-400 text-xs">Rating</div>
-                          </div>
-                          <div>
-                            <div className="text-white font-semibold text-sm">$2.5k</div>
-                            <div className="text-gray-400 text-xs">Earned</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Menu Items */}
-                      <div className="py-2">
-                        <Link
-                          href={`/${locale}/dashboard`}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200 group"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                            <BarChart3 className="w-4 h-4 text-blue-400" />
-                          </div>
-                          <span className="font-medium">Dashboard</span>
-                        </Link>
-
-                        <Link
-                          href={`/${locale}/profile`}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200 group"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                            <User className="w-4 h-4 text-purple-400" />
-                          </div>
-                          <span className="font-medium">Profile</span>
-                        </Link>
-
-                        <Link
-                          href={`/${locale}/messages`}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200 group"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
-                            <MessageCircle className="w-4 h-4 text-green-400" />
-                          </div>
-                          <div className="flex-1">
-                            <span className="font-medium">Messages</span>
-                            <div className="flex items-center space-x-1">
-                              <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">3</span>
-                            </div>
-                          </div>
-                        </Link>
-
-                        <Link
-                          href={`/${locale}/payments`}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200 group"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <CreditCard className="w-4 h-4 text-yellow-400" />
-                          </div>
-                          <span className="font-medium">Payments</span>
-                        </Link>
-
-                        <Link
-                          href={`/${locale}/settings`}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200 group"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center group-hover:bg-gray-500/30 transition-colors">
-                            <Settings className="w-4 h-4 text-gray-400" />
-                          </div>
-                          <span className="font-medium">Settings</span>
-                        </Link>
-                      </div>
-
-                      {/* Logout */}
-                      <div className="border-t border-gray-700 p-2">
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setShowProfileMenu(false);
-                          }}
-                          className="flex items-center space-x-3 px-4 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 w-full rounded-lg group"
-                        >
-                          <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
-                            <LogOut className="w-4 h-4 text-red-400" />
-                          </div>
-                          <span className="font-medium">Logout</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* Profile Avatar - Direct link to Dashboard */}
+                <Link
+                  href={`/${locale}/dashboard`}
+                  className="flex items-center space-x-2 p-1 rounded-full hover:bg-white/10 transition-all duration-200 group"
+                  title="Go to Dashboard"
+                >
+                  <UserAvatar
+                    src={user?.avatar}
+                    alt={user?.name}
+                    size="md"
+                    fallbackText={user?.name}
+                    className="ring-2 ring-transparent group-hover:ring-purple-500/50 transition-all duration-200"
+                  />
+                  <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
+                    Dashboard
+                  </span>
+                </Link>
               </>
             ) : (
               <>
