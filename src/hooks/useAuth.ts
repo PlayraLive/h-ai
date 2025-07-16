@@ -16,13 +16,22 @@ export function useAuth() {
 
   const checkAuth = async () => {
     try {
+      console.log('checkAuth: Checking current user...');
       const result = await appwriteAuth.getCurrentUser();
+      console.log('checkAuth result:', result);
+
       if (result.success) {
+        console.log('checkAuth: Setting user:', result.user);
         setUser(result.user);
+      } else {
+        console.log('checkAuth: No user found');
+        setUser(null);
       }
     } catch (err) {
-      console.log('No active session');
+      console.log('checkAuth: No active session', err);
+      setUser(null);
     } finally {
+      console.log('checkAuth: Setting loading to false');
       setLoading(false);
     }
   };

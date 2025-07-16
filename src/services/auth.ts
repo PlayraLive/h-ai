@@ -54,7 +54,7 @@ export class AuthService {
       }
 
       await account.createEmailPasswordSession(email, password);
-      const user = await this.getCurrentUser();
+      const user = await this._getCurrentUser();
       return { success: true, user };
     } catch (error: any) {
       console.error('Login error:', error);
@@ -72,11 +72,11 @@ export class AuthService {
     }
   }
 
-  // Get current user
-  async getCurrentUser() {
+  // Get current user (internal method)
+  async _getCurrentUser() {
     try {
       const account_user = await account.get();
-      
+
       // Get user profile from database
       const userProfiles = await databases.listDocuments(
         DATABASE_ID,
@@ -91,6 +91,16 @@ export class AuthService {
       return userProfiles.documents[0] as User;
     } catch (error: any) {
       throw new Error(error.message);
+    }
+  }
+
+  // Get current user (public method with success/error wrapper)
+  async getCurrentUser() {
+    try {
+      const user = await this._getCurrentUser();
+      return { success: true, user };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   }
 

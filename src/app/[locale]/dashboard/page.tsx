@@ -32,8 +32,15 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
+  // Debug logging
   useEffect(() => {
+    console.log('Dashboard auth state:', { user, isAuthenticated, isLoading });
+  }, [user, isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    console.log('Dashboard useEffect triggered:', { isLoading, isAuthenticated });
     if (!isLoading && !isAuthenticated) {
+      console.log('Redirecting to login...');
       router.push('/en/login');
     }
   }, [isAuthenticated, isLoading, router]);
