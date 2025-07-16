@@ -27,6 +27,11 @@ Invalid `success` param: Invalid URI. Register your new client (h-ai-lime.vercel
    - **Hostname**: `localhost`
 4. Нажмите **"Create"**
 
+### 4. Проверьте результат
+После добавления обеих платформ у вас должно быть:
+- ✅ **Next.js app** (h-ai-lime.vercel.app) - для Vercel
+- ✅ **Local Development** (localhost) - для локальной разработки
+
 ## ✅ Готово!
 Теперь обновите страницу Vercel - ошибка исчезнет.
 

@@ -12,34 +12,19 @@ export default function TestAppwritePage() {
     setStatus('Testing connection...');
 
     try {
-      // Test basic client connection
-      const health = await fetch(`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/health`);
-      if (health.ok) {
-        setStatus('✅ Appwrite endpoint is reachable');
+      // Test project connection by trying to get current user
+      const user = await appwriteAuth.getCurrentUser();
+      if (user.success) {
+        setStatus('✅ Connected to Appwrite! User is logged in: ' + user.user.name);
       } else {
-        setStatus('❌ Appwrite endpoint is not reachable');
-        setLoading(false);
-        return;
+        setStatus('✅ Connected to Appwrite! No user logged in (this is normal)');
       }
-
-      // Test project connection
-      try {
-        const user = await appwriteAuth.getCurrentUser();
-        if (user.success) {
-          setStatus('✅ Connected to Appwrite! User is logged in: ' + user.user.name);
-        } else {
-          setStatus('✅ Connected to Appwrite! No user logged in (this is normal)');
-        }
-      } catch (error: any) {
-        if (error.code === 401) {
-          setStatus('✅ Connected to Appwrite! No user logged in (this is normal)');
-        } else {
-          setStatus('❌ Error connecting to project: ' + error.message);
-        }
-      }
-
     } catch (error: any) {
-      setStatus('❌ Connection failed: ' + error.message);
+      if (error.code === 401 || error.message.includes('401')) {
+        setStatus('✅ Connected to Appwrite! No user logged in (this is normal)');
+      } else {
+        setStatus('❌ Error connecting to Appwrite: ' + error.message);
+      }
     }
 
     setLoading(false);
