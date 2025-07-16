@@ -16,16 +16,30 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // Debug: Check form data
+    console.log('Form data:', formData);
+    console.log('Email:', formData.email);
+    console.log('Password:', formData.password);
+
+    // Validate form data
+    if (!formData.email || !formData.password) {
+      console.error('Missing email or password');
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
         window.location.href = '/en/dashboard';
+      } else {
+        console.error('Login failed:', result.error);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -57,7 +71,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
               AI Freelance
             </span>
           </Link>
-          <h2 className="text-3xl font-bold text-white mb-2">{t('title')}</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
           <p className="text-gray-400">Welcome back to the future of freelancing</p>
         </div>
 
@@ -88,7 +102,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              {t('email')}
+              Email
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -107,7 +121,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
           {/* Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              {t('password')}
+              Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

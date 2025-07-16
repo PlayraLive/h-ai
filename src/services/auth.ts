@@ -47,10 +47,17 @@ export class AuthService {
   // Login user
   async login(email: string, password: string) {
     try {
+      console.log('AuthService.login called with:', { email, password: password ? '***' : 'MISSING' });
+
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+
       await account.createEmailPasswordSession(email, password);
       const user = await this.getCurrentUser();
       return { success: true, user };
     } catch (error: any) {
+      console.error('Login error:', error);
       return { success: false, error: error.message };
     }
   }
