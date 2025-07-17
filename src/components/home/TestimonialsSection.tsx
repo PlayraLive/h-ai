@@ -126,14 +126,14 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             What Our Community Says
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-400 mb-8">
             Join thousands of satisfied clients and freelancers
           </p>
 
@@ -153,7 +153,7 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
                 className={`px-6 py-3 rounded-full font-medium transition-all ${
                   filter === key
                     ? 'bg-purple-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 {label}
@@ -164,13 +164,13 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
 
         {/* Testimonial Carousel */}
         <div className="relative max-w-4xl mx-auto mb-16">
-          <div 
-            className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-8 md:p-12 relative overflow-hidden"
+          <div
+            className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-8 md:p-12 relative overflow-hidden border border-gray-700"
             onMouseEnter={() => setIsAutoPlaying(false)}
             onMouseLeave={() => setIsAutoPlaying(true)}
           >
             {/* Quote icon */}
-            <Quote className="absolute top-6 left-6 w-12 h-12 text-purple-200" />
+            <Quote className="absolute top-6 left-6 w-12 h-12 text-purple-500/30" />
             
             {currentTestimonialData && (
               <div className="relative z-10">
@@ -189,7 +189,7 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
                 </div>
 
                 {/* Testimonial text */}
-                <blockquote className="text-xl md:text-2xl text-gray-800 text-center mb-8 leading-relaxed">
+                <blockquote className="text-xl md:text-2xl text-white text-center mb-8 leading-relaxed">
                   "{currentTestimonialData.text}"
                 </blockquote>
 
@@ -201,16 +201,16 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <div className="text-center">
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold text-white">
                       {currentTestimonialData.name}
                     </div>
-                    <div className="text-gray-600">
+                    <div className="text-gray-300">
                       {currentTestimonialData.role}
                     </div>
-                    <div className="text-sm text-purple-600">
+                    <div className="text-sm text-purple-400">
                       {currentTestimonialData.company}
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">
+                    <div className="text-sm text-gray-400 mt-1">
                       Project: {currentTestimonialData.project}
                     </div>
                   </div>

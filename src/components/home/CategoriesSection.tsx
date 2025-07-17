@@ -113,14 +113,14 @@ export function CategoriesSection({ locale }: CategoriesSectionProps) {
   };
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Explore AI Services
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
             Discover talented AI specialists across various categories and find the perfect match for your project
           </p>
 
@@ -134,7 +134,7 @@ export function CategoriesSection({ locale }: CategoriesSectionProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search categories..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all placeholder-gray-400"
               />
             </div>
 
@@ -152,7 +152,7 @@ export function CategoriesSection({ locale }: CategoriesSectionProps) {
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     sortBy === key
                       ? 'bg-purple-500 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   {label}
@@ -171,7 +171,7 @@ export function CategoriesSection({ locale }: CategoriesSectionProps) {
             return (
               <div
                 key={index}
-                className={`group relative bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 ${
+                className={`group relative bg-gray-800 rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 ${
                   isSelected ? 'border-purple-500 scale-105' : 'border-transparent hover:scale-105'
                 }`}
                 onClick={() => handleCategoryClick(category.title)}
@@ -196,32 +196,32 @@ export function CategoriesSection({ locale }: CategoriesSectionProps) {
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">
                     {category.title}
                   </h3>
-                  <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                  <p className="text-gray-400 mb-6 text-sm leading-relaxed">
                     {category.description}
                   </p>
 
                   {/* Stats */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-gray-500">
+                      <div className="flex items-center gap-1 text-gray-400">
                         <Briefcase className="w-4 h-4" />
                         <span>{category.jobs} jobs</span>
                       </div>
-                      <div className="flex items-center gap-1 text-green-600">
+                      <div className="flex items-center gap-1 text-green-400">
                         <DollarSign className="w-4 h-4" />
                         <span>from ${category.avgPrice}</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-yellow-600">
+                      <div className="flex items-center gap-1 text-yellow-400">
                         <Star className="w-4 h-4 fill-current" />
                         <span>{category.rating}/5</span>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300" />
+                      <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                   </div>
                 </div>
