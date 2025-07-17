@@ -6,11 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, Zap, Github, Chrome, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingButton } from '@/components/Loading';
-import { useToast } from '@/components/Toast';
+
 
 export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const router = useRouter();
-  const { success, error } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -46,7 +45,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
     e.preventDefault();
 
     if (!validateForm()) {
-      error('Validation Error', 'Please fix the errors below');
+      console.log('Validation failed');
       return;
     }
 
@@ -57,13 +56,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        success('Welcome back!', 'You have successfully logged in');
+        console.log('Login successful');
         router.push('/en/dashboard');
       } else {
-        error('Login Failed', result.error || 'Invalid email or password');
+        console.error('Login failed:', result.error);
+        setErrors({ general: result.error || 'Invalid email or password' });
       }
     } catch (err) {
-      error('Login Error', err instanceof Error ? err.message : 'An unexpected error occurred');
+      console.error('Login error:', err);
+      setErrors({ general: err instanceof Error ? err.message : 'An unexpected error occurred' });
     } finally {
       setLoading(false);
     }
@@ -73,17 +74,14 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
     setSocialLoading(provider);
     try {
       if (provider === 'google') {
-        const result = await loginWithGoogle();
-        if (result.success) {
-          success('Welcome!', 'Successfully logged in with Google');
-          router.push('/en/dashboard');
-        } else {
-          error('Login Failed', result.error || 'Google login failed');
-        }
+        await loginWithGoogle();
+        console.log('Google login successful');
+        router.push('/en/dashboard');
       }
       // Add GitHub login here when implemented
     } catch (err) {
-      error('Social Login Error', err instanceof Error ? err.message : 'Social login failed');
+      console.error('Social login error:', err);
+      setErrors({ general: err instanceof Error ? err.message : 'Social login failed' });
     } finally {
       setSocialLoading(null);
     }
@@ -127,6 +125,16 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
             <span className="px-2 bg-gray-950 text-gray-400">Or continue with email</span>
           </div>
         </div>
+
+        {/* General Error */}
+        {errors.general && (
+          <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <p className="text-red-400 text-sm">{errors.general}</p>
+            </div>
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
