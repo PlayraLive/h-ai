@@ -22,10 +22,13 @@ import {
   Gamepad2
 } from 'lucide-react';
 
+import { JobsService } from '@/lib/appwrite/jobs';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export default function CreateJobPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -33,12 +36,15 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
     title: '',
     description: '',
     category: '',
+    subcategory: '',
     skills: [] as string[],
     budgetType: 'fixed',
     budgetMin: '',
     budgetMax: '',
     duration: '',
     experienceLevel: 'intermediate',
+    location: 'remote',
+    deadline: '',
     attachments: [] as File[]
   });
 
@@ -66,10 +72,57 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
     { value: 'expert', label: 'Expert', description: 'Extensive experience and proven track record' }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating job:', formData);
-    // Handle job creation logic
+
+    if (!user) {
+      alert('Please log in to post a job');
+      router.push('/en/login');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare job data
+      const jobData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        skills: formData.skills,
+        budgetType: formData.budgetType as 'fixed' | 'hourly',
+        budgetMin: parseInt(formData.budgetMin) || 0,
+        budgetMax: parseInt(formData.budgetMax) || 0,
+        currency: 'USD',
+        duration: formData.duration,
+        experienceLevel: formData.experienceLevel as 'entry' | 'intermediate' | 'expert',
+        location: formData.location,
+        clientId: user.id,
+        clientName: user.name || user.email,
+        clientCompany: user.company || '',
+        clientAvatar: user.avatar || '',
+        featured: false,
+        urgent: false,
+        deadline: formData.deadline || undefined,
+        attachments: [], // TODO: Handle file uploads
+        tags: formData.skills // Use skills as tags for now
+      };
+
+      // Create job in database
+      const createdJob = await JobsService.createJob(jobData, user.id);
+
+      console.log('Job created successfully:', createdJob);
+
+      // Redirect to job details page
+      router.push(`/en/jobs/${createdJob.$id}`);
+
+    } catch (error) {
+      console.error('Error creating job:', error);
+      alert('Failed to create job. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addSkill = () => {

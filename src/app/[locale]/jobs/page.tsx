@@ -21,6 +21,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { JobCardSkeleton } from '@/components/Loading';
 import { useToast } from '@/components/Toast';
+import { JobsService } from '@/lib/appwrite/jobs';
 import { cn } from '@/lib/utils';
 interface Job {
   id: string;
@@ -117,12 +118,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
   ];
 
   useEffect(() => {
-    // Симуляция загрузки данных
-    setLoading(true);
-    setTimeout(() => {
-      setJobs(mockJobs);
-      setLoading(false);
-    }, 1500);
+    loadJobs();
 
     // Получение параметров из URL
     const category = searchParams.get('category');
@@ -135,6 +131,85 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
       setSearchQuery(search);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [selectedCategory, selectedLocation, budgetRange, experienceLevel, sortBy, searchQuery]);
+
+  const loadJobs = async () => {
+    setLoading(true);
+    try {
+      const filters: any = {};
+
+      if (selectedCategory && selectedCategory !== 'all') {
+        filters.category = selectedCategory;
+      }
+
+      if (selectedLocation && selectedLocation !== 'all') {
+        filters.location = selectedLocation;
+      }
+
+      if (budgetRange[0] > 0) {
+        filters.budgetMin = budgetRange[0];
+      }
+
+      if (budgetRange[1] < 10000) {
+        filters.budgetMax = budgetRange[1];
+      }
+
+      if (experienceLevel && experienceLevel !== 'all') {
+        filters.experienceLevel = experienceLevel;
+      }
+
+      if (searchQuery) {
+        filters.search = searchQuery;
+      }
+
+      const { jobs: loadedJobs } = await JobsService.getJobs(filters);
+
+      // Convert Appwrite documents to Job interface
+      const convertedJobs = loadedJobs.map(job => ({
+        id: job.$id!,
+        title: job.title,
+        description: job.description,
+        company: job.clientCompany || job.clientName,
+        location: job.location,
+        type: job.budgetType,
+        budget: {
+          min: job.budgetMin,
+          max: job.budgetMax,
+          currency: job.currency
+        },
+        skills: job.skills,
+        postedAt: job.$createdAt!,
+        deadline: job.deadline,
+        proposals: job.applicationsCount,
+        rating: 4.5, // Default rating
+        category: job.category,
+        featured: job.featured,
+        urgent: job.urgent,
+        experienceLevel: job.experienceLevel,
+        client: {
+          name: job.clientName,
+          avatar: job.clientAvatar || '',
+          company: job.clientCompany || '',
+          rating: 4.5,
+          jobsPosted: 1,
+          totalSpent: job.budgetMax,
+          memberSince: job.$createdAt!,
+          verified: true
+        }
+      }));
+
+      setJobs(convertedJobs);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+      // Fallback to mock data if real data fails
+      setJobs(mockJobs);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveJob = (jobId: string) => {
     const newSavedJobs = new Set(savedJobs);

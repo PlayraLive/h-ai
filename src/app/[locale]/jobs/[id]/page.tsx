@@ -24,6 +24,8 @@ import {
   Globe,
   Award
 } from 'lucide-react';
+import { JobsService, ApplicationsService } from '@/lib/appwrite/jobs';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 interface Job {
@@ -66,6 +68,7 @@ interface Job {
 export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -73,10 +76,83 @@ export default function JobDetailsPage() {
   const [proposalText, setProposalText] = useState('');
   const [proposalBudget, setProposalBudget] = useState('');
   const [proposalDeadline, setProposalDeadline] = useState('');
+  const [hasApplied, setHasApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    const mockJob: Job = {
+    loadJob();
+  }, [params.id, user]);
+
+  const loadJob = async () => {
+    setLoading(true);
+    try {
+      const jobData = await JobsService.getJob(params.id as string);
+
+      // Convert Appwrite document to Job interface
+      const convertedJob: Job = {
+        id: jobData.$id!,
+        title: jobData.title,
+        description: jobData.description,
+        company: jobData.clientCompany || jobData.clientName,
+        companyLogo: jobData.clientAvatar || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=150',
+        companyDescription: `${jobData.clientCompany || jobData.clientName} is looking for talented freelancers.`,
+        location: jobData.location,
+        type: jobData.budgetType as 'full-time' | 'part-time' | 'contract' | 'freelance',
+        budget: {
+          min: jobData.budgetMin,
+          max: jobData.budgetMax,
+          currency: jobData.currency
+        },
+        skills: jobData.skills,
+        postedAt: jobData.$createdAt!,
+        deadline: jobData.deadline,
+        proposals: jobData.applicationsCount,
+        rating: 4.8, // Default rating
+        category: jobData.category,
+        featured: jobData.featured,
+        urgent: jobData.urgent,
+        requirements: [
+          `Experience level: ${jobData.experienceLevel}`,
+          `Duration: ${jobData.duration}`,
+          'Strong portfolio required',
+          'Excellent communication skills'
+        ],
+        responsibilities: [
+          'Deliver high-quality work on time',
+          'Communicate regularly with client',
+          'Follow project requirements',
+          'Provide revisions if needed'
+        ],
+        benefits: [
+          'Flexible working hours',
+          'Remote work opportunity',
+          'Competitive compensation',
+          'Potential for long-term collaboration'
+        ],
+        experienceLevel: jobData.experienceLevel,
+        clientInfo: {
+          name: jobData.clientName,
+          avatar: jobData.clientAvatar || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
+          rating: 4.9,
+          jobsPosted: 15,
+          totalSpent: 12500,
+          memberSince: jobData.$createdAt!,
+          verified: true
+        }
+      };
+
+      setJob(convertedJob);
+
+      // Check if user has already applied
+      if (user) {
+        const applied = await ApplicationsService.hasUserApplied(params.id as string, user.id);
+        setHasApplied(applied);
+      }
+
+    } catch (error) {
+      console.error('Error loading job:', error);
+      // Fallback to mock data
+      const mockJob: Job = {
       id: params.id as string,
       title: 'AI-Powered Logo Design for Tech Startup',
       description: `We are looking for a talented AI designer to create a modern, innovative logo for our tech startup. The logo should represent cutting-edge technology, innovation, and trust.
@@ -145,11 +221,14 @@ We value creativity, attention to detail, and professional communication. Please
       }
     };
 
-    setTimeout(() => {
-      setJob(mockJob);
+      setTimeout(() => {
+        setJob(mockJob);
+        setLoading(false);
+      }, 1000);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [params.id]);
+    }
+  };
 
   const handleSaveJob = () => {
     setIsSaved(!isSaved);
@@ -159,16 +238,48 @@ We value creativity, attention to detail, and professional communication. Please
     setShowApplyModal(true);
   };
 
-  const submitProposal = () => {
-    // Handle proposal submission
-    console.log('Submitting proposal:', {
-      jobId: job?.id,
-      text: proposalText,
-      budget: proposalBudget,
-      deadline: proposalDeadline
-    });
-    setShowApplyModal(false);
-    // Show success message
+  const submitProposal = async () => {
+    if (!user) {
+      alert('Please log in to apply for jobs');
+      router.push('/en/login');
+      return;
+    }
+
+    if (!proposalText.trim() || !proposalBudget) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsApplying(true);
+
+    try {
+      const applicationData = {
+        jobId: params.id as string,
+        freelancerId: user.id,
+        freelancerName: user.name || user.email,
+        freelancerAvatar: user.avatar,
+        freelancerRating: 4.5, // Default rating
+        coverLetter: proposalText,
+        proposedBudget: parseInt(proposalBudget),
+        proposedDuration: proposalDeadline || '1 week'
+      };
+
+      await ApplicationsService.submitApplication(applicationData, user.id);
+
+      setHasApplied(true);
+      setShowApplyModal(false);
+      setProposalText('');
+      setProposalBudget('');
+      setProposalDeadline('');
+
+      alert('Application submitted successfully!');
+
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Failed to submit application. Please try again.');
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   if (loading) {
@@ -361,9 +472,16 @@ We value creativity, attention to detail, and professional communication. Please
                 <div className="glass-card p-6 rounded-2xl">
                   <button
                     onClick={handleApply}
-                    className="w-full btn-primary text-lg py-4 mb-4"
+                    disabled={hasApplied || !user}
+                    className={`w-full text-lg py-4 mb-4 transition-colors ${
+                      hasApplied
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed'
+                        : !user
+                        ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed'
+                        : 'btn-primary'
+                    }`}
                   >
-                    Apply for this Job
+                    {hasApplied ? 'Application Submitted' : !user ? 'Login to Apply' : 'Apply for this Job'}
                   </button>
                   <Link
                     href={`/en/messages?job=${job.id}`}
@@ -500,9 +618,10 @@ We value creativity, attention to detail, and professional communication. Please
                 </button>
                 <button
                   onClick={submitProposal}
-                  className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                  disabled={isApplying || !proposalText.trim() || !proposalBudget}
+                  className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Proposal
+                  {isApplying ? 'Submitting...' : 'Submit Proposal'}
                 </button>
               </div>
             </div>
