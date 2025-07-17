@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, User, Zap, Github, Chrome, Briefcase, Users } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Zap, Github, Chrome, Briefcase, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingButton } from '@/components/Loading';
+import { useToast } from '@/components/Toast';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { success, error } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<'client' | 'freelancer'>('freelancer');
@@ -21,6 +23,7 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const { loginWithGoogle, register } = useAuth();
 

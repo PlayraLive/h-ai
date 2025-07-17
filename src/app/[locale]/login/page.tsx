@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, Zap, Github, Chrome } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Zap, Github, Chrome, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingButton } from '@/components/Loading';
+import { useToast } from '@/components/Toast';
 
 export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const router = useRouter();
+  const { success, error } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -17,51 +19,72 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
   });
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const { login, loginWithGoogle } = useAuth();
 
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    // Debug: Check form data
-    console.log('Form data:', formData);
-    console.log('Email:', formData.email);
-    console.log('Password:', formData.password);
-
-    // Validate form data
-    if (!formData.email || !formData.password) {
-      console.error('Missing email or password');
-      setLoading(false);
+    if (!validateForm()) {
+      error('Validation Error', 'Please fix the errors below');
       return;
     }
 
+    setLoading(true);
+    setErrors({});
+
     try {
       const result = await login(formData.email, formData.password);
-      console.log('Login result:', result);
 
       if (result.success) {
-        console.log('Login successful, redirecting to dashboard...');
-        // Redirect to dashboard after successful login
+        success('Welcome back!', 'You have successfully logged in');
         router.push('/en/dashboard');
       } else {
-        console.error('Login failed:', result.error);
-        alert('Login failed: ' + result.error);
+        error('Login Failed', result.error || 'Invalid email or password');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Login error: ' + error);
+    } catch (err) {
+      error('Login Error', err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialLogin = async () => {
-    setSocialLoading('google');
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
+    setSocialLoading(provider);
     try {
-      await loginWithGoogle();
-    } catch (error) {
-      console.error('Social login error:', error);
+      if (provider === 'google') {
+        const result = await loginWithGoogle();
+        if (result.success) {
+          success('Welcome!', 'Successfully logged in with Google');
+          router.push('/en/dashboard');
+        } else {
+          error('Login Failed', result.error || 'Google login failed');
+        }
+      }
+      // Add GitHub login here when implemented
+    } catch (err) {
+      error('Social Login Error', err instanceof Error ? err.message : 'Social login failed');
+    } finally {
       setSocialLoading(null);
     }
   };
@@ -86,7 +109,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         {/* Social Login */}
         <div className="space-y-3">
           <LoadingButton
-            onClick={handleSocialLogin}
+            onClick={() => handleSocialLogin('google')}
             loading={socialLoading === 'google'}
             className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-4 rounded-xl transition-all duration-300"
           >
@@ -119,11 +142,25 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="input-field pl-10 w-full"
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (errors.email) setErrors({ ...errors, email: '' });
+                }}
+                className={`input-field pl-10 w-full ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                 placeholder="Enter your email"
               />
+              {errors.email && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
+              )}
             </div>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {errors.email}
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -138,8 +175,11 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="input-field pl-10 pr-10 w-full"
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  if (errors.password) setErrors({ ...errors, password: '' });
+                }}
+                className={`input-field pl-10 pr-10 w-full ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                 placeholder="Enter your password"
               />
               <button
@@ -150,6 +190,12 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {errors.password}
+              </p>
+            )}
           </div>
 
           {/* Remember Me & Forgot Password */}
