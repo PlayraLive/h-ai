@@ -22,7 +22,7 @@ import {
   Gamepad2
 } from 'lucide-react';
 
-import { JobsService } from '@/lib/appwrite/jobs';
+import { JobService } from '@/services/jobs';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -123,7 +123,15 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
       };
 
       // Create job in database
-      const createdJob = await JobsService.createJob(jobData, user.$id || user.id);
+      const jobService = new JobService();
+      const result = await jobService.createJob(jobData, user.$id || user.id);
+
+      if (!result.success) {
+        alert('Failed to create job: ' + result.error);
+        return;
+      }
+
+      const createdJob = result.job;
 
       console.log('Job created successfully:', createdJob);
 

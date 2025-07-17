@@ -6,9 +6,20 @@ import { appwriteAuth } from '@/lib/appwrite';
 import { account } from '@/lib/appwrite';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('isAuthenticated') === 'true';
+    }
+    return false;
+  });
   // const { success, error } = useToast();
   const success = (title: string, message: string) => console.log('SUCCESS:', title, message);
   const error = (title: string, message: string) => console.error('ERROR:', title, message);
@@ -17,6 +28,17 @@ export function useAuth() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Save user to localStorage when it changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('isAuthenticated', 'true');
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+    }
+  }, [user, isAuthenticated]);
 
   const checkAuth = async () => {
     try {

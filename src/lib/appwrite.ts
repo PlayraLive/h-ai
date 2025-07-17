@@ -13,6 +13,7 @@ export const functions = new Functions(client);
 
 // Collection IDs
 export const COLLECTIONS = {
+  JOBS: process.env.NEXT_PUBLIC_APPWRITE_JOBS_COLLECTION_ID!,
   USERS: process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
   PROJECTS: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECTION_ID!,
   PROPOSALS: process.env.NEXT_PUBLIC_APPWRITE_PROPOSALS_COLLECTION_ID!,
@@ -28,6 +29,10 @@ export const COLLECTIONS = {
 };
 
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+
+// Individual collection exports for backward compatibility
+export const JOBS_COLLECTION_ID = COLLECTIONS.JOBS;
+export const PROPOSALS_COLLECTION_ID = COLLECTIONS.PROPOSALS;
 
 // Auth service
 export class AppwriteAuth {

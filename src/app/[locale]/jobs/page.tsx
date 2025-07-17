@@ -21,7 +21,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { JobCardSkeleton } from '@/components/Loading';
 import { useToast } from '@/components/Toast';
-import { JobsService } from '@/lib/appwrite/jobs';
+import { JobService } from '@/services/jobs';
 import { cn } from '@/lib/utils';
 interface Job {
   id: string;
@@ -172,8 +172,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
         filters.search = searchQuery;
       }
 
-      console.log('Calling JobsService.getJobs with filters:', filters);
-      const { jobs: loadedJobs } = await JobsService.getJobs(filters);
+      console.log('Calling JobService.getJobs with filters:', filters);
+      const jobService = new JobService();
+      const { jobs: loadedJobs } = await jobService.getJobs(filters);
       console.log('Loaded jobs:', loadedJobs);
 
       // Если нет джобов из БД, используем mock данные

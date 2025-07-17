@@ -248,17 +248,7 @@ export default function Navbar() {
                   </span>
                 </Link>
               </>
-            ) : (
-              <>
-                {/* Auth Buttons */}
-                <button onClick={handleLogin} className="btn-secondary">
-                  {t('login')}
-                </button>
-                <Link href={`/${locale}/signup`} className="btn-primary">
-                  {t('signup')}
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile menu button */}
