@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 
 export default function CreateJobPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -76,7 +76,16 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
     e.preventDefault();
 
     console.log('handleSubmit: user object:', user);
-    console.log('handleSubmit: isAuthenticated:', user ? 'YES' : 'NO');
+    console.log('handleSubmit: isAuthenticated:', isAuthenticated);
+    console.log('handleSubmit: user exists:', user ? 'YES' : 'NO');
+
+    // Проверяем аутентификацию
+    if (!isAuthenticated || !user) {
+      console.log('User not authenticated, redirecting to login');
+      alert('Please log in to post a job');
+      router.push('/en/login');
+      return;
+    }
 
     // Проверяем наличие переменных окружения Appwrite
     if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
@@ -85,12 +94,6 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
       console.warn('Appwrite not configured, simulating job creation');
       alert('Job created successfully! (Demo mode - Appwrite not configured)');
       router.push('/en/jobs');
-      return;
-    }
-
-    if (!user) {
-      alert('Please log in to post a job');
-      router.push('/en/login');
       return;
     }
 

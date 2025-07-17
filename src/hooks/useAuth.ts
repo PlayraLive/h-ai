@@ -48,8 +48,16 @@ export function useAuth() {
       if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
           !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) {
         console.log('checkAuth: Appwrite not configured');
-        setUser(null);
-        setIsAuthenticated(false);
+        // Если Appwrite не настроен, проверяем localStorage
+        const savedUser = localStorage.getItem('user');
+        const savedAuth = localStorage.getItem('isAuthenticated');
+        if (savedUser && savedAuth === 'true') {
+          setUser(JSON.parse(savedUser));
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
         setLoading(false);
         return;
       }
@@ -62,6 +70,9 @@ export function useAuth() {
 
     } catch (err) {
       console.log('checkAuth: No active session', err);
+      // Очищаем localStorage при ошибке
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
       setUser(null);
       setIsAuthenticated(false);
     } finally {

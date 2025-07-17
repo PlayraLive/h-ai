@@ -130,10 +130,6 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    loadJobs();
-  }, [loadJobs]);
-
   const loadJobs = useCallback(async () => {
     setLoading(true);
     try {
@@ -227,6 +223,10 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
       setLoading(false);
     }
   }, [selectedCategory, selectedLocation, budgetRange, experienceLevel, sortBy, searchQuery]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const handleSaveJob = (jobId: string) => {
     const newSavedJobs = new Set(savedJobs);
