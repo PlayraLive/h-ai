@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 // import { useToast } from '@/components/Toast';
 import { appwriteAuth } from '@/lib/appwrite';
+import { account } from '@/lib/appwrite';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
@@ -20,18 +21,12 @@ export function useAuth() {
   const checkAuth = async () => {
     try {
       console.log('checkAuth: Checking current user...');
-      const result = await appwriteAuth.getCurrentUser();
-      console.log('checkAuth result:', result);
+      const user = await account.get();
+      console.log('checkAuth: User found:', user);
 
-      if (result.success) {
-        console.log('checkAuth: Setting user:', result.user);
-        setUser(result.user);
-        setIsAuthenticated(true);
-      } else {
-        console.log('checkAuth: No user found');
-        setUser(null);
-        setIsAuthenticated(false);
-      }
+      setUser(user);
+      setIsAuthenticated(true);
+
     } catch (err) {
       console.log('checkAuth: No active session', err);
       setUser(null);
@@ -60,18 +55,13 @@ export function useAuth() {
 
       if (result.success) {
         console.log('Login successful, getting current user...');
-        const userResult = await appwriteAuth.getCurrentUser();
-        console.log('getCurrentUser result:', userResult);
+        const user = await account.get();
+        console.log('User data:', user);
 
-        if (userResult.success) {
-          setUser(userResult.user);
-          setIsAuthenticated(true);
-          success('Welcome back!', 'You have successfully logged in.');
-          return { success: true, user: userResult.user };
-        } else {
-          error('Login failed', 'Could not get user information.');
-          return { success: false, error: 'Could not get user information' };
-        }
+        setUser(user);
+        setIsAuthenticated(true);
+        success('Welcome back!', 'You have successfully logged in.');
+        return { success: true, user };
       } else {
         console.error('Login failed:', result.error);
         error('Login failed', result.error || 'Please check your credentials.');
@@ -97,13 +87,14 @@ export function useAuth() {
 
   const register = async (email: string, password: string, name: string, userType: 'freelancer' | 'client' = 'freelancer') => {
     try {
-      const result = await appwriteAuth.register(email, password, name, userType);
+      const result = await appwriteAuth.register(email, password, name);
       if (result.success) {
-        // Set user after successful registration
-        setUser(result.user);
+        // Get user after successful registration
+        const user = await account.get();
+        setUser(user);
         setIsAuthenticated(true);
         success('Account created!', 'Welcome to AI Freelance Platform!');
-        return { success: true, user: result.user };
+        return { success: true, user };
       } else {
         error('Registration failed', result.error || 'Please try again.');
         return { success: false, error: result.error };

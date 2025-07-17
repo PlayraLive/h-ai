@@ -173,7 +173,16 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
         filters.search = searchQuery;
       }
 
+      console.log('Calling JobsService.getJobs with filters:', filters);
       const { jobs: loadedJobs } = await JobsService.getJobs(filters);
+      console.log('Loaded jobs:', loadedJobs);
+
+      // Если нет джобов из БД, используем mock данные
+      if (!loadedJobs || loadedJobs.length === 0) {
+        console.log('No jobs found in database, using mock data');
+        setJobs(mockJobs);
+        return;
+      }
 
       // Convert Appwrite documents to Job interface
       const convertedJobs = loadedJobs.map(job => ({

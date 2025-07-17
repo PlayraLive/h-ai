@@ -10,7 +10,6 @@ import {
   User,
   Globe,
   Zap,
-  MessageCircle,
   Briefcase,
   Users,
   LogOut,
@@ -75,10 +74,8 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { href: `/${locale}`, label: t('home'), icon: Zap },
     { href: `/${locale}/jobs`, label: t('jobs'), icon: Briefcase },
     { href: `/${locale}/freelancers`, label: t('freelancers'), icon: Users },
-    { href: `/${locale}/messages`, label: 'Messages', icon: MessageCircle },
   ];
 
   const isActive = (href: string) => {
