@@ -59,7 +59,6 @@ export function useAuth() {
 
         if (userResult.success) {
           setUser(userResult.user);
-          setIsAuthenticated(true);
           success('Welcome back!', 'You have successfully logged in.');
           return { success: true, user: userResult.user };
         } else {
