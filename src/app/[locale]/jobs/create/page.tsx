@@ -76,6 +76,17 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
     e.preventDefault();
 
     console.log('handleSubmit: user object:', user);
+    console.log('handleSubmit: isAuthenticated:', user ? 'YES' : 'NO');
+
+    // Проверяем наличие переменных окружения Appwrite
+    if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+        !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
+        !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
+      console.warn('Appwrite not configured, simulating job creation');
+      alert('Job created successfully! (Demo mode - Appwrite not configured)');
+      router.push('/en/jobs');
+      return;
+    }
 
     if (!user) {
       alert('Please log in to post a job');

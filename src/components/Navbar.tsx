@@ -26,6 +26,7 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
@@ -128,24 +129,76 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Search */}
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search jobs, freelancers..."
-                className="bg-gray-800/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 w-64"
-              />
-            </form>
+            {/* User Avatar - показываем если залогинен */}
+            {isAuthenticated && user ? (
+              <div className="flex items-center space-x-3">
+                <NotificationDropdown userId={user.$id} />
 
-            {/* Notifications */}
-            {isAuthenticated && user && (
-              <NotificationDropdown userId={user.$id} />
+                {/* User Avatar with Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-800/50 transition-colors"
+                  >
+                    <UserAvatar
+                      src={user.avatar}
+                      alt={user.name || user.email}
+                      size="sm"
+                      fallbackText={user.name || user.email}
+                    />
+                    <span className="text-sm text-gray-300 hidden lg:block">
+                      {user.name || user.email}
+                    </span>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 glass-card border border-white/10 rounded-lg shadow-lg z-50">
+                      <Link
+                        href={`/${locale}/dashboard`}
+                        className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                      <Link
+                        href={`/${locale}/settings`}
+                        className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setShowUserMenu(false);
+                        }}
+                        className="flex items-center space-x-2 w-full px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href={`/${locale}/login`}
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  {t('login')}
+                </Link>
+                <Link
+                  href={`/${locale}/signup`}
+                  className="btn-primary"
+                >
+                  {t('signup')}
+                </Link>
+              </div>
             )}
-
-
 
             {/* Language Switcher */}
             <div className="relative">
@@ -226,20 +279,6 @@ export default function Navbar() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden py-4 border-t border-white/10 animate-in slide-in-from-top duration-300">
-            {/* Search Mobile */}
-            <div className="px-4 mb-4">
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="input-field pl-10 w-full"
-                />
-              </form>
-            </div>
-
             <div className="space-y-2 px-4">
               {navLinks.map((link) => {
                 const Icon = link.icon;

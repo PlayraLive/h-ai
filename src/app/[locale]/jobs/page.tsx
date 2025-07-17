@@ -143,7 +143,6 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
           !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
         console.warn('Appwrite not configured, using mock data');
         setJobs(mockJobs);
-        setLoading(false);
         return;
       }
 

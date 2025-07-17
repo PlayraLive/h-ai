@@ -55,6 +55,9 @@ export function useAuth() {
 
       if (result.success) {
         console.log('Login successful, getting current user...');
+        // Небольшая задержка чтобы сессия успела установиться
+        await new Promise(resolve => setTimeout(resolve, 200));
+
         const user = await account.get();
         console.log('User data:', user);
 
