@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -118,8 +118,6 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
   ];
 
   useEffect(() => {
-    loadJobs();
-
     // Получение параметров из URL
     const category = searchParams.get('category');
     const search = searchParams.get('search');
@@ -134,11 +132,21 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
 
   useEffect(() => {
     loadJobs();
-  }, [selectedCategory, selectedLocation, budgetRange, experienceLevel, sortBy, searchQuery]);
+  }, [loadJobs]);
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoading(true);
     try {
+      // Проверяем наличие переменных окружения
+      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+          !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
+          !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
+        console.warn('Appwrite not configured, using mock data');
+        setJobs(mockJobs);
+        setLoading(false);
+        return;
+      }
+
       const filters: any = {};
 
       if (selectedCategory && selectedCategory !== 'all') {
@@ -209,7 +217,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, selectedLocation, budgetRange, experienceLevel, sortBy, searchQuery]);
 
   const handleSaveJob = (jobId: string) => {
     const newSavedJobs = new Set(savedJobs);
