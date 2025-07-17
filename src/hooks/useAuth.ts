@@ -21,6 +21,17 @@ export function useAuth() {
   const checkAuth = async () => {
     try {
       console.log('checkAuth: Checking current user...');
+
+      // Проверяем переменные окружения
+      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+          !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) {
+        console.log('checkAuth: Appwrite not configured');
+        setUser(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
       const user = await account.get();
       console.log('checkAuth: User found:', user);
 

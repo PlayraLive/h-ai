@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   Menu,
   X,
-  Search,
   User,
   Globe,
   Zap,
@@ -28,7 +27,7 @@ export default function Navbar() {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
+
   const pathname = usePathname();
   const locale = 'en';
 
@@ -67,12 +66,7 @@ export default function Navbar() {
     await logout();
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/${locale}/jobs?search=${encodeURIComponent(searchQuery)}`;
-    }
-  };
+
 
   const navLinks = [
     { href: `/${locale}/jobs`, label: t('jobs'), icon: Briefcase },
