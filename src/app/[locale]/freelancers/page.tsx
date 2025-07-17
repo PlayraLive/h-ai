@@ -19,7 +19,8 @@ import {
   CheckCircle,
   SlidersHorizontal,
   ArrowRight,
-  Verified
+  Verified,
+  Briefcase
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { FreelancerCardSkeleton } from '@/components/Loading';
@@ -476,20 +477,30 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
       </div>
 
       {/* Actions */}
-      <div className="flex space-x-2">
+      <div className="space-y-3">
         <Link
           href={`/en/freelancers/${freelancer.id}`}
-          className="flex-1 btn-secondary text-center flex items-center justify-center space-x-2"
+          className="w-full btn-secondary text-center flex items-center justify-center space-x-2"
         >
           <Eye className="w-4 h-4" />
           <span>View Profile</span>
         </Link>
-        <Link
-          href={`/en/messages?freelancer=${freelancer.id}`}
-          className="w-10 h-10 btn-primary flex items-center justify-center"
-        >
-          <MessageCircle className="w-4 h-4" />
-        </Link>
+        <div className="flex space-x-2">
+          <Link
+            href={`/en/messages?freelancer=${freelancer.id}`}
+            className="flex-1 btn-primary text-center flex items-center justify-center space-x-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Message</span>
+          </Link>
+          <Link
+            href={`/en/jobs/create?freelancer=${freelancer.id}`}
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors text-center flex items-center justify-center space-x-2"
+          >
+            <Briefcase className="w-4 h-4" />
+            <span>Hire</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

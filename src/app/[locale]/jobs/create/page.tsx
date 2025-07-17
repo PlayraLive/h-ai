@@ -1,23 +1,34 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  Upload, 
-  X, 
+import Sidebar from '@/components/Sidebar';
+import {
+  ArrowLeft,
+  Upload,
+  Plus,
+  X,
   DollarSign,
+  Clock,
+  Users,
+  FileText,
+  Tag,
+  MapPin,
   Calendar,
   Palette,
   Code,
   Video,
-  Gamepad2,
-  Plus
+  Gamepad2
 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+
 import { cn } from '@/lib/utils';
 
 export default function CreateJobPage({ params: { locale } }: { params: { locale: string } }) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -94,11 +105,12 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <Navbar />
-      
-      <div className="pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+    <div className="flex h-screen bg-gray-950">
+      <Sidebar />
+
+      <div className="flex-1 lg:ml-0">
+        <div className="px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link 
@@ -406,6 +418,7 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
               </button>
             </div>
           </form>
+          </div>
         </div>
       </div>
     </div>
