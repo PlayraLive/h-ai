@@ -145,7 +145,7 @@ export default function JobDetailsPage() {
 
       // Check if user has already applied
       if (user) {
-        const applied = await ApplicationsService.hasUserApplied(params.id as string, user.id);
+        const applied = await ApplicationsService.hasUserApplied(params.id as string, user.$id || user.id);
         setHasApplied(applied);
       }
 
@@ -255,7 +255,7 @@ We value creativity, attention to detail, and professional communication. Please
     try {
       const applicationData = {
         jobId: params.id as string,
-        freelancerId: user.id,
+        freelancerId: user.$id || user.id,
         freelancerName: user.name || user.email,
         freelancerAvatar: user.avatar,
         freelancerRating: 4.5, // Default rating
@@ -264,7 +264,7 @@ We value creativity, attention to detail, and professional communication. Please
         proposedDuration: proposalDeadline || '1 week'
       };
 
-      await ApplicationsService.submitApplication(applicationData, user.id);
+      await ApplicationsService.submitApplication(applicationData, user.$id || user.id);
 
       setHasApplied(true);
       setShowApplyModal(false);

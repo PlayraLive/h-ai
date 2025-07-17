@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/Toast';
+// import { useToast } from '@/components/Toast';
 import { appwriteAuth } from '@/lib/appwrite';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { success, error } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const { success, error } = useToast();
+  const success = (title: string, message: string) => console.log('SUCCESS:', title, message);
+  const error = (title: string, message: string) => console.error('ERROR:', title, message);
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -23,13 +26,16 @@ export function useAuth() {
       if (result.success) {
         console.log('checkAuth: Setting user:', result.user);
         setUser(result.user);
+        setIsAuthenticated(true);
       } else {
         console.log('checkAuth: No user found');
         setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (err) {
       console.log('checkAuth: No active session', err);
       setUser(null);
+      setIsAuthenticated(false);
     } finally {
       console.log('checkAuth: Setting loading to false');
       setLoading(false);
@@ -59,6 +65,7 @@ export function useAuth() {
 
         if (userResult.success) {
           setUser(userResult.user);
+          setIsAuthenticated(true);
           success('Welcome back!', 'You have successfully logged in.');
           return { success: true, user: userResult.user };
         } else {
@@ -94,6 +101,7 @@ export function useAuth() {
       if (result.success) {
         // Set user after successful registration
         setUser(result.user);
+        setIsAuthenticated(true);
         success('Account created!', 'Welcome to AI Freelance Platform!');
         return { success: true, user: result.user };
       } else {
@@ -110,6 +118,7 @@ export function useAuth() {
     try {
       await appwriteAuth.logout();
       setUser(null);
+      setIsAuthenticated(false);
       success('Logged out', 'You have been logged out successfully.');
       // Redirect to home
       window.location.href = '/en';
@@ -120,7 +129,7 @@ export function useAuth() {
 
   return {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading: loading,
     login,
     loginWithGoogle,

@@ -75,6 +75,8 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('handleSubmit: user object:', user);
+
     if (!user) {
       alert('Please log in to post a job');
       router.push('/en/login');
@@ -98,7 +100,7 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
         duration: formData.duration,
         experienceLevel: formData.experienceLevel as 'entry' | 'intermediate' | 'expert',
         location: formData.location,
-        clientId: user.id,
+        clientId: user.$id || user.id,
         clientName: user.name || user.email,
         clientCompany: user.company || '',
         clientAvatar: user.avatar || '',
@@ -110,7 +112,7 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
       };
 
       // Create job in database
-      const createdJob = await JobsService.createJob(jobData, user.id);
+      const createdJob = await JobsService.createJob(jobData, user.$id || user.id);
 
       console.log('Job created successfully:', createdJob);
 
