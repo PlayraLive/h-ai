@@ -52,6 +52,8 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [experienceLevel, setExperienceLevel] = useState('all');
   const [budgetRange, setBudgetRange] = useState([0, 20000]);
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
