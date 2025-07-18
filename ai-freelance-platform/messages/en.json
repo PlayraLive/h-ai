@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "freelancers": "Freelancers",
+    "profile": "Profile",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "AI Freelance Platform",
+    "subtitle": "Connect with AI specialists for design, code, video, and games",
+    "hero": {
+      "title": "Find the best AI freelancers",
+      "subtitle": "Get your projects done by verified AI specialists",
+      "cta": "Get Started",
+      "browse": "Browse Jobs"
+    },
+    "categories": {
+      "title": "AI Services",
+      "design": "AI Design",
+      "code": "AI Development", 
+      "video": "AI Video",
+      "games": "AI Games"
+    }
+  },
+  "jobs": {
+    "title": "Available Jobs",
+    "filter": "Filter",
+    "category": "Category",
+    "budget": "Budget",
+    "duration": "Duration",
+    "posted": "Posted",
+    "proposals": "Proposals",
+    "apply": "Apply Now",
+    "viewDetails": "View Details"
+  },
+  "freelancers": {
+    "title": "AI Freelancers",
+    "skills": "Skills",
+    "rating": "Rating",
+    "hourlyRate": "Hourly Rate",
+    "completedJobs": "Completed Jobs",
+    "contact": "Contact",
+    "viewProfile": "View Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "portfolio": "Portfolio",
+    "reviews": "Reviews",
+    "settings": "Settings"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Login",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign up"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Login"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "next": "Next",
+    "previous": "Previous"
+  }
+}

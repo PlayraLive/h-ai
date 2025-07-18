@@ -1,86 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import { useToast } from '@/components/Toast';
 import { appwriteAuth } from '@/lib/appwrite';
 import { account } from '@/lib/appwrite';
+import { authService } from '@/services/authService';
+import { success, error } from '@/components/Toast';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('user');
-      return savedUser ? JSON.parse(savedUser) : null;
-    }
-    return null;
-  });
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('isAuthenticated') === 'true';
-    }
-    return false;
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  // const { success, error } = useToast();
-  const success = (title: string, message: string) => console.log('SUCCESS:', title, message);
-  const error = (title: string, message: string) => console.error('ERROR:', title, message);
-
-  // Check if user is logged in on mount
+  // Подписываемся на изменения состояния аутентификации
   useEffect(() => {
-    checkAuth();
+    const unsubscribe = authService.subscribe((state) => {
+      setUser(state.user);
+      setIsAuthenticated(state.isAuthenticated);
+      setLoading(state.isLoading);
+      setInitializing(state.isLoading);
+    });
+
+    return unsubscribe;
   }, []);
 
-  // Save user to localStorage when it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('isAuthenticated', 'true');
-    } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-    }
-  }, [user, isAuthenticated]);
-
   const checkAuth = async () => {
+    await authService.checkAuthStatus();
+  };
+
+  const loginWithGoogle = async () => {
     try {
-      console.log('checkAuth: Checking current user...');
-
-      // Проверяем переменные окружения
-      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
-          !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) {
-        console.log('checkAuth: Appwrite not configured');
-        // Если Appwrite не настроен, проверяем localStorage
-        const savedUser = localStorage.getItem('user');
-        const savedAuth = localStorage.getItem('isAuthenticated');
-        if (savedUser && savedAuth === 'true') {
-          setUser(JSON.parse(savedUser));
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-        setLoading(false);
-        setInitializing(false);
-        return;
-      }
-
-      const user = await account.get();
-      console.log('checkAuth: User found:', user);
-
-      setUser(user);
-      setIsAuthenticated(true);
-
-    } catch (err) {
-      console.log('checkAuth: No active session', err);
-      // Очищаем localStorage при ошибке
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      console.log('checkAuth: Setting loading to false');
-      setLoading(false);
-      setInitializing(false);
+      authService.setLoading(true);
+      await appwriteAuth.loginWithGoogle();
+      // OAuth redirect will handle the rest
+    } catch (err: any) {
+      authService.setLoading(false);
+      error('Google login failed', 'Please try again.');
+      throw err;
     }
   };
 
@@ -96,6 +51,8 @@ export function useAuth() {
         return { success: false, error: errorMsg };
       }
 
+      authService.setLoading(true);
+
       console.log('Calling appwriteAuth.login...');
       const result = await appwriteAuth.login(email, password);
       console.log('appwriteAuth.login result:', result);
@@ -108,48 +65,43 @@ export function useAuth() {
         const user = await account.get();
         console.log('User data:', user);
 
-        setUser(user);
-        setIsAuthenticated(true);
+        authService.setAuthenticated(user);
         success('Welcome back!', 'You have successfully logged in.');
         return { success: true, user };
       } else {
         console.error('Login failed:', result.error);
+        authService.setLoading(false);
         error('Login failed', result.error || 'Please check your credentials.');
         return { success: false, error: result.error };
       }
     } catch (err: any) {
       console.error('Login error in hook:', err);
+      authService.setLoading(false);
       error('Login failed', err.message || 'An unexpected error occurred.');
       return { success: false, error: err.message };
     }
   };
 
-  const loginWithGoogle = async () => {
-    try {
-      await appwriteAuth.loginWithGoogle();
-      // OAuth redirect will handle the rest
-    } catch (err: any) {
-      console.error('Google login error:', err);
-      error('Google login failed', 'Please try again.');
-      throw err;
-    }
-  };
+
 
   const register = async (email: string, password: string, name: string, userType: 'freelancer' | 'client' = 'freelancer') => {
     try {
+      authService.setLoading(true);
+
       const result = await appwriteAuth.register(email, password, name);
       if (result.success) {
         // Get user after successful registration
         const user = await account.get();
-        setUser(user);
-        setIsAuthenticated(true);
+        authService.setAuthenticated(user);
         success('Account created!', 'Welcome to AI Freelance Platform!');
         return { success: true, user };
       } else {
+        authService.setLoading(false);
         error('Registration failed', result.error || 'Please try again.');
         return { success: false, error: result.error };
       }
     } catch (err: any) {
+      authService.setLoading(false);
       error('Registration failed', 'An unexpected error occurred.');
       return { success: false, error: err.message };
     }
@@ -158,8 +110,7 @@ export function useAuth() {
   const logout = async () => {
     try {
       await appwriteAuth.logout();
-      setUser(null);
-      setIsAuthenticated(false);
+      authService.clearAuthentication();
       success('Logged out', 'You have been logged out successfully.');
       // Redirect to home
       window.location.href = '/en';
