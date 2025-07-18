@@ -94,14 +94,17 @@ class AuthService {
   async checkAuthStatus(): Promise<void> {
     try {
       console.log('AuthService: Checking auth status...');
-      
+
       // Проверяем переменные окружения
-      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 
+      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
           !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) {
         console.log('AuthService: Appwrite not configured');
         this.updateState({ isLoading: false });
         return;
       }
+
+      // Устанавливаем состояние загрузки
+      this.updateState({ isLoading: true });
 
       const user = await account.get();
       console.log('AuthService: User found:', user);
@@ -116,7 +119,7 @@ class AuthService {
 
     } catch (error) {
       console.log('AuthService: No active session', error);
-      
+
       this.updateState({
         user: null,
         isAuthenticated: false,
@@ -125,6 +128,19 @@ class AuthService {
 
       this.clearStorage();
     }
+  }
+
+  // Принудительная перепроверка (для OAuth колбэков)
+  async forceCheckAuth(): Promise<void> {
+    console.log('AuthService: Force checking auth status...');
+
+    // Очищаем текущее состояние
+    this.updateState({ isLoading: true });
+
+    // Небольшая задержка для OAuth
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    await this.checkAuthStatus();
   }
 
   // Установить состояние после успешного логина

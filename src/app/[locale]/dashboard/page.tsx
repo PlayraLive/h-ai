@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
+import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import {
   TrendingUp,
@@ -29,7 +30,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [filterStatus, setFilterStatus] = useState('all');
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
 
 
@@ -327,12 +328,16 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="min-h-screen bg-gray-950">
+      {/* Top Navigation */}
+      <Navbar />
 
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex">
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-0">
         <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -732,7 +737,8 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+        </div>
+        </div>
       </div>
     </div>
   );

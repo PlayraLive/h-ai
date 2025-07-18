@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import { appwriteAuth } from '@/lib/appwrite';
 import { account } from '@/lib/appwrite';
 import { authService } from '@/services/authService';
-import { success, error } from '@/components/Toast';
+import { useToast } from '@/components/Toast';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [initializing, setInitializing] = useState(true);
+
+  const { success, error } = useToast();
   // Подписываемся на изменения состояния аутентификации
   useEffect(() => {
     const unsubscribe = authService.subscribe((state) => {
