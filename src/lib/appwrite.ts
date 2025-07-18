@@ -1,4 +1,4 @@
-import { Client, Account, Databases, Storage, Functions, ID, Query } from 'appwrite';
+import { Client, Account, Databases, Storage, Functions, ID, Query, OAuthProvider } from 'appwrite';
 
 const client = new Client();
 
@@ -81,13 +81,33 @@ export class AppwriteAuth {
   // Login with Google OAuth
   async loginWithGoogle() {
     try {
-      await account.createOAuth2Session(
-        'google',
-        `${window.location.origin}/en/dashboard`,
-        `${window.location.origin}/en/auth/error`
+      console.log('Starting Google OAuth...');
+      const currentUrl = window.location.origin;
+      const successUrl = `${currentUrl}/en/auth/success`;
+      const failureUrl = `${currentUrl}/en/auth/error`;
+
+      console.log('OAuth URLs:', { successUrl, failureUrl });
+      console.log('OAuthProvider.Google:', OAuthProvider.Google);
+
+      // Проверяем, что account инициализирован
+      console.log('Account client:', account);
+
+      // createOAuth2Session не возвращает Promise, а просто перенаправляет
+      account.createOAuth2Session(
+        OAuthProvider.Google,
+        successUrl,
+        failureUrl,
+        ['openid', 'email', 'profile'] // Добавляем необходимые scopes
       );
+
+      console.log('OAuth redirect initiated');
     } catch (error: any) {
-      console.error('Google login error:', error);
+      console.error('Google OAuth error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        type: error.type,
+        code: error.code
+      });
       throw error;
     }
   }

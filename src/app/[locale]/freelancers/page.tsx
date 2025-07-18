@@ -64,19 +64,19 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
 
   const mockFreelancers: Freelancer[] = [
     {
-      id: '1',
-      name: 'Alex Chen',
-      title: 'AI Design Specialist',
-      avatar: '/api/placeholder/60/60',
+      id: 'freelancer-alex-001',
+      name: 'Alex Rodriguez',
+      title: 'Full-Stack AI Developer',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       rating: 4.9,
-      reviewCount: 127,
-      hourlyRate: 85,
-      completedJobs: 156,
+      reviewCount: 47,
+      hourlyRate: 95,
+      completedJobs: 23,
       responseTime: '1 hour',
       location: 'San Francisco, CA',
-      skills: ['Midjourney', 'DALL-E', 'Stable Diffusion', 'Brand Design', 'UI/UX'],
-      description: 'Expert in AI-powered design with 5+ years of experience. Specialized in creating stunning visuals using cutting-edge AI tools.',
-      languages: ['English', 'Mandarin'],
+      skills: ['React', 'Node.js', 'AI/ML', 'Python', 'TypeScript', 'Next.js'],
+      description: 'Passionate full-stack developer specializing in AI-powered web applications. 5+ years of experience building scalable solutions for startups and enterprises.',
+      languages: ['English', 'Spanish'],
       availability: 'available',
       verified: true,
       topRated: true,
@@ -84,44 +84,44 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
       portfolio: ['/api/placeholder/300/200', '/api/placeholder/300/200']
     },
     {
-      id: '2',
-      name: 'Sarah Johnson',
-      title: 'AI Developer & Automation Expert',
-      avatar: '/api/placeholder/60/60',
+      id: 'freelancer-sarah-002',
+      name: 'Sarah Chen',
+      title: 'AI Artist & Creative Technologist',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
       rating: 4.8,
-      reviewCount: 89,
-      hourlyRate: 95,
-      completedJobs: 134,
+      reviewCount: 32,
+      hourlyRate: 85,
+      completedJobs: 18,
       responseTime: '2 hours',
-      location: 'London, UK',
-      skills: ['OpenAI API', 'Python', 'TensorFlow', 'Machine Learning', 'Automation'],
-      description: 'Full-stack AI developer specializing in chatbots, automation, and machine learning solutions for businesses.',
-      languages: ['English', 'French'],
-      availability: 'busy',
-      verified: true,
-      topRated: false,
-      category: 'ai_development',
-      portfolio: ['/api/placeholder/300/200', '/api/placeholder/300/200']
-    },
-    {
-      id: '3',
-      name: 'Maria Rodriguez',
-      title: 'AI Video Content Creator',
-      avatar: '/api/placeholder/60/60',
-      rating: 4.7,
-      reviewCount: 203,
-      hourlyRate: 75,
-      completedJobs: 298,
-      responseTime: '30 minutes',
-      location: 'Barcelona, Spain',
-      skills: ['Runway ML', 'After Effects', 'Video Editing', 'AI Animation', 'Motion Graphics'],
-      description: 'Creative video specialist using AI tools to produce engaging content for social media and marketing campaigns.',
-      languages: ['Spanish', 'English'],
+      location: 'New York, NY',
+      skills: ['AI Art', 'Python', 'TensorFlow', 'Creative Coding', 'NFTs', 'Stable Diffusion'],
+      description: 'Creative technologist combining art and AI to create stunning digital experiences. Expert in generative art and neural network applications.',
+      languages: ['English', 'Mandarin'],
       availability: 'available',
       verified: true,
       topRated: true,
-      category: 'ai_video',
-      portfolio: ['/api/placeholder/300/200', '/api/placeholder/300/200']
+      category: 'ai_design',
+      portfolio: ['https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=300', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300']
+    },
+    {
+      id: 'freelancer-mike-003',
+      name: 'Mike Johnson',
+      title: 'IoT & Hardware Engineer',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      rating: 4.7,
+      reviewCount: 28,
+      hourlyRate: 80,
+      completedJobs: 15,
+      responseTime: '3 hours',
+      location: 'Austin, TX',
+      skills: ['IoT', 'Arduino', 'React Native', 'Node.js', 'Hardware', 'Smart Home'],
+      description: 'IoT specialist with expertise in smart home systems and industrial automation. Bridging the gap between hardware and software.',
+      languages: ['English'],
+      availability: 'available',
+      verified: true,
+      topRated: false,
+      category: 'ai_development',
+      portfolio: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300', 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300']
     }
   ];
 
@@ -478,13 +478,22 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
 
       {/* Actions */}
       <div className="space-y-3">
-        <Link
-          href={`/en/freelancers/${freelancer.id}`}
-          className="w-full btn-secondary text-center flex items-center justify-center space-x-2"
-        >
-          <Eye className="w-4 h-4" />
-          <span>View Profile</span>
-        </Link>
+        <div className="flex space-x-2">
+          <Link
+            href={`/en/freelancers/${freelancer.id}`}
+            className="flex-1 btn-secondary text-center flex items-center justify-center space-x-2"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Profile</span>
+          </Link>
+          <Link
+            href={`/en/freelancer/${freelancer.id}/portfolio`}
+            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-center flex items-center justify-center space-x-2"
+          >
+            <Award className="w-4 h-4" />
+            <span>Portfolio</span>
+          </Link>
+        </div>
         <div className="flex space-x-2">
           <Link
             href={`/en/messages?freelancer=${freelancer.id}`}

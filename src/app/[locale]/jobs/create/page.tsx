@@ -10,12 +10,6 @@ import {
   Plus,
   X,
   DollarSign,
-  Clock,
-  Users,
-  FileText,
-  Tag,
-  MapPin,
-  Calendar,
   Palette,
   Code,
   Video,
@@ -23,14 +17,13 @@ import {
 } from 'lucide-react';
 
 import { JobService } from '@/services/jobs';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 export default function CreateJobPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -78,14 +71,18 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
     console.log('handleSubmit: user object:', user);
     console.log('handleSubmit: isAuthenticated:', isAuthenticated);
     console.log('handleSubmit: user exists:', user ? 'YES' : 'NO');
+    console.log('handleSubmit: user details:', user ? { name: user.name, email: user.email, id: user.$id } : 'null');
 
     // Проверяем аутентификацию
     if (!isAuthenticated || !user) {
       console.log('User not authenticated, redirecting to login');
+      console.log('Auth state:', { isAuthenticated, user: user ? 'exists' : 'null' });
       alert('Please log in to post a job');
       router.push('/en/login');
       return;
     }
+
+    // Убираем проверку на mock пользователя - всегда пытаемся создать реальную запись
 
     // Проверяем наличие переменных окружения Appwrite
     if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
@@ -93,44 +90,33 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
         !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
       console.warn('Appwrite not configured, simulating job creation');
       alert('Job created successfully! (Demo mode - Appwrite not configured)');
-      router.push('/en/jobs');
+      router.push(`/${locale}/jobs`);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Prepare job data
+      // Prepare job data according to JobFormData interface
       const jobData = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        subcategory: formData.subcategory,
         skills: formData.skills,
         budgetType: formData.budgetType as 'fixed' | 'hourly',
-        budgetMin: parseInt(formData.budgetMin) || 0,
-        budgetMax: parseInt(formData.budgetMax) || 0,
-        currency: 'USD',
+        budgetMin: formData.budgetMin,
+        budgetMax: formData.budgetMax,
         duration: formData.duration,
-        experienceLevel: formData.experienceLevel as 'entry' | 'intermediate' | 'expert',
-        location: formData.location,
-        clientId: user.$id || user.id,
-        clientName: user.name || user.email,
-        clientCompany: user.company || '',
-        clientAvatar: user.avatar || '',
-        featured: false,
-        urgent: false,
-        deadline: formData.deadline || undefined,
-        attachments: [], // TODO: Handle file uploads
-        tags: formData.skills // Use skills as tags for now
+        experienceLevel: formData.experienceLevel as 'beginner' | 'intermediate' | 'expert',
+        attachments: formData.attachments
       };
 
       // Create job in database
       const jobService = new JobService();
-      const result = await jobService.createJob(jobData, user.$id || user.id);
+      const result = await jobService.createJob(jobData, user.$id);
 
-      if (!result.success) {
-        alert('Failed to create job: ' + result.error);
+      if (!result.success || !result.job) {
+        alert('Failed to create job: ' + (result.error || 'Unknown error'));
         return;
       }
 
@@ -284,7 +270,7 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
                       type="text"
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                       className="input-field flex-1"
                       placeholder="e.g., Midjourney, DALL-E, Python..."
                     />
@@ -490,8 +476,8 @@ export default function CreateJobPage({ params: { locale } }: { params: { locale
               <Link href={`/${locale}/jobs`} className="btn-secondary">
                 Cancel
               </Link>
-              <button type="submit" className="btn-primary">
-                Post Job
+              <button type="submit" disabled={isSubmitting} className="btn-primary">
+                {isSubmitting ? 'Creating Job...' : 'Post Job'}
               </button>
             </div>
           </form>

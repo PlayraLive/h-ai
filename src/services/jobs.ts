@@ -6,6 +6,23 @@ export class JobService {
   // Create new job
   async createJob(jobData: JobFormData, clientId: string) {
     try {
+      // Get client information
+      let clientName = 'Anonymous Client';
+      let clientAvatar = null;
+
+      try {
+        // Try to get client info from users collection
+        const clientDoc = await databases.getDocument(
+          DATABASE_ID,
+          process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+          clientId
+        );
+        clientName = clientDoc.name || 'Anonymous Client';
+        clientAvatar = clientDoc.avatar || null;
+      } catch (error) {
+        console.warn('Could not fetch client info, using defaults');
+      }
+
       const job = await databases.createDocument(
         DATABASE_ID,
         JOBS_COLLECTION_ID,
@@ -13,17 +30,24 @@ export class JobService {
         {
           ...jobData,
           clientId,
-          status: 'open',
-          proposals: 0,
+          clientName,
+          clientAvatar: clientAvatar || null,
+          status: 'active',
+          applicationsCount: 0,
+          viewsCount: 0,
           featured: false,
+          urgent: false,
+          currency: 'USD',
+          location: 'Remote',
           budgetMin: parseFloat(jobData.budgetMin),
           budgetMax: parseFloat(jobData.budgetMax),
-          attachments: [] // Handle file uploads separately
+          attachments: jobData.attachments || []
         }
       );
-      
+
       return { success: true, job: job as Job };
     } catch (error: any) {
+      console.error('Error creating job:', error);
       return { success: false, error: error.message };
     }
   }

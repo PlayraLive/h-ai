@@ -2,37 +2,54 @@
 
 import { useEffect } from 'react';
 import { authService } from '@/services/authService';
+import { account } from '@/lib/appwrite';
+import { MockAuthManager } from '@/utils/mockAuth';
 
 export default function AuthCallback() {
   useEffect(() => {
-    // Проверяем аутентификацию после OAuth редиректа
-    const checkAuthAfterOAuth = async () => {
-      console.log('OAuth redirect detected, force checking auth status...');
+    const checkAuth = async () => {
+      try {
+        console.log('AuthCallback: Checking for active session...');
 
-      // Принудительно проверяем состояние аутентификации
-      await authService.forceCheckAuth();
+        // Сначала проверяем, есть ли mock сессия
+        if (MockAuthManager.isMockSession()) {
+          console.log('AuthCallback: Mock session detected, skipping Appwrite check');
+          return; // Не проверяем Appwrite для mock пользователей
+        }
+
+        // Проверяем есть ли активная сессия в Appwrite только для реальных пользователей
+        const user = await account.get();
+        console.log('AuthCallback: Found active session:', user);
+
+        // Принудительно обновляем состояние
+        authService.setAuthenticated(user);
+        console.log('AuthCallback: State updated with user data');
+
+      } catch (error) {
+        console.log('AuthCallback: No active session found');
+
+        // Проверяем, есть ли mock сессия перед очисткой
+        if (MockAuthManager.isMockSession()) {
+          console.log('AuthCallback: Preserving mock user session');
+          return; // Не очищаем состояние для mock пользователей
+        }
+
+        // Очищаем состояние только если нет mock пользователя
+        authService.clearAuthentication();
+      }
     };
 
-    // Проверяем если мы пришли с OAuth редиректа
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasOAuthParams = urlParams.has('code') || urlParams.has('state') ||
-                          window.location.hash.includes('access_token') ||
-                          document.referrer.includes('appwrite') ||
-                          window.location.pathname.includes('auth');
+    // Проверяем сразу при загрузке
+    checkAuth();
 
-    if (hasOAuthParams) {
-      checkAuthAfterOAuth();
-    }
+    // Также проверяем через небольшую задержку (для OAuth)
+    const timeoutId = setTimeout(() => {
+      console.log('AuthCallback: Delayed check for OAuth...');
+      checkAuth();
+    }, 1500);
 
-    // Также проверяем при каждой загрузке страницы
-    // на случай если пользователь уже залогинен
-    const checkOnLoad = async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await authService.checkAuthStatus();
-    };
-
-    checkOnLoad();
+    return () => clearTimeout(timeoutId);
   }, []);
 
-  return null; // Этот компонент не рендерит ничего
+  return null;
 }

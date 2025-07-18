@@ -470,19 +470,28 @@ We value creativity, attention to detail, and professional communication. Please
               <div className="space-y-6">
                 {/* Apply Section */}
                 <div className="glass-card p-6 rounded-2xl">
-                  <button
-                    onClick={handleApply}
-                    disabled={hasApplied || !user}
-                    className={`w-full text-lg py-4 mb-4 transition-colors ${
-                      hasApplied
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed'
-                        : !user
-                        ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed'
-                        : 'btn-primary'
-                    }`}
-                  >
-                    {hasApplied ? 'Application Submitted' : !user ? 'Login to Apply' : 'Apply for this Job'}
-                  </button>
+                  {hasApplied ? (
+                    <button
+                      disabled
+                      className="w-full text-lg py-4 mb-4 bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed transition-colors"
+                    >
+                      ✓ Application Submitted
+                    </button>
+                  ) : !user ? (
+                    <Link
+                      href="/en/auth/login"
+                      className="w-full text-lg py-4 mb-4 bg-gray-500/20 text-gray-400 border border-gray-500/30 text-center block transition-colors hover:bg-gray-500/30"
+                    >
+                      Login to Apply
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/en/jobs/${job?.id}/apply`}
+                      className="w-full text-lg py-4 mb-4 btn-primary text-center block"
+                    >
+                      Apply for this Job
+                    </Link>
+                  )}
                   <Link
                     href={`/en/messages?job=${job.id}`}
                     className="w-full btn-secondary text-center block py-3"

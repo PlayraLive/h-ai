@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
-    "@stripe/stripe-js": "^7.4.0",
+    "@heroicons/react": "^2.2.0",
+    "@stripe/stripe-js": "^7.5.0",
     "appwrite": "^18.1.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

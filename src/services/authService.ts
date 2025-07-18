@@ -25,16 +25,28 @@ class AuthService {
     if (typeof window === 'undefined') return;
 
     try {
+      console.log('AuthService: Initializing from storage...');
       const savedUser = localStorage.getItem('user');
       const savedAuth = localStorage.getItem('isAuthenticated');
-      
+
+      console.log('AuthService: Saved user:', savedUser ? 'exists' : 'null');
+      console.log('AuthService: Saved auth:', savedAuth);
+
       if (savedUser && savedAuth === 'true') {
+        const user = JSON.parse(savedUser);
+        console.log('AuthService: Restoring user:', user.name);
+
+        // Проверяем, является ли это mock сессией
+        const isMockSession = localStorage.getItem('mockSession') === 'true' && user.$id === 'mock-user-id';
+
         this.state = {
-          user: JSON.parse(savedUser),
+          user,
           isAuthenticated: true,
-          isLoading: true // Все еще проверяем с сервером
+          isLoading: !isMockSession // Для mock пользователей не показываем загрузку
         };
         this.notifyListeners();
+      } else {
+        console.log('AuthService: No saved user found');
       }
     } catch (error) {
       console.error('Error loading auth state from localStorage:', error);
@@ -95,7 +107,54 @@ class AuthService {
     try {
       console.log('AuthService: Checking auth status...');
 
-      // Проверяем переменные окружения
+      // Проверяем сохраненного пользователя
+      const savedUser = localStorage.getItem('user');
+      const savedAuth = localStorage.getItem('isAuthenticated');
+
+      if (savedUser && savedAuth === 'true') {
+        try {
+          const user = JSON.parse(savedUser);
+          console.log('AuthService: Found saved user, trying to verify with Appwrite...');
+
+          // Пытаемся проверить сессию с Appwrite
+          try {
+            const { account } = await import('@/lib/appwrite');
+            const appwriteUser = await account.get();
+            console.log('AuthService: Appwrite session verified');
+
+            // Обновляем сохраненные данные если нужно
+            if (appwriteUser.$id !== user.$id) {
+              localStorage.setItem('user', JSON.stringify(appwriteUser));
+              this.updateState({
+                user: appwriteUser,
+                isAuthenticated: true,
+                isLoading: false
+              });
+            } else {
+              this.updateState({
+                user,
+                isAuthenticated: true,
+                isLoading: false
+              });
+            }
+            return;
+          } catch (appwriteError) {
+            console.log('AuthService: No active Appwrite session, using saved user');
+            // Если нет активной сессии в Appwrite, но есть сохраненный пользователь
+            // Возможно это mock пользователь или сессия истекла
+            this.updateState({
+              user,
+              isAuthenticated: true,
+              isLoading: false
+            });
+            return;
+          }
+        } catch (parseError) {
+          console.error('AuthService: Error parsing saved user:', parseError);
+        }
+      }
+
+      // Проверяем переменные окружения только для реальных пользователей
       if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
           !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) {
         console.log('AuthService: Appwrite not configured');
@@ -103,30 +162,21 @@ class AuthService {
         return;
       }
 
-      // Устанавливаем состояние загрузки
-      this.updateState({ isLoading: true });
-
-      const user = await account.get();
-      console.log('AuthService: User found:', user);
-
-      this.updateState({
-        user,
-        isAuthenticated: true,
-        isLoading: false
-      });
-
-      this.saveToStorage(user, true);
-
-    } catch (error) {
-      console.log('AuthService: No active session', error);
-
+      // Если нет сохраненного пользователя, просто завершаем загрузку
+      console.log('AuthService: No saved user, staying logged out');
       this.updateState({
         user: null,
         isAuthenticated: false,
         isLoading: false
       });
 
-      this.clearStorage();
+    } catch (error) {
+      console.log('AuthService: Error in checkAuthStatus', error);
+
+      // Не сбрасываем состояние, если есть ошибка - возможно пользователь уже авторизован
+      this.updateState({
+        isLoading: false
+      });
     }
   }
 

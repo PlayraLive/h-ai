@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
-import Navbar from '@/components/Navbar';
+// import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import PortfolioGrid from '@/components/portfolio/PortfolioGrid';
+import AddPortfolioForm from '@/components/portfolio/AddPortfolioForm';
+import UserLevelCard from '@/components/gamification/UserLevelCard';
+import AchievementsGrid from '@/components/gamification/AchievementsGrid';
+import SimplePortfolioTest from '@/components/portfolio/SimplePortfolioTest';
 import {
   TrendingUp,
   DollarSign,
@@ -30,24 +35,84 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [filterStatus, setFilterStatus] = useState('all');
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
+  const [showAddPortfolio, setShowAddPortfolio] = useState(false);
+
+  // Mock gamification data - replace with real data from API
+  const userStats = {
+    portfolioItems: 5,
+    totalViews: 1250,
+    totalLikes: 89,
+    averageRating: 4.7,
+    featuredItems: 2,
+    nftItems: 0,
+    streakDays: 12,
+    followers: 34,
+    following: 18,
+    commentsReceived: 23,
+    sharesReceived: 15,
+    joinedDate: '2024-01-15T00:00:00Z'
+  };
+
+  const totalPoints = 485; // Calculate based on achievements
+  const unlockedAchievements = [
+    'first_portfolio',
+    'first_thousand',
+    'liked_creator',
+    'featured_debut',
+    'consistent_creator'
+  ];
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
 
-
-
-  // Debug logging
+  // Debug: log auth state
   useEffect(() => {
-    console.log('Dashboard auth state:', { user, isAuthenticated, isLoading });
+    console.log('Dashboard auth state:', {
+      user: user ? { name: user.name, email: user.email, id: user.$id } : null,
+      isAuthenticated,
+      isLoading
+    });
   }, [user, isAuthenticated, isLoading]);
 
+  // Проверка аутентификации
   useEffect(() => {
-    console.log('Dashboard useEffect triggered:', { isLoading, isAuthenticated });
-    // Temporarily disable strict auth check to test
-    // if (!isLoading && !isAuthenticated) {
-    //   console.log('Redirecting to login...');
-    //   router.push('/en/login');
-    // }
+    const checkAuth = async () => {
+      // Проверяем, есть ли mock сессия
+      const mockSession = localStorage.getItem('mockSession');
+      const savedUser = localStorage.getItem('user');
+
+      if (mockSession === 'true' && savedUser) {
+        console.log('Dashboard: Mock session detected, skipping Appwrite check');
+        return; // Не проверяем Appwrite для mock пользователей
+      }
+
+      // Для реальных пользователей проверяем Appwrite
+      try {
+        const { account } = await import('@/lib/appwrite');
+        const { authService } = await import('@/services/authService');
+
+        const user = await account.get();
+        authService.setAuthenticated(user);
+
+        if (!isAuthenticated) {
+          setTimeout(() => window.location.reload(), 500);
+        }
+      } catch (error: any) {
+        console.log('Dashboard: No Appwrite session, checking auth context...');
+
+        // Даем время для инициализации контекста
+        setTimeout(() => {
+          if (!isLoading && !isAuthenticated) {
+            console.log('Dashboard: Redirecting to login');
+            router.push('/en/login');
+          }
+        }, 1000);
+      }
+    };
+
+    checkAuth();
   }, [isAuthenticated, isLoading, router]);
+
+
 
   if (isLoading) {
     return (
@@ -55,6 +120,23 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Проверяем аутентификацию после загрузки
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Please log in to access the dashboard</p>
+          <button
+            onClick={() => router.push('/en/login')}
+            className="btn-primary"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -320,7 +402,14 @@ export default function DashboardPage() {
     ? recentProjects 
     : recentProjects.filter(project => project.status === filterStatus);
 
-  const tabs = [
+  const tabs = userType === 'freelancer' ? [
+    { id: 'overview', label: 'Overview' },
+    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'test', label: 'Test' },
+    { id: 'achievements', label: 'Achievements' },
+    { id: 'earnings', label: 'Earnings' },
+    { id: 'analytics', label: 'Analytics' }
+  ] : [
     { id: 'overview', label: 'Overview' },
     { id: 'projects', label: 'Projects' },
     { id: 'earnings', label: 'Earnings' },
@@ -329,8 +418,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Top Navigation */}
-      <Navbar />
+      {/* Top Navigation отключена */}
+      {/* <Navbar /> */}
 
       <div className="flex">
         {/* Sidebar */}
@@ -419,6 +508,16 @@ export default function DashboardPage() {
             })}
           </div>
 
+          {/* User Level Card for Freelancers */}
+          {userType === 'freelancer' && (
+            <div className="mb-8">
+              <UserLevelCard
+                userStats={userStats}
+                totalPoints={totalPoints}
+              />
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="border-b border-gray-800 mb-8">
             <div className="flex space-x-8">
@@ -446,10 +545,15 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <div className="glass-card p-6 rounded-2xl">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white">Recent Projects</h3>
-                    <Link href="/en/projects" className="text-purple-400 hover:text-purple-300 transition-colors">
+                    <h3 className="text-xl font-semibold text-white">
+                      {userType === 'freelancer' ? 'Recent Portfolio' : 'Recent Projects'}
+                    </h3>
+                    <button
+                      onClick={() => setActiveTab(userType === 'freelancer' ? 'portfolio' : 'projects')}
+                      className="text-purple-400 hover:text-purple-300 transition-colors"
+                    >
                       View All
-                    </Link>
+                    </button>
                   </div>
                   
                   <div className="space-y-4">
@@ -561,9 +665,12 @@ export default function DashboardPage() {
                         <Link href="/en/jobs" className="block w-full btn-secondary text-center">
                           🔍 Find Jobs
                         </Link>
-                        <Link href="/en/projects" className="block w-full btn-secondary text-center">
-                          📋 My Projects
-                        </Link>
+                        <button
+                          onClick={() => setActiveTab('portfolio')}
+                          className="block w-full btn-secondary text-center"
+                        >
+                          🎨 My Portfolio
+                        </button>
                         <Link href="/en/reviews" className="block w-full btn-secondary text-center">
                           ⭐ Reviews
                         </Link>
@@ -714,6 +821,78 @@ export default function DashboardPage() {
                   </table>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'portfolio' && userType === 'freelancer' && (
+            <div>
+              {showAddPortfolio ? (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">Add to Portfolio</h2>
+                    <button
+                      onClick={() => setShowAddPortfolio(false)}
+                      className="btn-secondary"
+                    >
+                      ← Back to Portfolio
+                    </button>
+                  </div>
+                  <AddPortfolioForm
+                    onSubmit={async (data) => {
+                      console.log('Portfolio data:', data);
+                      // TODO: Save to database
+                      setShowAddPortfolio(false);
+                    }}
+                    onCancel={() => setShowAddPortfolio(false)}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">My Portfolio</h2>
+                    <button
+                      onClick={() => setShowAddPortfolio(true)}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Project</span>
+                    </button>
+                  </div>
+
+                  <div className="bg-gray-900/50 rounded-2xl p-6">
+                    {/* Debug info */}
+                    <div className="mb-4 p-3 bg-gray-800 rounded-lg text-sm text-gray-300">
+                      <strong>Debug:</strong> Current user ID: {user?.$id || 'Not logged in'}
+                    </div>
+
+                    <PortfolioGrid
+                      userId={user?.$id}
+                      showFilters={false}
+                      showSearch={false}
+                      title=""
+                      subtitle=""
+                      limit={12}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'achievements' && userType === 'freelancer' && (
+            <div className="space-y-8">
+              <div className="glass-card p-6 rounded-2xl">
+                <AchievementsGrid
+                  userStats={userStats}
+                  unlockedAchievements={unlockedAchievements}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'test' && userType === 'freelancer' && (
+            <div className="space-y-8">
+              <SimplePortfolioTest />
             </div>
           )}
 
