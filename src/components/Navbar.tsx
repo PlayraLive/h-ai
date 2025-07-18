@@ -16,22 +16,23 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { useAuth } from '@/hooks/useAuth';
-import UserAvatar from '@/components/UserAvatar';
-import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { useAuthContext } from '@/contexts/AuthContext';
+import UserMenu from '@/components/UserMenu';
+import AuthButtons from '@/components/AuthButtons';
+import UserAvatarSkeleton from '@/components/UserAvatarSkeleton';
 
 
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+
 
 
   const pathname = usePathname();
   const locale = 'en';
 
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, initializing, logout } = useAuthContext();
 
 
 
@@ -59,7 +60,7 @@ export default function Navbar() {
 
   const handleLogin = async () => {
     // Redirect to login page
-    window.location.href = '/en/login';
+    window.location.href = `/${locale}/login`;
   };
 
   const handleLogout = async () => {
@@ -123,75 +124,13 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* User Avatar - показываем если залогинен */}
-            {isAuthenticated && user ? (
-              <div className="flex items-center space-x-3">
-                <NotificationDropdown userId={user.$id} />
-
-                {/* User Avatar with Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-800/50 transition-colors"
-                  >
-                    <UserAvatar
-                      src={user.avatar}
-                      alt={user.name || user.email}
-                      size="sm"
-                      fallbackText={user.name || user.email}
-                    />
-                    <span className="text-sm text-gray-300 hidden lg:block">
-                      {user.name || user.email}
-                    </span>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 glass-card border border-white/10 rounded-lg shadow-lg z-50">
-                      <Link
-                        href={`/${locale}/dashboard`}
-                        className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <User className="w-4 h-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                      <Link
-                        href={`/${locale}/settings`}
-                        className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <User className="w-4 h-4" />
-                        <span>Settings</span>
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setShowUserMenu(false);
-                        }}
-                        className="flex items-center space-x-2 w-full px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Auth State */}
+            {initializing ? (
+              <UserAvatarSkeleton />
+            ) : isAuthenticated && user ? (
+              <UserMenu locale={locale} />
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  href={`/${locale}/login`}
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  {t('login')}
-                </Link>
-                <Link
-                  href={`/${locale}/signup`}
-                  className="btn-primary"
-                >
-                  {t('signup')}
-                </Link>
-              </div>
+              <AuthButtons locale={locale} />
             )}
 
             {/* Language Switcher */}
@@ -222,33 +161,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {isAuthenticated ? (
-              <>
-                {/* Post Job Button */}
-                <Link href={`/${locale}/jobs/create`} className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post Job
-                </Link>
 
-                {/* Profile Avatar - Direct link to Dashboard */}
-                <Link
-                  href={`/${locale}/dashboard`}
-                  className="flex items-center space-x-2 p-1 rounded-full hover:bg-white/10 transition-all duration-200 group"
-                  title="Go to Dashboard"
-                >
-                  <UserAvatar
-                    src={user?.avatar}
-                    alt={user?.name}
-                    size="md"
-                    fallbackText={user?.name}
-                    className="ring-2 ring-transparent group-hover:ring-purple-500/50 transition-all duration-200"
-                  />
-                  <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
-                    Dashboard
-                  </span>
-                </Link>
-              </>
-            ) : null}
           </div>
 
           {/* Mobile menu button */}
@@ -285,8 +198,31 @@ export default function Navbar() {
               })}
             </div>
 
-            {isAuthenticated ? (
+            {/* Mobile Auth State */}
+            {initializing ? (
+              <div className="mt-4 pt-4 border-t border-white/10 px-4">
+                <div className="animate-pulse">
+                  <div className="h-10 bg-gray-700 rounded-lg mb-3"></div>
+                  <div className="h-10 bg-gray-700 rounded-lg"></div>
+                </div>
+              </div>
+            ) : isAuthenticated ? (
               <div className="mt-4 pt-4 border-t border-white/10 space-y-2 px-4">
+                {/* User Info */}
+                <div className="flex items-center space-x-3 px-4 py-3 mb-2">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                    {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {user?.name || user?.email}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+
                 <Link
                   href={`/${locale}/jobs/create`}
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"

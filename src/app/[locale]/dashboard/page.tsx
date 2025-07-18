@@ -5,21 +5,25 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Briefcase, 
+import {
+  TrendingUp,
+  DollarSign,
+  Briefcase,
   Star,
+  Calendar,
+  Clock,
   Users,
   MessageCircle,
   Plus,
+  Filter,
   Eye,
   Edit,
   CheckCircle,
   AlertCircle,
   XCircle
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+// Navbar removed - using Sidebar instead
+import { cn, formatCurrency, formatRelativeTime } from '@/lib/utils';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -27,6 +31,8 @@ export default function DashboardPage() {
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+
+
 
   // Debug logging
   useEffect(() => {
@@ -56,14 +62,24 @@ export default function DashboardPage() {
   // Safe formatting functions
   const safeCurrency = (amount: number) => {
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
+      return formatCurrency(amount);
     } catch (e) {
       return `$${amount}`;
     }
   };
+
+  const safeRelativeTime = (date: string) => {
+    try {
+      return formatRelativeTime(date);
+    } catch (e) {
+      return new Date(date).toLocaleDateString();
+    }
+  };
+
+  // Temporarily disable auth check
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   // Dynamic data based on user type
   const freelancerStats = [
@@ -138,10 +154,183 @@ export default function DashboardPage() {
 
   const stats = userType === 'freelancer' ? freelancerStats : clientStats;
 
+  // Dynamic projects data
+  const freelancerProjects = [
+    {
+      id: '1',
+      title: 'AI Logo Design for TechCorp',
+      client: 'Sarah Johnson',
+      status: 'in_progress',
+      budget: 1500,
+      deadline: '2024-01-20',
+      progress: 75,
+      lastUpdate: '2024-01-15T10:00:00Z',
+      messages: 3
+    },
+    {
+      id: '2',
+      title: 'Chatbot Development',
+      client: 'Mike Davis',
+      status: 'review',
+      budget: 3000,
+      deadline: '2024-01-18',
+      progress: 90,
+      lastUpdate: '2024-01-14T15:30:00Z',
+      messages: 1
+    },
+    {
+      id: '3',
+      title: 'AI Video Content Creation',
+      client: 'Emma Wilson',
+      status: 'completed',
+      budget: 2000,
+      deadline: '2024-01-15',
+      progress: 100,
+      lastUpdate: '2024-01-15T09:00:00Z',
+      messages: 0
+    },
+    {
+      id: '4',
+      title: 'Game Character Design',
+      client: 'Alex Rodriguez',
+      status: 'pending',
+      budget: 2500,
+      deadline: '2024-01-25',
+      progress: 0,
+      lastUpdate: '2024-01-13T14:00:00Z',
+      messages: 2
+    }
+  ];
+
+  const clientProjects = [
+    {
+      id: '1',
+      title: 'E-commerce Website Development',
+      freelancer: 'Alex Chen',
+      status: 'in_progress',
+      budget: 5000,
+      deadline: '2024-02-01',
+      progress: 60,
+      lastUpdate: '2024-01-15T10:00:00Z',
+      messages: 5
+    },
+    {
+      id: '2',
+      title: 'Mobile App UI/UX Design',
+      freelancer: 'Maria Rodriguez',
+      status: 'review',
+      budget: 2500,
+      deadline: '2024-01-22',
+      progress: 85,
+      lastUpdate: '2024-01-14T15:30:00Z',
+      messages: 2
+    },
+    {
+      id: '3',
+      title: 'AI Chatbot Integration',
+      freelancer: 'David Kim',
+      status: 'completed',
+      budget: 3500,
+      deadline: '2024-01-10',
+      progress: 100,
+      lastUpdate: '2024-01-10T09:00:00Z',
+      messages: 0
+    },
+    {
+      id: '4',
+      title: 'Content Writing for Blog',
+      freelancer: 'Sarah Wilson',
+      status: 'pending',
+      budget: 800,
+      deadline: '2024-01-30',
+      progress: 0,
+      lastUpdate: '2024-01-12T14:00:00Z',
+      messages: 1
+    }
+  ];
+
+  const recentProjects = userType === 'freelancer' ? freelancerProjects : clientProjects;
+
+  const upcomingDeadlines = [
+    {
+      project: 'AI Logo Design for TechCorp',
+      deadline: '2024-01-20',
+      daysLeft: 5,
+      priority: 'high'
+    },
+    {
+      project: 'Chatbot Development',
+      deadline: '2024-01-18',
+      daysLeft: 3,
+      priority: 'urgent'
+    },
+    {
+      project: 'Game Character Design',
+      deadline: '2024-01-25',
+      daysLeft: 10,
+      priority: 'medium'
+    }
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'in_progress':
+        return <Clock className="w-4 h-4 text-blue-400" />;
+      case 'review':
+        return <Eye className="w-4 h-4 text-yellow-400" />;
+      case 'pending':
+        return <AlertCircle className="w-4 h-4 text-orange-400" />;
+      default:
+        return <XCircle className="w-4 h-4 text-red-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-500/20 text-green-400';
+      case 'in_progress':
+        return 'bg-blue-500/20 text-blue-400';
+      case 'review':
+        return 'bg-yellow-500/20 text-yellow-400';
+      case 'pending':
+        return 'bg-orange-500/20 text-orange-400';
+      default:
+        return 'bg-red-500/20 text-red-400';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'text-red-400';
+      case 'high':
+        return 'text-orange-400';
+      case 'medium':
+        return 'text-yellow-400';
+      default:
+        return 'text-green-400';
+    }
+  };
+
+  const filteredProjects = filterStatus === 'all' 
+    ? recentProjects 
+    : recentProjects.filter(project => project.status === filterStatus);
+
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'earnings', label: 'Earnings' },
+    { id: 'analytics', label: 'Analytics' }
+  ];
+
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="min-h-screen bg-gray-950 flex">
+      {/* Sidebar */}
       <Sidebar />
-      
+
       {/* Main Content */}
       <div className="flex-1 lg:ml-0">
         <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -153,8 +342,8 @@ export default function DashboardPage() {
                 {userType === 'freelancer' ? 'Freelancer Dashboard' : 'Client Dashboard'}
               </h1>
               <p className="text-gray-400">
-                {userType === 'freelancer' 
-                  ? "Manage your projects and find new opportunities" 
+                {userType === 'freelancer'
+                  ? "Manage your projects and find new opportunities"
                   : "Post jobs and manage your hired freelancers"
                 }
               </p>
@@ -211,81 +400,339 @@ export default function DashboardPage() {
                     <div className={`w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center ${stat.color}`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-sm font-medium ${
+                    <span className={cn(
+                      "text-sm font-medium",
                       stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    )}>
                       {stat.change}
                     </span>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
-                    <p className="text-sm text-gray-400">{stat.label}</p>
-                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-sm text-gray-400">{stat.label}</div>
                 </div>
               );
             })}
           </div>
 
-          {/* Quick Actions */}
-          <div className="glass-card p-6 rounded-2xl mb-8">
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {userType === 'client' ? (
-                <>
-                  <Link href="/en/jobs/create" className="btn-secondary text-center">
-                    📝 Post New Job
-                  </Link>
-                  <Link href="/en/freelancers" className="btn-secondary text-center">
-                    👥 Find Freelancers
-                  </Link>
-                  <Link href="/en/messages" className="btn-secondary text-center">
-                    💬 Messages
-                  </Link>
-                  <Link href="/en/profile/edit" className="btn-secondary text-center">
-                    ⚙️ Edit Profile
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/en/jobs" className="btn-secondary text-center">
-                    🔍 Find Jobs
-                  </Link>
-                  <Link href="/en/proposals" className="btn-secondary text-center">
-                    📋 My Proposals
-                  </Link>
-                  <Link href="/en/messages" className="btn-secondary text-center">
-                    💬 Messages
-                  </Link>
-                  <Link href="/en/profile/edit" className="btn-secondary text-center">
-                    ⚙️ Edit Profile
-                  </Link>
-                </>
-              )}
+          {/* Tabs */}
+          <div className="border-b border-gray-800 mb-8">
+            <div className="flex space-x-8">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "py-4 border-b-2 transition-colors",
+                    activeTab === tab.id
+                      ? "border-purple-500 text-purple-400"
+                      : "border-transparent text-gray-400 hover:text-white"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Welcome Message */}
-          <div className="glass-card p-8 rounded-2xl text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Welcome to your {userType} dashboard!
-            </h2>
-            <p className="text-gray-400 mb-6">
-              {userType === 'freelancer' 
-                ? "Start browsing available jobs or manage your current projects."
-                : "Post your first job or browse our talented freelancers."
-              }
-            </p>
-            <div className="flex justify-center space-x-4">
-              <Link href="/en/jobs" className="btn-primary">
-                {userType === 'freelancer' ? 'Browse Jobs' : 'Post a Job'}
-              </Link>
-              <Link href="/en/profile" className="btn-secondary">
-                View Profile
-              </Link>
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Recent Projects */}
+              <div className="lg:col-span-2">
+                <div className="glass-card p-6 rounded-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-white">Recent Projects</h3>
+                    <Link href="/en/projects" className="text-purple-400 hover:text-purple-300 transition-colors">
+                      View All
+                    </Link>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {recentProjects.slice(0, 4).map((project) => (
+                      <div key={project.id} className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl">
+                        <div className="flex items-center space-x-4">
+                          {getStatusIcon(project.status)}
+                          <div>
+                            <h4 className="text-white font-medium">{project.title}</h4>
+                            <p className="text-sm text-gray-400">
+                              {userType === 'freelancer'
+                                ? `Client: ${(project as any).client}`
+                                : `Freelancer: ${(project as any).freelancer}`
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right">
+                            <div className="text-white font-medium">{safeCurrency(project.budget)}</div>
+                            <div className="text-sm text-gray-400">
+                              Due {safeRelativeTime(project.deadline)}
+                            </div>
+                          </div>
+                          
+                          {project.messages > 0 && (
+                            <Link
+                              href={`/en/messages?project=${project.id}`}
+                              className="flex items-center space-x-1 text-purple-400 hover:text-purple-300 transition-colors"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span className="text-sm">{project.messages}</span>
+                            </Link>
+                          )}
+
+                          <div className="flex items-center space-x-2">
+                            <Link
+                              href={`/en/projects/${project.id}`}
+                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                              title="View Project"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={`/en/messages?project=${project.id}`}
+                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                              title="Message"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Upcoming Deadlines */}
+                <div className="glass-card p-6 rounded-2xl">
+                  <h3 className="text-lg font-semibold text-white mb-4">Upcoming Deadlines</h3>
+                  <div className="space-y-3">
+                    {upcomingDeadlines.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white text-sm font-medium">{item.project}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(item.deadline).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          getPriorityColor(item.priority)
+                        )}>
+                          {item.daysLeft}d
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="glass-card p-6 rounded-2xl">
+                  <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                  <div className="space-y-3">
+                    {userType === 'client' ? (
+                      <>
+                        <Link href="/en/jobs/create" className="block w-full btn-secondary text-center">
+                          📝 Post New Job
+                        </Link>
+                        <Link href="/en/freelancers" className="block w-full btn-secondary text-center">
+                          👥 Find Freelancers
+                        </Link>
+                        <Link href="/en/payments" className="block w-full btn-secondary text-center">
+                          💳 Payments
+                        </Link>
+                        <Link href="/en/messages" className="block w-full btn-secondary text-center">
+                          💬 Messages
+                        </Link>
+                        <Link href="/en/settings" className="block w-full btn-secondary text-center">
+                          ⚙️ Settings
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/en/jobs" className="block w-full btn-secondary text-center">
+                          🔍 Find Jobs
+                        </Link>
+                        <Link href="/en/projects" className="block w-full btn-secondary text-center">
+                          📋 My Projects
+                        </Link>
+                        <Link href="/en/reviews" className="block w-full btn-secondary text-center">
+                          ⭐ Reviews
+                        </Link>
+                        <Link href="/en/payments" className="block w-full btn-secondary text-center">
+                          💳 Payments
+                        </Link>
+                        <Link href="/en/messages" className="block w-full btn-secondary text-center">
+                          💬 Messages
+                        </Link>
+                        <Link href="/en/settings" className="block w-full btn-secondary text-center">
+                          ⚙️ Settings
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="glass-card p-6 rounded-2xl">
+                  <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-gray-300">Project completed</span>
+                      <span className="text-gray-500">2h ago</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span className="text-gray-300">New message received</span>
+                      <span className="text-gray-500">4h ago</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <span className="text-gray-300">Payment received</span>
+                      <span className="text-gray-500">1d ago</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'projects' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">All Projects</h2>
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="review">In Review</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="glass-card rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Project</th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
+                          {userType === 'freelancer' ? 'Client' : 'Freelancer'}
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Budget</th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Deadline</th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Progress</th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {filteredProjects.map((project) => (
+                        <tr key={project.id} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="text-white font-medium">{project.title}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-300">
+                              {userType === 'freelancer'
+                                ? (project as any).client
+                                : (project as any).freelancer
+                              }
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={cn(
+                              "inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium",
+                              getStatusColor(project.status)
+                            )}>
+                              {getStatusIcon(project.status)}
+                              <span className="capitalize">{project.status.replace('_', ' ')}</span>
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-white font-medium">{safeCurrency(project.budget)}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-300">
+                              {new Date(project.deadline).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-16 bg-gray-700 rounded-full h-2">
+                                <div
+                                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                                  style={{ width: `${project.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-400">{project.progress}%</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-2">
+                              <Link
+                                href={`/en/projects/${project.id}`}
+                                className="p-1 text-gray-400 hover:text-white transition-colors"
+                                title="View Project"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                              <Link
+                                href={`/en/projects/${project.id}/edit`}
+                                className="p-1 text-gray-400 hover:text-white transition-colors"
+                                title="Edit Project"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Link>
+                              <Link
+                                href={`/en/messages?project=${project.id}`}
+                                className="p-1 text-gray-400 hover:text-white transition-colors"
+                                title="Message"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'earnings' && (
+            <div className="glass-card p-6 rounded-2xl">
+              <h2 className="text-2xl font-bold text-white mb-6">Earnings Overview</h2>
+              <div className="text-center py-12">
+                <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">Earnings analytics coming soon...</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="glass-card p-6 rounded-2xl">
+              <h2 className="text-2xl font-bold text-white mb-6">Analytics</h2>
+              <div className="text-center py-12">
+                <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">Advanced analytics coming soon...</p>
+              </div>
+            </div>
+          )}
         </div>
-        </div>
+      </div>
       </div>
     </div>
   );

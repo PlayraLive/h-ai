@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ToastProvider } from '@/components/Toast';
+import { AuthProvider } from '@/contexts/AuthContext';
 // Используем только Appwrite для аутентификации
 import "../globals.css";
 
@@ -19,7 +20,9 @@ export default async function LocaleLayout({
 
   return (
     <ToastProvider>
-      {children}
+      <AuthProvider>
+        {children}
+      </AuthProvider>
     </ToastProvider>
   );
 }

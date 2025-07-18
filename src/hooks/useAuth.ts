@@ -20,6 +20,7 @@ export function useAuth() {
     }
     return false;
   });
+  const [initializing, setInitializing] = useState(true);
   // const { success, error } = useToast();
   const success = (title: string, message: string) => console.log('SUCCESS:', title, message);
   const error = (title: string, message: string) => console.error('ERROR:', title, message);
@@ -59,6 +60,7 @@ export function useAuth() {
           setIsAuthenticated(false);
         }
         setLoading(false);
+        setInitializing(false);
         return;
       }
 
@@ -78,6 +80,7 @@ export function useAuth() {
     } finally {
       console.log('checkAuth: Setting loading to false');
       setLoading(false);
+      setInitializing(false);
     }
   };
 
@@ -169,6 +172,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     isLoading: loading,
+    initializing,
     login,
     loginWithGoogle,
     logout,
