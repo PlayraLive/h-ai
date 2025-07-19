@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   MessageCircle, 
   Mail, 
@@ -18,7 +18,8 @@ import {
 import Navbar from '@/components/Navbar';
 import { cn } from '@/lib/utils';
 
-export default function SupportPage({ params: { locale } }: { params: { locale: string } }) {
+export default function SupportPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = React.use(params);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);

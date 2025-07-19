@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -20,7 +20,8 @@ import { JobService } from '@/services/jobs';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-export default function CreateJobPage({ params: { locale } }: { params: { locale: string } }) {
+export default function CreateJobPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = React.use(params);
   const router = useRouter();
   const { user, isAuthenticated } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);

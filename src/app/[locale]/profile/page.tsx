@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { 
@@ -22,7 +22,8 @@ import {
 import Navbar from '@/components/Navbar';
 import { cn, formatCurrency } from '@/lib/utils';
 
-export default function ProfilePage({ params: { locale } }: { params: { locale: string } }) {
+export default function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = React.use(params);
   const t = useTranslations('profile');
   const [activeTab, setActiveTab] = useState('overview');
 

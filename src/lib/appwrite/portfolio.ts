@@ -210,6 +210,74 @@ export class PortfolioService {
   // Get user portfolio
   static async getUserPortfolio(userId: string, limit = 20, offset = 0): Promise<PortfolioItem[]> {
     try {
+      // Check if we should use mock data
+      if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ||
+          !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
+          process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID === 'demo-mode') {
+
+        // Return mock portfolio data
+        return [
+          {
+            $id: 'mock-portfolio-1',
+            title: 'AI-Powered E-commerce Website',
+            description: 'Modern e-commerce platform with AI recommendations and chatbot integration.',
+            category: 'Web Development',
+            subcategory: 'E-commerce',
+            images: ['https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800'],
+            thumbnailUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400',
+            liveUrl: 'https://demo-ecommerce.com',
+            githubUrl: 'https://github.com/demo/ecommerce',
+            aiServices: ['ChatGPT', 'Midjourney', 'Claude'],
+            skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'],
+            tools: ['VS Code', 'Figma', 'Vercel'],
+            userId: userId,
+            userName: 'Demo User',
+            userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+            featured: true,
+            status: 'published' as const,
+            likesCount: 45,
+            viewsCount: 234,
+            commentsCount: 12,
+            sharesCount: 8,
+            averageRating: 4.8,
+            ratingsCount: 15,
+            createdAt: '2024-01-10T00:00:00Z',
+            tags: ['AI', 'E-commerce', 'React', 'Modern'],
+            $createdAt: '2024-01-10T00:00:00Z',
+            $updatedAt: '2024-01-15T00:00:00Z'
+          },
+          {
+            $id: 'mock-portfolio-2',
+            title: 'Mobile App UI/UX Design',
+            description: 'Clean and modern mobile app design for fitness tracking application.',
+            category: 'UI/UX Design',
+            subcategory: 'Mobile Design',
+            images: ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800'],
+            thumbnailUrl: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400',
+            liveUrl: 'https://dribbble.com/shots/demo',
+            githubUrl: undefined,
+            aiServices: ['Midjourney', 'Adobe Firefly'],
+            skills: ['UI Design', 'UX Research', 'Prototyping'],
+            tools: ['Figma', 'Adobe XD', 'Principle'],
+            userId: userId,
+            userName: 'Demo User',
+            userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+            featured: false,
+            status: 'published' as const,
+            likesCount: 28,
+            viewsCount: 156,
+            commentsCount: 5,
+            sharesCount: 3,
+            averageRating: 4.5,
+            ratingsCount: 8,
+            createdAt: '2024-01-18T00:00:00Z',
+            tags: ['Mobile', 'UI/UX', 'Fitness', 'Clean'],
+            $createdAt: '2024-01-18T00:00:00Z',
+            $updatedAt: '2024-01-20T00:00:00Z'
+          }
+        ];
+      }
+
       const response = await databases.listDocuments(
         DATABASE_ID,
         PORTFOLIO_COLLECTIONS.PORTFOLIO_ITEMS,
@@ -225,7 +293,39 @@ export class PortfolioService {
       return response.documents as PortfolioItem[];
     } catch (error) {
       console.error('Error fetching user portfolio:', error);
-      throw new Error('Failed to fetch portfolio');
+
+      // Fallback to mock data on error
+      return [
+        {
+          $id: 'fallback-portfolio-1',
+          title: 'Demo Project',
+          description: 'This is a demo portfolio item shown when Appwrite is not available.',
+          category: 'Demo',
+          subcategory: 'Fallback',
+          images: ['https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800'],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400',
+          liveUrl: undefined,
+          githubUrl: undefined,
+          aiServices: ['Demo AI'],
+          skills: ['Demo Skill'],
+          tools: ['Demo Tool'],
+          userId: userId,
+          userName: 'Demo User',
+          userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+          featured: false,
+          status: 'published' as const,
+          likesCount: 0,
+          viewsCount: 0,
+          commentsCount: 0,
+          sharesCount: 0,
+          averageRating: 0,
+          ratingsCount: 0,
+          createdAt: '2024-01-01T00:00:00Z',
+          tags: ['Demo', 'Fallback'],
+          $createdAt: '2024-01-01T00:00:00Z',
+          $updatedAt: '2024-01-01T00:00:00Z'
+        }
+      ];
     }
   }
 
