@@ -1,0 +1,61 @@
+{
+  "name": "h-ai-testing-bot",
+  "version": "1.0.0",
+  "description": "AI-powered testing bot for H-AI Platform - автоматический анализ и диагностика проблем",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "install-bot": "node install.js",
+    "start": "node src/index.js",
+    "test": "node src/index.js test",
+    "test:auth": "node src/index.js test",
+    "test:portfolio": "node src/tests/portfolio-test.js",
+    "test:jobs": "node src/tests/jobs-test.js",
+    "test:admin": "node src/tests/admin-test.js",
+    "test:full": "node src/index.js full-test",
+    "analyze": "node src/index.js analyze-issue",
+    "report": "node src/index.js report",
+    "monitor": "node src/index.js monitor",
+    "setup": "npm install && npx playwright install && node install.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.5.2",
+    "playwright": "^1.40.0",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "inquirer": "^9.2.12",
+    "fs-extra": "^11.1.1",
+    "moment": "^2.29.4",
+    "nodemailer": "^6.9.7",
+    "winston": "^3.11.0",
+    "dotenv": "^16.3.1",
+    "sharp": "^0.32.6",
+    "json2csv": "^6.1.0",
+    "html-pdf": "^3.0.1",
+    "node-cron": "^3.0.3",
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "ai",
+    "bot",
+    "playwright",
+    "puppeteer",
+    "e2e",
+    "monitoring",
+    "analysis"
+  ],
+  "author": "H-AI Platform Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
