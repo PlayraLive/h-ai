@@ -58,7 +58,8 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
   // Check if user is admin (in real app, this would be a proper role check)
-  const isAdmin = user?.email === 'admin@h-ai.com' || user?.email === 'sacralprojects8@gmail.com';
+  const isAdmin = user?.email === 'admin@h-ai.com' ||
+                  user?.email === 'sacralprojects8@gmail.com';
 
   useEffect(() => {
     if (!isAdmin) return;
