@@ -11,8 +11,15 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const { success, error } = useToast();
+
+  // Check if user is admin
+  const checkAdminStatus = (userData: any) => {
+    const adminEmails = ['admin@h-ai.com', 'sacralprojects8@gmail.com'];
+    return adminEmails.includes(userData?.email);
+  };
   // Подписываемся на изменения состояния аутентификации
   useEffect(() => {
     const unsubscribe = authService.subscribe((state) => {
@@ -20,6 +27,13 @@ export function useAuth() {
       setIsAuthenticated(state.isAuthenticated);
       setLoading(state.isLoading);
       setInitializing(state.isLoading);
+
+      // Check admin status when user changes
+      if (state.user) {
+        setIsAdmin(checkAdminStatus(state.user));
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return unsubscribe;

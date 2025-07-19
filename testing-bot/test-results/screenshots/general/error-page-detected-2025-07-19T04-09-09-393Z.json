@@ -1,0 +1,10 @@
+{
+  "name": "error-page-detected",
+  "timestamp": "2025-07-19T04:09:11.446Z",
+  "url": "http://localhost:3000/en/register",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "category": "general"
+}

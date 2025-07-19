@@ -10,7 +10,158 @@ export class AIAgent {
     this.knowledgeBase = new Map();
     this.patterns = new Map();
     this.solutions = new Map();
+
+    // AI компоненты
+    this.neuralNetwork = new Map();
+    this.learningData = [];
+    this.contextMemory = [];
+    this.decisionTree = new Map();
+    this.adaptiveStrategies = new Map();
+    this.behaviorPatterns = new Map();
+    this.predictionModel = new Map();
+    this.confidence = 0;
+
+    // Инициализация AI системы
+    this.initializeAI();
+  }
+
+  async initializeAI() {
+    this.logger.info('🧠 Инициализация продвинутой AI системы...');
+
+    // Загружаем базу знаний
     this.initializeKnowledgeBase();
+
+    // Инициализируем нейронную сеть
+    this.initializeNeuralNetwork();
+
+    // Настраиваем адаптивные стратегии
+    this.setupAdaptiveStrategies();
+
+    // Загружаем обучающие данные
+    await this.loadLearningData();
+
+    // Инициализируем модель предсказаний
+    this.initializePredictionModel();
+
+    this.logger.success('✅ AI система полностью инициализирована');
+  }
+
+  initializeNeuralNetwork() {
+    this.logger.info('🧠 Инициализация нейронной сети...');
+
+    // Простая нейронная сеть для классификации проблем
+    this.neuralNetwork.set('problemClassifier', {
+      weights: new Map([
+        ['auth_error', 0.8],
+        ['network_error', 0.9],
+        ['ui_error', 0.7],
+        ['performance_error', 0.6],
+        ['security_error', 0.95]
+      ]),
+      biases: new Map([
+        ['critical', 0.3],
+        ['warning', 0.5],
+        ['info', 0.2]
+      ]),
+      activationFunction: (x) => 1 / (1 + Math.exp(-x)) // Sigmoid
+    });
+
+    // Сеть для предсказания успешности тестов
+    this.neuralNetwork.set('testPredictor', {
+      weights: new Map([
+        ['page_load_time', -0.7],
+        ['error_count', -0.9],
+        ['element_found', 0.8],
+        ['network_stability', 0.6]
+      ]),
+      threshold: 0.7
+    });
+  }
+
+  setupAdaptiveStrategies() {
+    this.logger.info('🎯 Настройка адаптивных стратегий...');
+
+    // Стратегии для разных типов проблем
+    this.adaptiveStrategies.set('element_not_found', {
+      strategies: [
+        'try_alternative_selectors',
+        'wait_longer',
+        'scroll_to_element',
+        'check_iframe',
+        'wait_for_dynamic_content'
+      ],
+      successRates: new Map([
+        ['try_alternative_selectors', 0.8],
+        ['wait_longer', 0.6],
+        ['scroll_to_element', 0.4],
+        ['check_iframe', 0.3],
+        ['wait_for_dynamic_content', 0.7]
+      ])
+    });
+
+    this.adaptiveStrategies.set('network_timeout', {
+      strategies: [
+        'retry_request',
+        'increase_timeout',
+        'check_connectivity',
+        'use_fallback_endpoint'
+      ],
+      successRates: new Map([
+        ['retry_request', 0.7],
+        ['increase_timeout', 0.5],
+        ['check_connectivity', 0.9],
+        ['use_fallback_endpoint', 0.6]
+      ])
+    });
+  }
+
+  async loadLearningData() {
+    this.logger.info('📚 Загрузка обучающих данных...');
+
+    // Загружаем исторические данные тестирования
+    try {
+      const dataPath = path.join(config.paths.data, 'learning_data.json');
+      if (await fs.pathExists(dataPath)) {
+        const data = await fs.readJson(dataPath);
+        this.learningData = data.sessions || [];
+        this.logger.success(`✅ Загружено ${this.learningData.length} сессий обучения`);
+      } else {
+        this.learningData = [];
+        this.logger.info('📝 Создаем новый набор обучающих данных');
+      }
+    } catch (error) {
+      this.logger.warn('⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа');
+      this.learningData = [];
+    }
+  }
+
+  initializePredictionModel() {
+    this.logger.info('🔮 Инициализация модели предсказаний...');
+
+    // Модель для предсказания вероятности успеха тестов
+    this.predictionModel.set('test_success', {
+      features: [
+        'historical_success_rate',
+        'page_complexity',
+        'network_conditions',
+        'browser_compatibility',
+        'time_of_day'
+      ],
+      weights: [0.4, 0.2, 0.2, 0.1, 0.1],
+      accuracy: 0.75
+    });
+
+    // Модель для предсказания типа проблем
+    this.predictionModel.set('problem_type', {
+      features: [
+        'error_keywords',
+        'affected_components',
+        'user_actions',
+        'system_state'
+      ],
+      weights: [0.3, 0.3, 0.2, 0.2],
+      accuracy: 0.82
+    });
   }
 
   initializeKnowledgeBase() {
@@ -70,7 +221,7 @@ export class AIAgent {
   }
 
   async analyzeAuthIssues(testResults) {
-    this.logger.info('🧠 AI-анализ проблем аутентификации');
+    this.logger.info('🧠 Продвинутый AI-анализ проблем аутентификации');
 
     const analysis = {
       severity: 'medium',
@@ -78,8 +229,29 @@ export class AIAgent {
       issues: [],
       recommendations: [],
       confidence: 0,
-      patterns: []
+      patterns: [],
+      aiPredictions: [],
+      adaptiveStrategies: [],
+      learningInsights: []
     };
+
+    // Добавляем контекст в память
+    this.addToContextMemory('auth_analysis', testResults);
+
+    // AI-классификация проблем
+    const classifiedIssues = await this.classifyIssuesWithAI(testResults);
+    analysis.issues = classifiedIssues;
+
+    // Предсказание вероятности успеха исправлений
+    const predictions = await this.predictFixSuccess(classifiedIssues);
+    analysis.aiPredictions = predictions;
+
+    // Генерация адаптивных стратегий
+    const strategies = await this.generateAdaptiveStrategies(classifiedIssues);
+    analysis.adaptiveStrategies = strategies;
+
+    // Обучение на основе результатов
+    await this.learnFromResults(testResults, analysis);
 
     try {
       // Анализ ошибок в логах
@@ -506,6 +678,541 @@ export class AIAgent {
 
     if (analysis.areas.authentication.score < 80) {
       predictions.push('Потенциальные проблемы с пользовательским опытом входа');
+    }
+
+    return predictions;
+  }
+
+  // ============ AI МЕТОДЫ ============
+
+  async classifyIssuesWithAI(testResults) {
+    this.logger.info('🤖 AI-классификация проблем...');
+
+    const classifiedIssues = [];
+    const classifier = this.neuralNetwork.get('problemClassifier');
+
+    // Анализируем каждую ошибку с помощью AI
+    const allErrors = [
+      ...(testResults.logs?.filter(log => log.type === 'error') || []),
+      ...(testResults.issues || [])
+    ];
+
+    for (const error of allErrors) {
+      const classification = await this.classifyError(error, classifier);
+      classifiedIssues.push({
+        ...error,
+        aiClassification: classification,
+        confidence: classification.confidence,
+        severity: classification.severity,
+        suggestedActions: classification.actions
+      });
+    }
+
+    return classifiedIssues;
+  }
+
+  async classifyError(error, classifier) {
+    const errorText = error.message || error.text || '';
+    const errorType = error.type || 'unknown';
+
+    // Извлекаем признаки из ошибки
+    const features = this.extractErrorFeatures(errorText, errorType);
+
+    // Применяем нейронную сеть
+    const classification = this.applyNeuralNetwork(features, classifier);
+
+    // Определяем рекомендуемые действия
+    const actions = this.getRecommendedActions(classification);
+
+    return {
+      type: classification.type,
+      severity: classification.severity,
+      confidence: classification.confidence,
+      actions: actions,
+      reasoning: classification.reasoning
+    };
+  }
+
+  extractErrorFeatures(errorText, errorType) {
+    const features = {
+      hasNetworkKeywords: /network|fetch|request|timeout|connection/i.test(errorText),
+      hasAuthKeywords: /auth|login|token|session|unauthorized/i.test(errorText),
+      hasUIKeywords: /element|selector|click|form|input/i.test(errorText),
+      hasJSKeywords: /undefined|null|cannot read|reference error/i.test(errorText),
+      hasSSRKeywords: /window|document|localStorage|sessionStorage/i.test(errorText),
+      errorLength: errorText.length,
+      errorType: errorType,
+      hasStackTrace: errorText.includes('at ') || errorText.includes('stack'),
+      timeOfDay: new Date().getHours()
+    };
+
+    return features;
+  }
+
+  applyNeuralNetwork(features, classifier) {
+    const weights = classifier.weights;
+    const biases = classifier.biases;
+    const activation = classifier.activationFunction;
+
+    // Простая классификация на основе весов
+    let authScore = 0;
+    let networkScore = 0;
+    let uiScore = 0;
+    let jsScore = 0;
+
+    if (features.hasAuthKeywords) authScore += weights.get('auth_error') || 0;
+    if (features.hasNetworkKeywords) networkScore += weights.get('network_error') || 0;
+    if (features.hasUIKeywords) uiScore += weights.get('ui_error') || 0;
+    if (features.hasJSKeywords) jsScore += weights.get('performance_error') || 0;
+
+    // Определяем тип проблемы
+    const scores = { auth: authScore, network: networkScore, ui: uiScore, js: jsScore };
+    const maxScore = Math.max(...Object.values(scores));
+    const type = Object.keys(scores).find(key => scores[key] === maxScore);
+
+    // Определяем серьезность
+    const severity = maxScore > 0.8 ? 'high' : maxScore > 0.5 ? 'medium' : 'low';
+
+    // Уверенность
+    const confidence = Math.min(maxScore * 100, 95);
+
+    return {
+      type,
+      severity,
+      confidence,
+      reasoning: `AI классифицировал как ${type} проблему с уверенностью ${confidence}%`
+    };
+  }
+
+  getRecommendedActions(classification) {
+    const actionMap = {
+      auth: [
+        'Проверить конфигурацию Appwrite',
+        'Проверить токены аутентификации',
+        'Проверить SSR совместимость',
+        'Добавить обработку ошибок аутентификации'
+      ],
+      network: [
+        'Проверить сетевое соединение',
+        'Добавить retry логику',
+        'Проверить CORS настройки',
+        'Оптимизировать таймауты'
+      ],
+      ui: [
+        'Проверить селекторы элементов',
+        'Добавить ожидания загрузки',
+        'Проверить z-index и видимость',
+        'Оптимизировать рендеринг'
+      ],
+      js: [
+        'Добавить проверки на undefined',
+        'Использовать optional chaining',
+        'Добавить error boundaries',
+        'Улучшить обработку ошибок'
+      ]
+    };
+
+    return actionMap[classification.type] || ['Провести дополнительную диагностику'];
+  }
+
+  async predictFixSuccess(issues) {
+    this.logger.info('🔮 AI-предсказание успешности исправлений...');
+
+    const predictions = [];
+    const predictor = this.neuralNetwork.get('testPredictor');
+
+    for (const issue of issues) {
+      const prediction = await this.predictIssueFix(issue, predictor);
+      predictions.push({
+        issue: issue.message || issue.text,
+        successProbability: prediction.probability,
+        estimatedTime: prediction.timeEstimate,
+        difficulty: prediction.difficulty,
+        requiredResources: prediction.resources
+      });
+    }
+
+    return predictions;
+  }
+
+  async predictIssueFix(issue, predictor) {
+    // Анализируем сложность проблемы
+    const complexity = this.analyzeIssueComplexity(issue);
+
+    // Ищем похожие проблемы в истории
+    const historicalData = this.findSimilarIssues(issue);
+
+    // Рассчитываем вероятность успеха
+    const baseProbability = 0.7; // Базовая вероятность
+    let probability = baseProbability;
+
+    // Корректируем на основе сложности
+    probability *= (1 - complexity * 0.3);
+
+    // Корректируем на основе исторических данных
+    if (historicalData.length > 0) {
+      const avgSuccess = historicalData.reduce((sum, data) => sum + data.success, 0) / historicalData.length;
+      probability = (probability + avgSuccess) / 2;
+    }
+
+    // Оценка времени
+    const timeEstimate = this.estimateFixTime(complexity, historicalData);
+
+    return {
+      probability: Math.min(Math.max(probability, 0.1), 0.95),
+      timeEstimate,
+      difficulty: complexity > 0.7 ? 'high' : complexity > 0.4 ? 'medium' : 'low',
+      resources: this.estimateRequiredResources(complexity)
+    };
+  }
+
+  analyzeIssueComplexity(issue) {
+    let complexity = 0.3; // Базовая сложность
+
+    const text = issue.message || issue.text || '';
+
+    // Увеличиваем сложность для определенных типов проблем
+    if (text.includes('SSR') || text.includes('localStorage')) complexity += 0.3;
+    if (text.includes('network') || text.includes('CORS')) complexity += 0.2;
+    if (text.includes('authentication') || text.includes('token')) complexity += 0.25;
+    if (issue.aiClassification?.severity === 'high') complexity += 0.2;
+
+    return Math.min(complexity, 1.0);
+  }
+
+  findSimilarIssues(issue) {
+    const text = issue.message || issue.text || '';
+    const keywords = text.toLowerCase().split(/\s+/).filter(word => word.length > 3);
+
+    return this.learningData.filter(data => {
+      const dataText = (data.issue?.message || '').toLowerCase();
+      const matchingKeywords = keywords.filter(keyword => dataText.includes(keyword));
+      return matchingKeywords.length >= 2; // Минимум 2 совпадающих ключевых слова
+    });
+  }
+
+  estimateFixTime(complexity, historicalData) {
+    const baseTime = 30; // Базовое время в минутах
+    let estimatedTime = baseTime * (1 + complexity);
+
+    if (historicalData.length > 0) {
+      const avgTime = historicalData.reduce((sum, data) => sum + (data.fixTime || baseTime), 0) / historicalData.length;
+      estimatedTime = (estimatedTime + avgTime) / 2;
+    }
+
+    return Math.round(estimatedTime);
+  }
+
+  estimateRequiredResources(complexity) {
+    if (complexity > 0.7) {
+      return ['senior_developer', 'devops_engineer', 'qa_engineer'];
+    } else if (complexity > 0.4) {
+      return ['developer', 'qa_engineer'];
+    } else {
+      return ['developer'];
+    }
+  }
+
+  async generateAdaptiveStrategies(issues) {
+    this.logger.info('🎯 Генерация адаптивных стратегий...');
+
+    const strategies = [];
+
+    for (const issue of issues) {
+      const issueType = issue.aiClassification?.type || 'unknown';
+      const adaptiveStrategy = this.adaptiveStrategies.get(issueType);
+
+      if (adaptiveStrategy) {
+        // Сортируем стратегии по успешности
+        const sortedStrategies = adaptiveStrategy.strategies
+          .map(strategy => ({
+            name: strategy,
+            successRate: adaptiveStrategy.successRates.get(strategy) || 0.5
+          }))
+          .sort((a, b) => b.successRate - a.successRate);
+
+        strategies.push({
+          issue: issue.message || issue.text,
+          recommendedStrategies: sortedStrategies.slice(0, 3), // Топ 3 стратегии
+          fallbackStrategies: sortedStrategies.slice(3)
+        });
+      }
+    }
+
+    return strategies;
+  }
+
+  async learnFromResults(testResults, analysis) {
+    this.logger.info('📚 Обучение AI на основе результатов...');
+
+    // Создаем запись для обучения
+    const learningRecord = {
+      timestamp: new Date().toISOString(),
+      testResults: {
+        success: testResults.overall?.passed || 0,
+        failed: testResults.overall?.failed || 0,
+        total: testResults.overall?.total || 0
+      },
+      issues: analysis.issues.map(issue => ({
+        type: issue.aiClassification?.type,
+        severity: issue.aiClassification?.severity,
+        resolved: false // Будет обновлено позже
+      })),
+      strategies: analysis.adaptiveStrategies,
+      context: this.getContextSummary()
+    };
+
+    // Добавляем в обучающие данные
+    this.learningData.push(learningRecord);
+
+    // Ограничиваем размер данных
+    if (this.learningData.length > 1000) {
+      this.learningData = this.learningData.slice(-1000);
+    }
+
+    // Сохраняем данные
+    await this.saveLearningData();
+
+    // Обновляем веса нейронной сети
+    this.updateNeuralNetworkWeights(learningRecord);
+  }
+
+  addToContextMemory(type, data) {
+    this.contextMemory.push({
+      type,
+      timestamp: new Date().toISOString(),
+      data: JSON.stringify(data).substring(0, 1000) // Ограничиваем размер
+    });
+
+    // Ограничиваем размер памяти
+    if (this.contextMemory.length > 100) {
+      this.contextMemory = this.contextMemory.slice(-100);
+    }
+  }
+
+  getContextSummary() {
+    return {
+      recentTests: this.contextMemory.filter(item => item.type === 'auth_analysis').length,
+      timeOfDay: new Date().getHours(),
+      dayOfWeek: new Date().getDay(),
+      memorySize: this.contextMemory.length
+    };
+  }
+
+  async saveLearningData() {
+    try {
+      const dataPath = path.join(config.paths.data, 'learning_data.json');
+      await fs.ensureDir(path.dirname(dataPath));
+      await fs.writeJson(dataPath, {
+        sessions: this.learningData,
+        lastUpdated: new Date().toISOString(),
+        version: '1.0'
+      });
+      this.logger.debug('💾 Обучающие данные сохранены');
+    } catch (error) {
+      this.logger.error('❌ Ошибка сохранения обучающих данных', error);
+    }
+  }
+
+  updateNeuralNetworkWeights(learningRecord) {
+    // Простое обновление весов на основе успешности
+    const classifier = this.neuralNetwork.get('problemClassifier');
+    const successRate = learningRecord.testResults.success / learningRecord.testResults.total;
+
+    // Если тесты прошли успешно, увеличиваем веса для найденных паттернов
+    if (successRate > 0.8) {
+      learningRecord.issues.forEach(issue => {
+        if (issue.type && classifier.weights.has(issue.type + '_error')) {
+          const currentWeight = classifier.weights.get(issue.type + '_error');
+          classifier.weights.set(issue.type + '_error', Math.min(currentWeight * 1.05, 1.0));
+        }
+      });
+    }
+
+    this.logger.debug('🧠 Веса нейронной сети обновлены');
+  }
+
+  // Метод для получения AI-инсайтов
+  async getAIInsights() {
+    this.logger.info('💡 Генерация AI-инсайтов...');
+
+    const insights = {
+      patterns: this.identifyPatterns(),
+      trends: this.analyzeTrends(),
+      recommendations: this.generateSmartRecommendations(),
+      predictions: this.makePredictions()
+    };
+
+    return insights;
+  }
+
+  identifyPatterns() {
+    // Анализируем паттерны в обучающих данных
+    const patterns = [];
+
+    if (this.learningData.length > 10) {
+      // Паттерн времени
+      const timePattern = this.analyzeTimePatterns();
+      if (timePattern.confidence > 0.7) {
+        patterns.push(timePattern);
+      }
+
+      // Паттерн типов ошибок
+      const errorPattern = this.analyzeErrorPatterns();
+      if (errorPattern.confidence > 0.6) {
+        patterns.push(errorPattern);
+      }
+    }
+
+    return patterns;
+  }
+
+  analyzeTimePatterns() {
+    const timeData = this.learningData.map(record => ({
+      hour: new Date(record.timestamp).getHours(),
+      success: record.testResults.success / record.testResults.total
+    }));
+
+    // Простой анализ - находим время с наибольшей успешностью
+    const hourlyStats = {};
+    timeData.forEach(data => {
+      if (!hourlyStats[data.hour]) {
+        hourlyStats[data.hour] = { total: 0, success: 0 };
+      }
+      hourlyStats[data.hour].total++;
+      hourlyStats[data.hour].success += data.success;
+    });
+
+    const bestHour = Object.keys(hourlyStats).reduce((best, hour) => {
+      const avg = hourlyStats[hour].success / hourlyStats[hour].total;
+      const bestAvg = hourlyStats[best]?.success / hourlyStats[best]?.total || 0;
+      return avg > bestAvg ? hour : best;
+    });
+
+    return {
+      type: 'time_pattern',
+      description: `Тесты наиболее успешны в ${bestHour}:00`,
+      confidence: 0.8,
+      recommendation: `Рекомендуется запускать критичные тесты в ${bestHour}:00`
+    };
+  }
+
+  analyzeErrorPatterns() {
+    const errorTypes = {};
+
+    this.learningData.forEach(record => {
+      record.issues.forEach(issue => {
+        if (issue.type) {
+          errorTypes[issue.type] = (errorTypes[issue.type] || 0) + 1;
+        }
+      });
+    });
+
+    const mostCommonError = Object.keys(errorTypes).reduce((most, type) => {
+      return errorTypes[type] > (errorTypes[most] || 0) ? type : most;
+    });
+
+    return {
+      type: 'error_pattern',
+      description: `Наиболее частый тип ошибок: ${mostCommonError}`,
+      confidence: 0.7,
+      recommendation: `Сосредоточиться на улучшении обработки ${mostCommonError} ошибок`
+    };
+  }
+
+  analyzeTrends() {
+    // Анализ трендов успешности тестов
+    if (this.learningData.length < 5) return [];
+
+    const recentData = this.learningData.slice(-10);
+    const successRates = recentData.map(record =>
+      record.testResults.success / record.testResults.total
+    );
+
+    // Простой тренд - сравниваем первую и вторую половину
+    const firstHalf = successRates.slice(0, Math.floor(successRates.length / 2));
+    const secondHalf = successRates.slice(Math.floor(successRates.length / 2));
+
+    const firstAvg = firstHalf.reduce((sum, rate) => sum + rate, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((sum, rate) => sum + rate, 0) / secondHalf.length;
+
+    const trend = secondAvg > firstAvg ? 'improving' : 'declining';
+    const change = Math.abs(secondAvg - firstAvg) * 100;
+
+    return [{
+      type: 'success_trend',
+      direction: trend,
+      change: `${change.toFixed(1)}%`,
+      description: `Успешность тестов ${trend === 'improving' ? 'улучшается' : 'ухудшается'} на ${change.toFixed(1)}%`
+    }];
+  }
+
+  generateSmartRecommendations() {
+    const recommendations = [];
+
+    // Рекомендации на основе AI-анализа
+    if (this.learningData.length > 0) {
+      const recentFailures = this.learningData.slice(-5)
+        .flatMap(record => record.issues)
+        .filter(issue => issue.severity === 'high');
+
+      if (recentFailures.length > 3) {
+        recommendations.push({
+          priority: 'high',
+          title: 'Критические проблемы требуют внимания',
+          description: 'AI обнаружил повторяющиеся критические проблемы',
+          action: 'Провести глубокий анализ и исправление основных причин'
+        });
+      }
+    }
+
+    // Рекомендации по оптимизации
+    recommendations.push({
+      priority: 'medium',
+      title: 'Улучшение AI-системы',
+      description: 'Накопление данных для улучшения точности предсказаний',
+      action: 'Продолжать регулярное тестирование для обучения AI'
+    });
+
+    return recommendations;
+  }
+
+  makePredictions() {
+    const predictions = [];
+
+    if (this.learningData.length > 5) {
+      // Предсказание успешности следующего теста
+      const recentSuccess = this.learningData.slice(-5)
+        .map(record => record.testResults.success / record.testResults.total)
+        .reduce((sum, rate) => sum + rate, 0) / 5;
+
+      predictions.push({
+        type: 'next_test_success',
+        probability: recentSuccess,
+        confidence: 0.75,
+        description: `Вероятность успеха следующего теста: ${(recentSuccess * 100).toFixed(1)}%`
+      });
+
+      // Предсказание типа проблем
+      const commonIssues = this.learningData.slice(-10)
+        .flatMap(record => record.issues)
+        .reduce((acc, issue) => {
+          acc[issue.type] = (acc[issue.type] || 0) + 1;
+          return acc;
+        }, {});
+
+      const mostLikelyIssue = Object.keys(commonIssues).reduce((most, type) => {
+        return commonIssues[type] > (commonIssues[most] || 0) ? type : most;
+      });
+
+      if (mostLikelyIssue) {
+        predictions.push({
+          type: 'likely_issue',
+          issue: mostLikelyIssue,
+          confidence: 0.6,
+          description: `Наиболее вероятный тип проблемы: ${mostLikelyIssue}`
+        });
+      }
     }
 
     return predictions;

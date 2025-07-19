@@ -2,86 +2,80 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Clock, User, MessageSquare, DollarSign, Star } from 'lucide-react';
+import { Bell, X, Check, Clock, User, MessageSquare, DollarSign, Star, Filter, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-
-interface Notification {
-  id: string;
-  type: 'message' | 'payment' | 'review' | 'project' | 'system';
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-  actionUrl?: string;
-  metadata?: any;
-}
+import { NotificationService, Notification as AppNotification } from '@/lib/services/notifications';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface NotificationDropdownProps {
-  userId: string;
   className?: string;
 }
 
-export function NotificationDropdown({ userId, className = '' }: NotificationDropdownProps) {
+export function NotificationDropdown({ className = '' }: NotificationDropdownProps) {
+  const { user } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [filter, setFilter] = useState<'all' | 'unread' | 'message' | 'project' | 'payment'>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Заглушка для демонстрации
-  const mockNotifications: Notification[] = [
-    {
-      id: '1',
-      type: 'message',
-      title: 'Новое сообщение',
-      message: 'Анна Иванова отправила вам сообщение по проекту "Дизайн логотипа"',
-      isRead: false,
-      createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      actionUrl: '/chat?conversation=1'
-    },
-    {
-      id: '2',
-      type: 'payment',
-      title: 'Платеж получен',
-      message: 'Вы получили платеж $500 за выполненный milestone',
-      isRead: false,
-      createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      actionUrl: '/payments'
-    },
-    {
-      id: '3',
-      type: 'review',
-      title: 'Новый отзыв',
-      message: 'Петр Сидоров оставил отзыв 5⭐ о вашей работе',
-      isRead: true,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      actionUrl: '/profile/reviews'
-    },
-    {
-      id: '4',
-      type: 'project',
-      title: 'Новый проект',
-      message: 'Найден подходящий проект: "Разработка мобильного приложения"',
-      isRead: true,
-      createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      actionUrl: '/projects/123'
-    },
-    {
-      id: '5',
-      type: 'system',
-      title: 'Обновление профиля',
-      message: 'Не забудьте обновить свой профиль для лучшей видимости',
-      isRead: true,
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      actionUrl: '/profile/edit'
+  // Загрузка уведомлений
+  const loadNotifications = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const userNotifications = await NotificationService.getUserNotifications(user.$id, 20);
+      setNotifications(userNotifications);
+
+      const unread = userNotifications.filter(n => !n.is_read).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    // Загружаем уведомления при монтировании
+    if (!user) return;
+
     loadNotifications();
-  }, [userId]);
+
+    // Подписываемся на real-time уведомления
+    const unsubscribe = NotificationService.subscribeToUserNotifications(
+      user.$id,
+      (newNotification) => {
+        console.log('🔔 New notification:', newNotification);
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+
+        // Показать браузерное уведомление
+        if (window.Notification && window.Notification.permission === 'granted') {
+          new window.Notification(newNotification.title, {
+            body: newNotification.message,
+            icon: '/favicon.ico'
+          });
+        }
+      },
+      (updatedNotification) => {
+        console.log('📝 Updated notification:', updatedNotification);
+        setNotifications(prev =>
+          prev.map(n => n.$id === updatedNotification.$id ? updatedNotification : n)
+        );
+
+        if (updatedNotification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
 
   useEffect(() => {
     // Закрываем dropdown при клике вне его
@@ -95,27 +89,19 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const loadNotifications = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Заменить на реальный API вызов
-      await new Promise(resolve => setTimeout(resolve, 500)); // Имитация загрузки
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.isRead).length);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    } finally {
-      setIsLoading(false);
+  // Запрос разрешения на уведомления
+  useEffect(() => {
+    if (window.Notification && window.Notification.permission === 'default') {
+      window.Notification.requestPermission();
     }
-  };
+  }, []);
 
+  // Отметить как прочитанное
   const markAsRead = async (notificationId: string) => {
     try {
-      // TODO: Реальный API вызов
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, isRead: true } : n
-        )
+      await NotificationService.markAsRead(notificationId);
+      setNotifications(prev =>
+        prev.map(n => n.$id === notificationId ? { ...n, is_read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -123,30 +109,51 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
     }
   };
 
-  const markAllAsRead = async () => {
+  // Удалить уведомление
+  const deleteNotification = async (notificationId: string) => {
     try {
-      // TODO: Реальный API вызов
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      await NotificationService.deleteNotification(notificationId);
+      setNotifications(prev => prev.filter(n => n.$id !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+
+    try {
+      await NotificationService.markAllAsRead(user.$id);
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   };
 
-  const deleteNotification = async (notificationId: string) => {
-    try {
-      // TODO: Реальный API вызов
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      const notification = notifications.find(n => n.id === notificationId);
-      if (notification && !notification.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+  // Фильтрация уведомлений
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'all') return true;
+    if (filter === 'unread') return !notification.is_read;
+    return notification.type === filter;
+  });
+
+  // Обработка клика по уведомлению
+  const handleNotificationClick = (notification: AppNotification) => {
+    // Отмечаем как прочитанное
+    if (!notification.is_read) {
+      markAsRead(notification.$id);
     }
+
+    // Переходим по ссылке если есть
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+
+    setIsOpen(false);
   };
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: AppNotification['type']) => {
     switch (type) {
       case 'message':
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
@@ -174,18 +181,6 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.isRead) {
-      markAsRead(notification.id);
-    }
-    
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
-    }
-    
-    setIsOpen(false);
-  };
-
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Кнопка уведомлений */}
@@ -204,45 +199,63 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-96 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50">
           {/* Заголовок */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Уведомления</h3>
-            <div className="flex items-center gap-2">
+          <div className="p-4 border-b border-gray-800">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">Уведомления</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Фильтры */}
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as any)}
+                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+              >
+                <option value="all">Все</option>
+                <option value="unread">Непрочитанные</option>
+                <option value="message">Сообщения</option>
+                <option value="project">Проекты</option>
+                <option value="payment">Платежи</option>
+              </select>
+
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-sm text-blue-500 hover:text-blue-600 transition-colors"
+                  className="text-xs text-purple-400 hover:text-purple-300 ml-auto"
                 >
                   Прочитать все
                 </button>
               )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
           </div>
 
           {/* Список уведомлений */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <div className="p-4 text-center">
+                <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-gray-400 text-sm">Загрузка уведомлений...</p>
               </div>
-            ) : notifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p>Нет уведомлений</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              filteredNotifications.map((notification) => (
                 <div
-                  key={notification.id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                  key={notification.$id}
+                  className={`p-4 border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors ${
+                    !notification.is_read ? 'bg-purple-500/5 border-l-2 border-l-purple-500' : ''
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -256,29 +269,44 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <h4 className={`font-medium text-sm ${
-                          !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                          !notification.is_read ? 'text-white' : 'text-gray-300'
                         }`}>
                           {notification.title}
                         </h4>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNotification(notification.id);
-                          }}
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center space-x-1">
+                          {!notification.is_read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsRead(notification.$id);
+                              }}
+                              className="p-1 text-gray-400 hover:text-green-400"
+                              title="Mark as read"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.$id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                         {notification.message}
                       </p>
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-xs text-gray-500">
-                          {formatTime(notification.createdAt)}
+                          {formatTime(notification.created_at)}
                         </span>
-                        {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        {!notification.is_read && (
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         )}
                       </div>
                     </div>

@@ -4,29 +4,36 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
+
+import MessagesSetupGuide from '@/components/MessagesSetupGuide';
+// import { UserProfileService, UserProfile, FreelancerStats, ClientStats } from '@/lib/user-profile-service';
 // import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
+
 import PortfolioGrid from '@/components/portfolio/PortfolioGrid';
 import AddPortfolioForm from '@/components/portfolio/AddPortfolioForm';
 import UserLevelCard from '@/components/gamification/UserLevelCard';
 import AchievementsGrid from '@/components/gamification/AchievementsGrid';
-import SimplePortfolioTest from '@/components/portfolio/SimplePortfolioTest';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
+import UserProfileDropdown from '@/components/UserProfileDropdown';
+import Navbar from '@/components/Navbar';
 import {
   TrendingUp,
   DollarSign,
   Briefcase,
   Star,
-  Calendar,
   Clock,
   Users,
   MessageCircle,
   Plus,
-  Filter,
   Eye,
   Edit,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Bell,
+  Home,
+  Search,
+  FileText
 } from 'lucide-react';
 // Navbar removed - using Sidebar instead
 import { cn, formatCurrency, formatRelativeTime } from '@/lib/utils';
@@ -36,6 +43,9 @@ export default function DashboardPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
+
+
+
 
   // Mock gamification data - replace with real data from API
   const userStats = {
@@ -63,6 +73,138 @@ export default function DashboardPage() {
   ];
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
+
+  // Set user type based on user data
+  useEffect(() => {
+    if (user && user.userType) {
+      setUserType(user.userType);
+    }
+  }, [user]);
+
+  // Run Appwrite diagnostics
+  const runDiagnostics = async () => {
+    setRunningDiagnostics(true);
+    try {
+      console.log('🔍 Running Appwrite diagnostics...');
+      const results = await AppwriteSetup.runDiagnostics();
+
+      let message = '🔍 Appwrite Diagnostics Results:\n\n';
+
+      if (results.connection.success) {
+        message += '✅ Connection: OK\n';
+      } else {
+        message += `❌ Connection: ${results.connection.error}\n`;
+        message += `💡 ${results.connection.message}\n\n`;
+      }
+
+      if (results.database.success) {
+        message += '✅ Database: OK\n';
+      } else {
+        message += `❌ Database: ${results.database.error}\n`;
+        message += `💡 ${results.database.message}\n\n`;
+      }
+
+      if (results.collections.success) {
+        message += `✅ Collections: ${results.collections.collections?.length || 0} found\n`;
+      } else {
+        message += `❌ Collections: ${results.collections.error}\n`;
+      }
+
+      alert(message);
+    } catch (error: any) {
+      console.error('❌ Error running diagnostics:', error);
+      alert(`❌ Diagnostics failed:\n\n${error.message}\n\nCheck console for details.`);
+    } finally {
+      setRunningDiagnostics(false);
+    }
+  };
+
+  // Setup messages collections
+  const setupMessagesCollections = async () => {
+    setSettingUpCollections(true);
+    try {
+      console.log('🚀 Setting up messages collections...');
+      const result = await messagesSetup.setupMessagesCollections();
+
+      if (result.success) {
+        if (result.created) {
+          console.log('🎉 Collections created successfully!');
+          alert('✅ Messages collections created successfully! You can now use the messaging system.');
+        } else {
+          console.log('✅ Collections already exist!');
+          alert('✅ Collections already exist and are ready to use!');
+        }
+      } else {
+        console.error('❌ Failed to setup collections:', result.error);
+        alert('❌ Failed to setup collections. Check console for details.');
+      }
+    } catch (error) {
+      console.error('❌ Error setting up collections:', error);
+      alert('❌ Error setting up collections. Check console for details.');
+    } finally {
+      setSettingUpCollections(false);
+    }
+  };
+
+  // Create demo messages
+  const createDemoMessages = async () => {
+    setCreatingDemoMessages(true);
+    try {
+      console.log('🚀 Creating demo messages...');
+      const result = await demoMessagesCreator.createDemoMessages();
+      console.log('✅ Demo messages created:', result);
+
+      if (result) {
+        alert(`🎉 Demo messages created successfully!\n\nCreated:\n• ${result.conversations} conversations\n• ${result.messages} messages\n\nGo to Messages page to see them!`);
+      }
+    } catch (error: any) {
+      console.error('❌ Error creating demo messages:', error);
+      alert(`❌ Error creating demo messages:\n\n${error.message}\n\nCheck console for details.`);
+    } finally {
+      setCreatingDemoMessages(false);
+    }
+  };
+
+  // Create demo notifications
+  const createDemoNotifications = async () => {
+    if (!user) return;
+
+    setCreatingDemoNotifications(true);
+    try {
+      console.log('🔔 Creating demo notifications...');
+
+      // Создаем разные типы уведомлений
+      await Promise.all([
+        NotificationService.createMessageNotification(
+          user.$id,
+          'John Doe',
+          'Hi! I\'m interested in your AI development services.',
+          'demo-conversation-1'
+        ),
+        NotificationService.createProjectNotification(
+          user.$id,
+          'AI Chatbot Development',
+          'demo-project-1',
+          'new_project'
+        ),
+        NotificationService.createPaymentNotification(
+          user.$id,
+          500,
+          'USD',
+          'demo-payment-1',
+          'payment_received'
+        )
+      ]);
+
+      console.log('✅ Demo notifications created');
+      alert('🔔 Demo notifications created! Check the notification bell.');
+    } catch (error: any) {
+      console.error('❌ Error creating demo notifications:', error);
+      alert(`❌ Error creating demo notifications:\n\n${error.message}`);
+    } finally {
+      setCreatingDemoNotifications(false);
+    }
+  };
 
   // Debug: log auth state
   useEffect(() => {
@@ -172,7 +314,9 @@ export default function DashboardPage() {
       change: '+12%',
       changeType: 'positive',
       icon: DollarSign,
-      color: 'text-green-400'
+      color: 'text-green-400',
+      bgGradient: 'from-green-500 to-emerald-500',
+      shadowColor: 'shadow-green-500/25'
     },
     {
       label: 'Active Projects',
@@ -180,7 +324,9 @@ export default function DashboardPage() {
       change: '+2',
       changeType: 'positive',
       icon: Briefcase,
-      color: 'text-blue-400'
+      color: 'text-blue-400',
+      bgGradient: 'from-blue-500 to-cyan-500',
+      shadowColor: 'shadow-blue-500/25'
     },
     {
       label: 'Completed Jobs',
@@ -188,7 +334,9 @@ export default function DashboardPage() {
       change: '+5',
       changeType: 'positive',
       icon: CheckCircle,
-      color: 'text-purple-400'
+      color: 'text-purple-400',
+      bgGradient: 'from-purple-500 to-violet-500',
+      shadowColor: 'shadow-purple-500/25'
     },
     {
       label: 'Client Rating',
@@ -196,7 +344,9 @@ export default function DashboardPage() {
       change: '+0.1',
       changeType: 'positive',
       icon: Star,
-      color: 'text-yellow-400'
+      color: 'text-yellow-400',
+      bgGradient: 'from-yellow-500 to-orange-500',
+      shadowColor: 'shadow-yellow-500/25'
     }
   ];
 
@@ -207,7 +357,9 @@ export default function DashboardPage() {
       change: '+18%',
       changeType: 'positive',
       icon: DollarSign,
-      color: 'text-green-400'
+      color: 'text-green-400',
+      bgGradient: 'from-green-500 to-emerald-500',
+      shadowColor: 'shadow-green-500/25'
     },
     {
       label: 'Active Jobs',
@@ -215,7 +367,9 @@ export default function DashboardPage() {
       change: '+1',
       changeType: 'positive',
       icon: Briefcase,
-      color: 'text-blue-400'
+      color: 'text-blue-400',
+      bgGradient: 'from-blue-500 to-cyan-500',
+      shadowColor: 'shadow-blue-500/25'
     },
     {
       label: 'Hired Freelancers',
@@ -223,7 +377,9 @@ export default function DashboardPage() {
       change: '+3',
       changeType: 'positive',
       icon: Users,
-      color: 'text-purple-400'
+      color: 'text-purple-400',
+      bgGradient: 'from-purple-500 to-violet-500',
+      shadowColor: 'shadow-purple-500/25'
     },
     {
       label: 'Success Rate',
@@ -231,7 +387,9 @@ export default function DashboardPage() {
       change: '+2%',
       changeType: 'positive',
       icon: TrendingUp,
-      color: 'text-yellow-400'
+      color: 'text-yellow-400',
+      bgGradient: 'from-yellow-500 to-orange-500',
+      shadowColor: 'shadow-yellow-500/25'
     }
   ];
 
@@ -405,112 +563,109 @@ export default function DashboardPage() {
   const tabs = userType === 'freelancer' ? [
     { id: 'overview', label: 'Overview' },
     { id: 'portfolio', label: 'Portfolio' },
-    { id: 'test', label: 'Test' },
     { id: 'achievements', label: 'Achievements' },
-    { id: 'earnings', label: 'Earnings' },
-    { id: 'analytics', label: 'Analytics' }
+    { id: 'earnings', label: 'Earnings' }
   ] : [
     { id: 'overview', label: 'Overview' },
     { id: 'projects', label: 'Projects' },
-    { id: 'earnings', label: 'Earnings' },
-    { id: 'analytics', label: 'Analytics' }
+    { id: 'earnings', label: 'Earnings' }
   ];
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Top Navigation отключена */}
-      {/* <Navbar /> */}
+      {/* Top Navigation */}
+      <Navbar />
 
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main Content */}
-        <div className="flex-1 lg:ml-0">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
+      {/* Main Content */}
+      <div className="pt-20 p-2.5 sm:p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                {userType === 'freelancer' ? 'Freelancer Dashboard' : 'Client Dashboard'}
-              </h1>
-              <p className="text-gray-400">
-                {userType === 'freelancer'
-                  ? "Manage your projects and find new opportunities"
-                  : "Post jobs and manage your hired freelancers"
-                }
-              </p>
-            </div>
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              {/* User Type Switcher */}
-              <div className="flex items-center bg-gray-800/50 rounded-xl p-1">
-                <button
-                  onClick={() => setUserType('freelancer')}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                    userType === 'freelancer'
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white'
-                  )}
-                >
-                  👨‍💻 Freelancer
-                </button>
-                <button
-                  onClick={() => setUserType('client')}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                    userType === 'client'
-                      ? 'bg-purple-500 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white'
-                  )}
-                >
-                  🏢 Client
-                </button>
+          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-800/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+                  Welcome back, {user?.name || 'User'}! 👋
+                </h1>
+                <p className="text-gray-400 text-sm sm:text-base">
+                  {userType === 'freelancer'
+                    ? "Manage your projects and find new opportunities"
+                    : "Post jobs and manage your hired freelancers"
+                  }
+                </p>
               </div>
 
-              {/* Action Button */}
-              {userType === 'client' ? (
-                <Link href="/en/jobs/create" className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post New Job
-                </Link>
-              ) : (
-                <Link href="/en/jobs" className="btn-primary">
-                  <Briefcase className="w-4 h-4 mr-2" />
-                  Find Jobs
-                </Link>
-              )}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                {/* User Type Switcher */}
+                <div className="flex bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm">
+                  <button
+                    onClick={() => setUserType('freelancer')}
+                    className={cn(
+                      'px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                      userType === 'freelancer'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    )}
+                  >
+                    👨‍💻 Freelancer
+                  </button>
+                  <button
+                    onClick={() => setUserType('client')}
+                    className={cn(
+                      'px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                      userType === 'client'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    )}
+                  >
+                    🏢 Client
+                  </button>
+                </div>
+
+                {/* Action Button */}
+                {userType === 'client' ? (
+                  <Link href="/en/jobs/create" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 hover:shadow-green-600/40">
+                    <Plus className="w-4 h-4" />
+                    Post New Job
+                  </Link>
+                ) : (
+                  <Link href="/en/jobs" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40">
+                    <Briefcase className="w-4 h-4" />
+                    Find Jobs
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="glass-card p-6 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center ${stat.color}`}>
-                      <Icon className="w-6 h-6" />
+                <div key={index} className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl hover:bg-gray-900/70 transition-all duration-200 group">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.bgGradient} flex items-center justify-center shadow-lg ${stat.shadowColor} group-hover:scale-110 transition-transform duration-200`}>
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <span className={cn(
-                      "text-sm font-medium",
-                      stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
+                      "text-xs sm:text-sm font-medium px-2 py-1 rounded-lg",
+                      stat.changeType === 'positive'
+                        ? 'text-green-400 bg-green-400/10'
+                        : 'text-red-400 bg-red-400/10'
                     )}>
                       {stat.change}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-xs sm:text-sm text-gray-400">{stat.label}</div>
                 </div>
               );
             })}
           </div>
 
-          {/* User Level Card for Freelancers */}
+          {/* User Level Card */}
           {userType === 'freelancer' && (
-            <div className="mb-8">
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl overflow-hidden">
               <UserLevelCard
                 userStats={userStats}
                 totalPoints={totalPoints}
@@ -519,17 +674,17 @@ export default function DashboardPage() {
           )}
 
           {/* Tabs */}
-          <div className="border-b border-gray-800 mb-8">
-            <div className="flex space-x-8">
+          <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-1 border border-gray-800/50">
+            <div className="flex flex-wrap gap-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "py-4 border-b-2 transition-colors",
+                    "px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex-1 sm:flex-none",
                     activeTab === tab.id
-                      ? "border-purple-500 text-purple-400"
-                      : "border-transparent text-gray-400 hover:text-white"
+                      ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                   )}
                 >
                   {tab.label}
@@ -539,11 +694,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Recent Projects */}
-              <div className="lg:col-span-2">
-                <div className="glass-card p-6 rounded-2xl">
+          <div className="mt-6">
+            {activeTab === 'overview' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                {/* Recent Projects */}
+                <div className="lg:col-span-2">
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-white">
                       {userType === 'freelancer' ? 'Recent Portfolio' : 'Recent Projects'}
@@ -556,14 +712,14 @@ export default function DashboardPage() {
                     </button>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {recentProjects.slice(0, 4).map((project) => (
-                      <div key={project.id} className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl">
-                        <div className="flex items-center space-x-4">
+                      <div key={project.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-200 border border-gray-700/50">
+                        <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-0">
                           {getStatusIcon(project.status)}
-                          <div>
-                            <h4 className="text-white font-medium">{project.title}</h4>
-                            <p className="text-sm text-gray-400">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-white font-medium text-sm sm:text-base truncate">{project.title}</h4>
+                            <p className="text-xs sm:text-sm text-gray-400 truncate">
                               {userType === 'freelancer'
                                 ? `Client: ${(project as any).client}`
                                 : `Freelancer: ${(project as any).freelancer}`
@@ -571,39 +727,32 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="text-white font-medium">{safeCurrency(project.budget)}</div>
-                            <div className="text-sm text-gray-400">
+
+                        <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4">
+                          <div className="text-left sm:text-right">
+                            <div className="text-white font-medium text-sm sm:text-base">{safeCurrency(project.budget)}</div>
+                            <div className="text-xs sm:text-sm text-gray-400">
                               Due {safeRelativeTime(project.deadline)}
                             </div>
                           </div>
-                          
-                          {project.messages > 0 && (
-                            <Link
-                              href={`/en/messages?project=${project.id}`}
-                              className="flex items-center space-x-1 text-purple-400 hover:text-purple-300 transition-colors"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              <span className="text-sm">{project.messages}</span>
-                            </Link>
-                          )}
 
                           <div className="flex items-center space-x-2">
+                            {project.messages > 0 && (
+                              <Link
+                                href={`/en/messages?project=${project.id}`}
+                                className="flex items-center space-x-1 text-purple-400 hover:text-purple-300 transition-colors p-2 rounded-lg hover:bg-purple-500/10"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                <span className="text-sm hidden sm:inline">{project.messages}</span>
+                              </Link>
+                            )}
+
                             <Link
                               href={`/en/projects/${project.id}`}
-                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                              className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50"
                               title="View Project"
                             >
                               <Eye className="w-4 h-4" />
-                            </Link>
-                            <Link
-                              href={`/en/messages?project=${project.id}`}
-                              className="p-2 text-gray-400 hover:text-white transition-colors"
-                              title="Message"
-                            >
-                              <MessageCircle className="w-4 h-4" />
                             </Link>
                           </div>
                         </div>
@@ -638,53 +787,91 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="glass-card p-6 rounded-2xl">
-                  <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                  <div className="space-y-3">
-                    {userType === 'client' ? (
-                      <>
-                        <Link href="/en/jobs/create" className="block w-full btn-secondary text-center">
-                          📝 Post New Job
+                {/* Navigation Card */}
+                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
+                  <h3 className="text-lg font-semibold text-white mb-4">Navigation</h3>
+
+                  {/* Main Navigation Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <Link
+                      href="/en/dashboard"
+                      className="flex flex-col items-center p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/25">
+                        <Home className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-blue-400 text-center font-medium">Dashboard</span>
+                    </Link>
+
+                    <Link
+                      href={userType === 'freelancer' ? '/en/projects' : '/en/jobs'}
+                      className="flex flex-col items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/25">
+                        <Briefcase className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-purple-400 text-center font-medium">
+                        {userType === 'freelancer' ? 'Projects' : 'Jobs'}
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/en/messages"
+                      className="flex flex-col items-center p-3 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/25">
+                        <MessageCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-green-400 text-center font-medium">Messages</span>
+                    </Link>
+
+                    <Link
+                      href="/en/payments"
+                      className="flex flex-col items-center p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-yellow-500/25">
+                        <DollarSign className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-yellow-400 text-center font-medium">Payments</span>
+                    </Link>
+
+                    <Link
+                      href="/en/reviews"
+                      className="flex flex-col items-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/25">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-orange-400 text-center font-medium">Reviews</span>
+                    </Link>
+
+                    <Link
+                      href="/en/reports"
+                      className="flex flex-col items-center p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/25">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-indigo-400 text-center font-medium">Reports</span>
+                    </Link>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="border-t border-gray-800/50 pt-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Quick Actions</h4>
+                    <div className="space-y-2">
+                      {userType === 'client' ? (
+                        <Link href="/en/jobs/create" className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 text-sm">
+                          <Plus className="w-4 h-4" />
+                          Post New Job
                         </Link>
-                        <Link href="/en/freelancers" className="block w-full btn-secondary text-center">
-                          👥 Find Freelancers
+                      ) : (
+                        <Link href="/en/jobs" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 text-sm">
+                          <Search className="w-4 h-4" />
+                          Find Jobs
                         </Link>
-                        <Link href="/en/payments" className="block w-full btn-secondary text-center">
-                          💳 Payments
-                        </Link>
-                        <Link href="/en/messages" className="block w-full btn-secondary text-center">
-                          💬 Messages
-                        </Link>
-                        <Link href="/en/settings" className="block w-full btn-secondary text-center">
-                          ⚙️ Settings
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/en/jobs" className="block w-full btn-secondary text-center">
-                          🔍 Find Jobs
-                        </Link>
-                        <button
-                          onClick={() => setActiveTab('portfolio')}
-                          className="block w-full btn-secondary text-center"
-                        >
-                          🎨 My Portfolio
-                        </button>
-                        <Link href="/en/reviews" className="block w-full btn-secondary text-center">
-                          ⭐ Reviews
-                        </Link>
-                        <Link href="/en/payments" className="block w-full btn-secondary text-center">
-                          💳 Payments
-                        </Link>
-                        <Link href="/en/messages" className="block w-full btn-secondary text-center">
-                          💬 Messages
-                        </Link>
-                        <Link href="/en/settings" className="block w-full btn-secondary text-center">
-                          ⚙️ Settings
-                        </Link>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -709,6 +896,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+
+
               </div>
             </div>
           )}
@@ -890,11 +1079,9 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {activeTab === 'test' && userType === 'freelancer' && (
-            <div className="space-y-8">
-              <SimplePortfolioTest />
-            </div>
-          )}
+
+
+
 
           {activeTab === 'earnings' && (
             <div className="glass-card p-6 rounded-2xl">
@@ -915,8 +1102,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-        </div>
-        </div>
+          </div>
         </div>
       </div>
     </div>

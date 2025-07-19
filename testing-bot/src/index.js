@@ -127,9 +127,11 @@ class HAITestingBot {
   }
 
   async runQuickAuthTest() {
-    const spinner = ora('🔍 Запуск быстрой диагностики аутентификации...').start();
-    
+    const spinner = ora('🔍 Проверка доступности H-AI Platform...').start();
+
     try {
+      // Сначала проверяем доступность сайта через TestRunner
+      spinner.text = '🔍 Запуск быстрой диагностики аутентификации...';
       const results = await this.testRunner.runAuthTests();
       spinner.succeed('✅ Диагностика завершена');
       
@@ -162,6 +164,19 @@ class HAITestingBot {
     } catch (error) {
       spinner.fail('❌ Ошибка при диагностике');
       console.error(chalk.red(`Ошибка: ${error.message}`));
+
+      // Специальная обработка ошибок доступности
+      if (error.message.includes('недоступна') || error.message.includes('отменено')) {
+        console.log(chalk.yellow('\n💡 Совет: Убедитесь что H-AI Platform запущена'));
+        console.log(chalk.cyan('   🚀 Команда для запуска: npm run dev'));
+        console.log(chalk.cyan('   🌐 URL: http://localhost:3000\n'));
+      } else if (error.message.includes('так и не стала доступна')) {
+        console.log(chalk.yellow('\n💡 Возможные причины:'));
+        console.log(chalk.gray('   • Проект не запущен'));
+        console.log(chalk.gray('   • Запущен на другом порту'));
+        console.log(chalk.gray('   • Ошибки при сборке'));
+        console.log(chalk.gray('   • Проблемы с зависимостями\n'));
+      }
     }
 
     await this.waitForContinue();

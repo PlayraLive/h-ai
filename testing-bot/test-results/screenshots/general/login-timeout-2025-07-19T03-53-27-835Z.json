@@ -1,0 +1,10 @@
+{
+  "name": "login-timeout",
+  "timestamp": "2025-07-19T03:53:28.393Z",
+  "url": "http://localhost:3000/en/login",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "category": "general"
+}

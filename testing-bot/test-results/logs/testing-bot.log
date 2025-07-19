@@ -1,0 +1,1340 @@
+2025-07-19 06:25:29 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:25:29 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:25:29 ERROR [TestRunner] ❌ Ошибка инициализации браузера: browserType.launch: Executable doesn't exist at /Users/alexandr/Library/Caches/ms-playwright/chromium_headless_shell-1181/chrome-mac/headless_shell
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+2025-07-19 06:25:29 ERROR [TestRunner] ❌ Ошибка при тестировании аутентификации: browserType.launch: Executable doesn't exist at /Users/alexandr/Library/Caches/ms-playwright/chromium_headless_shell-1181/chrome-mac/headless_shell
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+2025-07-19 06:25:29 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:28:14 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:28:14 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:28:23 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:28:23 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:28:23 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Загрузка страницы логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:23 ERROR [TestRunner] ❌ Тест провален: Загрузка страницы логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "networkidle"[22m
+
+2025-07-19 06:28:23 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:28:24 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка формы регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:24 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/register", waiting until "networkidle"[22m
+
+2025-07-19 06:28:24 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:28:24 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Валидация полей
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:24 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:24 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:28:24 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Процесс логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:24 ERROR [TestRunner] ❌ Тест провален: Процесс логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:24 INFO [TestRunner] 🧪 Выполнение теста: Процесс регистрации
+2025-07-19 06:28:24 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Процесс регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:24 ERROR [TestRunner] ❌ Тест провален: Процесс регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/register", waiting until "load"[22m
+
+2025-07-19 06:28:24 INFO [TestRunner] 🧪 Выполнение теста: Редирект после логина
+2025-07-19 06:28:25 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Редирект после логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:25 ERROR [TestRunner] ❌ Тест провален: Редирект после логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/dashboard
+Call log:
+[2m  - navigating to "http://localhost:3001/en/dashboard", waiting until "load"[22m
+
+2025-07-19 06:28:25 INFO [TestRunner] 🧪 Выполнение теста: Проверка сессии
+2025-07-19 06:28:25 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка сессии
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:25 ERROR [TestRunner] ❌ Тест провален: Проверка сессии - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:27 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:28:27 INFO [AIAgent] 🧠 AI-анализ проблем аутентификации
+2025-07-19 06:28:27 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:28:52 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:28:52 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:28:54 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:28:54 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:28:54 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Загрузка страницы логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:54 ERROR [TestRunner] ❌ Тест провален: Загрузка страницы логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "networkidle"[22m
+
+2025-07-19 06:28:54 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:28:54 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка формы регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:54 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/register", waiting until "networkidle"[22m
+
+2025-07-19 06:28:54 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:28:55 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Валидация полей
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:55 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:55 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:28:55 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Процесс логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:55 ERROR [TestRunner] ❌ Тест провален: Процесс логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:55 INFO [TestRunner] 🧪 Выполнение теста: Процесс регистрации
+2025-07-19 06:28:55 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Процесс регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:55 ERROR [TestRunner] ❌ Тест провален: Процесс регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/register", waiting until "load"[22m
+
+2025-07-19 06:28:55 INFO [TestRunner] 🧪 Выполнение теста: Редирект после логина
+2025-07-19 06:28:55 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Редирект после логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:55 ERROR [TestRunner] ❌ Тест провален: Редирект после логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/dashboard
+Call log:
+[2m  - navigating to "http://localhost:3001/en/dashboard", waiting until "load"[22m
+
+2025-07-19 06:28:55 INFO [TestRunner] 🧪 Выполнение теста: Проверка сессии
+2025-07-19 06:28:55 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка сессии
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.waitForContinue (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:410:5)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:167:5)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:28:55 ERROR [TestRunner] ❌ Тест провален: Проверка сессии - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3001/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:28:56 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:28:56 INFO [AIAgent] 🧠 AI-анализ проблем аутентификации
+2025-07-19 06:28:56 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:30:29 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:30:29 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:30:33 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:30:33 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:30:54 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Загрузка страницы логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:30:54 ERROR [TestRunner] ❌ Тест провален: Загрузка страницы логина - page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('form') to be visible[22m
+
+2025-07-19 06:30:54 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:30:56 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка формы регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:30:56 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - Отсутствует обязательное поле: input[name="name"]
+2025-07-19 06:30:56 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:31:27 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Валидация полей
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:31:27 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+[2m    - waiting for" http://localhost:3000/en" navigation to finish...[22m
+
+2025-07-19 06:31:27 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:31:45 ERROR [ScreenshotManager] Ошибка создания скриншота: before-login
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.testLoginProcess (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:280:5)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:31:54 ERROR [ScreenshotManager] Ошибка создания скриншота: after-successful-login
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.testLoginProcess (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:287:7)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:31:54 INFO [TestRunner] ✅ Тест пройден: Процесс логина (26793ms)
+2025-07-19 06:31:54 INFO [TestRunner] 🧪 Выполнение теста: Процесс регистрации
+2025-07-19 06:32:26 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Процесс регистрации
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:32:26 ERROR [TestRunner] ❌ Тест провален: Процесс регистрации - page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[name="name"]')[22m
+
+2025-07-19 06:32:26 INFO [TestRunner] 🧪 Выполнение теста: Редирект после логина
+2025-07-19 06:32:43 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Редирект после логина
+page.screenshot: options.quality is unsupported for the png screenshots
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:32:43 ERROR [TestRunner] ❌ Тест провален: Редирект после логина - page.waitForURL: Timeout 15000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/auth/login" until "load"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+  navigated to "http://localhost:3000/en/dashboard"
+============================================================
+2025-07-19 06:32:43 INFO [TestRunner] 🧪 Выполнение теста: Проверка сессии
+2025-07-19 06:32:45 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Проверка сессии
+page.screenshot: Target page, context or browser has been closed
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:49:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:32:45 ERROR [TestRunner] ❌ Тест провален: Проверка сессии - page.fill: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+
+2025-07-19 06:32:45 ERROR [TestRunner] ❌ Ошибка при закрытии браузера: browserContext.close: Target page, context or browser has been closed
+2025-07-19 06:32:45 INFO [AIAgent] 🧠 AI-анализ проблем аутентификации
+2025-07-19 06:36:02 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:36:02 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:36:04 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:36:04 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:36:04 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:36:04 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:36:04 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:36:04 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:36:04 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:36:05 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:36:05 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:36:05 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:36:05 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:36:05 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:339:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:245:31)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:36:06 INFO [ScreenshotManager] Screenshot taken: error-Загрузка страницы логина-2025-07-19T03-36-05-961Z.png
+2025-07-19 06:36:06 ERROR [TestRunner] ❌ Тест провален: Загрузка страницы логина - Не удалось найти страницу логина ни одним способом
+2025-07-19 06:36:06 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:36:06 INFO [TestRunner] 🔍 Умный поиск страницы регистрации...
+2025-07-19 06:36:06 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/register
+2025-07-19 06:36:06 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/auth/register
+2025-07-19 06:36:06 INFO [TestRunner] 🔍 Проверяем URL регистрации: /register
+2025-07-19 06:36:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /auth/register
+2025-07-19 06:36:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /signup
+2025-07-19 06:36:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/signup
+2025-07-19 06:36:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /sign-up
+2025-07-19 06:36:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/sign-up
+2025-07-19 06:36:08 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 06:36:08 INFO [TestRunner] 🔍 Ищем ссылки на регистрацию в навигации...
+2025-07-19 06:36:08 ERROR [TestRunner] Ошибка поиска регистрации через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findRegisterThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:538:23)
+    at TestRunner.testRegistrationForm (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:434:31)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:36:08 INFO [ScreenshotManager] Screenshot taken: error-Проверка формы регистрации-2025-07-19T03-36-08-390Z.png
+2025-07-19 06:36:08 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - Не удалось найти страницу регистрации ни одним способом
+2025-07-19 06:36:08 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:36:09 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:36:09 INFO [ScreenshotManager] Screenshot taken: error-Валидация полей-2025-07-19T03-36-08-874Z.png
+2025-07-19 06:36:09 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:36:09 INFO [TestRunner] 🔐 Умный тест процесса логина...
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:36:09 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:36:10 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:36:10 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:36:10 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:339:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:245:31)
+    at async TestRunner.testLoginProcess (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:619:5)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:36:10 INFO [ScreenshotManager] Screenshot taken: error-Процесс логина-2025-07-19T03-36-10-324Z.png
+2025-07-19 06:36:10 ERROR [TestRunner] ❌ Тест провален: Процесс логина - Не удалось найти страницу логина ни одним способом
+2025-07-19 06:36:10 INFO [TestRunner] 🧪 Выполнение теста: Процесс регистрации
+2025-07-19 06:36:11 INFO [ScreenshotManager] Screenshot taken: error-Процесс регистрации-2025-07-19T03-36-10-830Z.png
+2025-07-19 06:36:11 ERROR [TestRunner] ❌ Тест провален: Процесс регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/register", waiting until "load"[22m
+
+2025-07-19 06:36:11 INFO [TestRunner] 🧪 Выполнение теста: Редирект после логина
+2025-07-19 06:36:11 INFO [ScreenshotManager] Screenshot taken: error-Редирект после логина-2025-07-19T03-36-11-326Z.png
+2025-07-19 06:36:11 ERROR [TestRunner] ❌ Тест провален: Редирект после логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/dashboard
+Call log:
+[2m  - navigating to "http://localhost:3000/en/dashboard", waiting until "load"[22m
+
+2025-07-19 06:36:11 INFO [TestRunner] 🧪 Выполнение теста: Проверка сессии
+2025-07-19 06:36:12 INFO [ScreenshotManager] Screenshot taken: error-Проверка сессии-2025-07-19T03-36-11-812Z.png
+2025-07-19 06:36:12 ERROR [TestRunner] ❌ Тест провален: Проверка сессии - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:36:12 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:36:12 INFO [AIAgent] 🧠 AI-анализ проблем аутентификации
+2025-07-19 06:36:12 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:38:10 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:38:10 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:38:13 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:38:13 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:38:13 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:38:13 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:38:14 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:38:14 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:38:14 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:38:14 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:38:14 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:38:15 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:38:15 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:38:15 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:339:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:245:31)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:38:15 INFO [ScreenshotManager] Screenshot taken: error-Загрузка страницы логина-2025-07-19T03-38-15-329Z.png
+2025-07-19 06:38:15 ERROR [TestRunner] ❌ Тест провален: Загрузка страницы логина - Не удалось найти страницу логина ни одним способом
+2025-07-19 06:38:15 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:38:15 INFO [TestRunner] 🔍 Умный поиск страницы регистрации...
+2025-07-19 06:38:15 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/register
+2025-07-19 06:38:15 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/auth/register
+2025-07-19 06:38:16 INFO [TestRunner] 🔍 Проверяем URL регистрации: /register
+2025-07-19 06:38:16 INFO [TestRunner] 🔍 Проверяем URL регистрации: /auth/register
+2025-07-19 06:38:16 INFO [TestRunner] 🔍 Проверяем URL регистрации: /signup
+2025-07-19 06:38:16 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/signup
+2025-07-19 06:38:17 INFO [TestRunner] 🔍 Проверяем URL регистрации: /sign-up
+2025-07-19 06:38:17 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/sign-up
+2025-07-19 06:38:17 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 06:38:17 INFO [TestRunner] 🔍 Ищем ссылки на регистрацию в навигации...
+2025-07-19 06:38:17 ERROR [TestRunner] Ошибка поиска регистрации через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findRegisterThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:538:23)
+    at TestRunner.testRegistrationForm (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:434:31)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:38:17 INFO [ScreenshotManager] Screenshot taken: error-Проверка формы регистрации-2025-07-19T03-38-17-634Z.png
+2025-07-19 06:38:17 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - Не удалось найти страницу регистрации ни одним способом
+2025-07-19 06:38:17 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:38:18 INFO [ScreenshotManager] Screenshot taken: error-Валидация полей-2025-07-19T03-38-18-170Z.png
+2025-07-19 06:38:18 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:38:18 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:38:18 INFO [TestRunner] 🔐 Умный тест процесса логина...
+2025-07-19 06:38:18 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:38:18 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:38:18 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:38:18 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:38:19 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:38:19 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:38:19 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:38:19 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:38:19 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:38:20 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:339:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:245:31)
+    at async TestRunner.testLoginProcess (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:619:5)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:167:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:38:20 INFO [ScreenshotManager] Screenshot taken: error-Процесс логина-2025-07-19T03-38-20-167Z.png
+2025-07-19 06:38:20 ERROR [TestRunner] ❌ Тест провален: Процесс логина - Не удалось найти страницу логина ни одним способом
+2025-07-19 06:38:20 INFO [TestRunner] 🧪 Выполнение теста: Процесс регистрации
+2025-07-19 06:38:21 INFO [ScreenshotManager] Screenshot taken: error-Процесс регистрации-2025-07-19T03-38-20-771Z.png
+2025-07-19 06:38:21 ERROR [TestRunner] ❌ Тест провален: Процесс регистрации - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/register", waiting until "load"[22m
+
+2025-07-19 06:38:21 INFO [TestRunner] 🧪 Выполнение теста: Редирект после логина
+2025-07-19 06:38:21 INFO [ScreenshotManager] Screenshot taken: error-Редирект после логина-2025-07-19T03-38-21-432Z.png
+2025-07-19 06:38:21 ERROR [TestRunner] ❌ Тест провален: Редирект после логина - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/dashboard
+Call log:
+[2m  - navigating to "http://localhost:3000/en/dashboard", waiting until "load"[22m
+
+2025-07-19 06:38:21 INFO [TestRunner] 🧪 Выполнение теста: Проверка сессии
+2025-07-19 06:38:22 INFO [ScreenshotManager] Screenshot taken: error-Проверка сессии-2025-07-19T03-38-22-002Z.png
+2025-07-19 06:38:22 ERROR [TestRunner] ❌ Тест провален: Проверка сессии - page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:38:23 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:38:23 INFO [AIAgent] 🧠 AI-анализ проблем аутентификации
+2025-07-19 06:38:23 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:39:30 INFO [TestRunner] 🔐 Запуск тестов аутентификации
+2025-07-19 06:39:30 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:39:33 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:39:33 INFO [TestRunner] 🧪 Выполнение теста: Загрузка страницы логина
+2025-07-19 06:39:33 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:39:33 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:39:43 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:39:47 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:39:51 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:39:53 INFO [TestRunner] ✅ Найдена форма логина: form:has(input[type="email"], input[type="password"])
+2025-07-19 06:39:53 INFO [TestRunner] ✅ Найдена страница логина: /auth/login
+2025-07-19 06:39:53 WARN [TestRunner] Обнаружены ошибки в консоли: Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 401 (), Failed to load resource: the server responded with a status of 401 ()
+2025-07-19 06:39:53 INFO [ScreenshotManager] Screenshot taken: login-page-loaded-2025-07-19T03-39-53-651Z.png
+2025-07-19 06:39:53 INFO [TestRunner] ✅ Страница логина успешно загружена: /auth/login
+2025-07-19 06:39:53 INFO [TestRunner] ✅ Тест пройден: Загрузка страницы логина (20348ms)
+2025-07-19 06:39:53 INFO [TestRunner] 🧪 Выполнение теста: Проверка формы регистрации
+2025-07-19 06:39:53 INFO [TestRunner] 🔍 Умный поиск страницы регистрации...
+2025-07-19 06:39:53 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/register
+2025-07-19 06:39:55 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/auth/register
+2025-07-19 06:39:57 INFO [TestRunner] 🔍 Проверяем URL регистрации: /register
+2025-07-19 06:40:01 INFO [TestRunner] 🔍 Проверяем URL регистрации: /auth/register
+2025-07-19 06:40:03 INFO [TestRunner] 🔍 Проверяем URL регистрации: /signup
+2025-07-19 06:40:07 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/signup
+2025-07-19 06:40:12 INFO [TestRunner] 🔍 Проверяем URL регистрации: /sign-up
+2025-07-19 06:40:15 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/sign-up
+2025-07-19 06:40:17 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 06:40:17 INFO [TestRunner] 🔍 Ищем ссылки на регистрацию в навигации...
+2025-07-19 06:40:20 INFO [TestRunner] 🔗 Найдена ссылка на регистрацию: /en/signup
+2025-07-19 06:40:21 INFO [TestRunner] 🔗 Найдена ссылка на регистрацию: /en/signup
+2025-07-19 06:40:22 INFO [ScreenshotManager] Screenshot taken: error-Проверка формы регистрации-2025-07-19T03-40-22-425Z.png
+2025-07-19 06:40:22 ERROR [TestRunner] ❌ Тест провален: Проверка формы регистрации - Не удалось найти страницу регистрации ни одним способом
+2025-07-19 06:40:22 INFO [TestRunner] 🧪 Выполнение теста: Валидация полей
+2025-07-19 06:40:32 ERROR [ScreenshotManager] Ошибка создания скриншота: error-Валидация полей
+page.screenshot: Target page, context or browser has been closed
+    at ScreenshotManager.takeScreenshot (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/utils/screenshot-manager.js:53:18)
+    at async TestRunner.runSingleTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:180:26)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:137:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:40:32 ERROR [TestRunner] ❌ Тест провален: Валидация полей - page.fill: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+
+2025-07-19 06:40:32 INFO [TestRunner] 🧪 Выполнение теста: Процесс логина
+2025-07-19 06:40:32 INFO [TestRunner] 🔐 Умный тест процесса логина...
+2025-07-19 06:40:32 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:40:32 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:40:32 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:45:56 INFO [TestRunner] 🤖 AI система готова к работе
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:45:56 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:45:56 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:45:56 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:45:56 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:45:56 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:45:56 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:45:56 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:45:56 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:45:56 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:45:56 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:45:56 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:45:56 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:45:56 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:45:56 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:45:56 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:45:56 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:46:17 INFO [TestRunner] 🔐 Запуск AI-powered тестов аутентификации
+2025-07-19 06:46:17 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:46:20 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:46:20 INFO [AIAgent] 💡 Генерация AI-инсайтов...
+2025-07-19 06:46:20 INFO [TestRunner] 🤖 Получение AI-инсайтов...
+2025-07-19 06:46:20 INFO [TestRunner] 🧪 AI-тест: Загрузка страницы логина
+2025-07-19 06:46:20 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:46:20 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:46:20 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:20 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:46:20 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:46:21 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:46:21 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:46:21 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:46:21 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:46:21 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:46:22 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:450:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:356:31)
+    at async TestRunner.runAIEnhancedTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:218:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:160:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:46:22 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:22 ERROR [TestRunner] ❌ Тест "Загрузка страницы логина" провален: Не удалось найти страницу логина ни одним способом
+2025-07-19 06:46:22 INFO [TestRunner] 🧪 AI-тест: Проверка формы регистрации
+2025-07-19 06:46:22 INFO [TestRunner] 🔍 Умный поиск страницы регистрации...
+2025-07-19 06:46:22 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/register
+2025-07-19 06:46:22 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:22 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/auth/register
+2025-07-19 06:46:22 INFO [TestRunner] 🔍 Проверяем URL регистрации: /register
+2025-07-19 06:46:23 INFO [TestRunner] 🔍 Проверяем URL регистрации: /auth/register
+2025-07-19 06:46:23 INFO [TestRunner] 🔍 Проверяем URL регистрации: /signup
+2025-07-19 06:46:23 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/signup
+2025-07-19 06:46:23 INFO [TestRunner] 🔍 Проверяем URL регистрации: /sign-up
+2025-07-19 06:46:24 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/sign-up
+2025-07-19 06:46:24 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 06:46:24 INFO [TestRunner] 🔍 Ищем ссылки на регистрацию в навигации...
+2025-07-19 06:46:24 ERROR [TestRunner] Ошибка поиска регистрации через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findRegisterThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:649:23)
+    at TestRunner.testRegistrationForm (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:545:31)
+    at async TestRunner.runAIEnhancedTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:218:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:160:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:46:24 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:24 ERROR [TestRunner] ❌ Тест "Проверка формы регистрации" провален: Не удалось найти страницу регистрации ни одним способом
+2025-07-19 06:46:24 INFO [TestRunner] 🧪 AI-тест: Валидация полей
+2025-07-19 06:46:24 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:24 ERROR [TestRunner] ❌ Тест "Валидация полей" провален: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:46:24 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:24 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:24 INFO [TestRunner] 🧪 AI-тест: Процесс логина
+2025-07-19 06:46:24 INFO [TestRunner] 🔐 Умный тест процесса логина...
+2025-07-19 06:46:24 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:46:24 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Проверяем URL: /en/auth/login
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Проверяем URL: /login
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Проверяем URL: /auth/login
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Проверяем URL: /signin
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Проверяем URL: /en/signin
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 06:46:25 INFO [TestRunner] 🔍 Ищем ссылки на логин в навигации...
+2025-07-19 06:46:26 ERROR [TestRunner] Ошибка поиска через навигацию
+page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/
+Call log:
+[2m  - navigating to "http://localhost:3000/", waiting until "networkidle"[22m
+
+    at TestRunner.findLoginThroughNavigation (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:450:23)
+    at TestRunner.testLoginPageLoad (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:356:31)
+    at async TestRunner.testLoginProcess (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:730:5)
+    at async TestRunner.runAIEnhancedTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:218:7)
+    at async TestRunner.runAuthTests (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:160:9)
+    at async HAITestingBot.runQuickAuthTest (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (/Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:46:26 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:26 ERROR [TestRunner] ❌ Тест "Процесс логина" провален: Не удалось найти страницу логина ни одним способом
+2025-07-19 06:46:26 INFO [TestRunner] 🧪 AI-тест: Процесс регистрации
+2025-07-19 06:46:26 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:26 ERROR [TestRunner] ❌ Тест "Процесс регистрации" провален: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/register
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/register", waiting until "load"[22m
+
+2025-07-19 06:46:26 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:26 INFO [TestRunner] 🧪 AI-тест: Редирект после логина
+2025-07-19 06:46:26 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:26 ERROR [TestRunner] ❌ Тест "Редирект после логина" провален: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/dashboard
+Call log:
+[2m  - navigating to "http://localhost:3000/en/dashboard", waiting until "load"[22m
+
+2025-07-19 06:46:26 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:26 INFO [TestRunner] 🧪 AI-тест: Проверка сессии
+2025-07-19 06:46:26 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:26 ERROR [TestRunner] ❌ Тест "Проверка сессии" провален: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/en/auth/login
+Call log:
+[2m  - navigating to "http://localhost:3000/en/auth/login", waiting until "load"[22m
+
+2025-07-19 06:46:26 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:26 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 06:46:26 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 06:46:26 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:26 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:26 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 06:46:26 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async TestRunner.performAIAnalysis (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:259:26)
+    at async TestRunner.runAuthTests (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:164:7)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:133:23)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+2025-07-19 06:46:26 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:46:26 INFO [TestRunner] 🧠 Выполнение AI-анализа результатов...
+2025-07-19 06:46:26 INFO [TestRunner] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:46:28 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:46:28 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 06:46:28 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 06:46:28 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:46:28 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:46:28 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 06:46:28 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:154:28)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:464:3
+2025-07-19 06:46:28 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:50:16 INFO [TestRunner] 🤖 AI система готова к работе
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:50:16 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:50:16 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:50:16 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:50:16 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:50:16 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:50:16 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:50:16 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:50:16 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:50:16 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:50:16 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:50:16 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 06:50:16 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 06:50:16 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 06:50:16 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 06:50:16 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 06:50:16 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 06:50:36 INFO [TestRunner] 🔐 Запуск AI-powered тестов аутентификации
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверка доступности H-AI Platform...
+2025-07-19 06:50:36 WARN [TestRunner] ⚠️ H-AI Platform недоступна на http://localhost:3000
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Поиск H-AI Platform на других портах...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Умный поиск H-AI Platform...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 3000...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 3001...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 3002...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 8000...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 8080...
+2025-07-19 06:50:36 INFO [TestRunner] 🔍 Проверяем порт 5000...
+2025-07-19 06:50:36 INFO [TestRunner] 🚀 H-AI Platform не запущена. Варианты действий:
+2025-07-19 06:51:26 INFO [TestRunner] 🚀 Автоматический запуск H-AI Platform...
+2025-07-19 06:51:26 INFO [TestRunner] 📁 Путь к проекту: /Users/alexandr/Desktop/CODeAPPs/H-Ai
+2025-07-19 06:51:26 INFO [TestRunner] ⏳ Запуск H-AI Platform...
+2025-07-19 06:51:51 INFO [TestRunner] ✅ H-AI Platform успешно запущена!
+2025-07-19 06:51:51 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 06:51:56 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 06:51:56 INFO [AIAgent] 💡 Генерация AI-инсайтов...
+2025-07-19 06:51:56 INFO [TestRunner] 🤖 Получение AI-инсайтов...
+2025-07-19 06:51:56 INFO [TestRunner] 🧪 AI-тест: Загрузка страницы логина
+2025-07-19 06:51:56 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:51:56 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:51:56 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:52:03 INFO [TestRunner] ✅ Найдена форма логина: form:has(input[type="email"], input[type="password"])
+2025-07-19 06:52:03 INFO [TestRunner] ✅ Найдена страница логина: /en/login
+2025-07-19 06:52:03 WARN [TestRunner] Обнаружены ошибки в консоли: Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 ()
+2025-07-19 06:52:04 INFO [ScreenshotManager] Screenshot taken: login-page-loaded-2025-07-19T03-52-03-703Z.png
+2025-07-19 06:52:04 INFO [TestRunner] ✅ Страница логина успешно загружена: /en/login
+2025-07-19 06:52:04 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:52:04 INFO [TestRunner] ✅ Тест "Загрузка страницы логина" пройден (7695ms)
+2025-07-19 06:52:04 INFO [TestRunner] 🧪 AI-тест: Проверка формы регистрации
+2025-07-19 06:52:04 INFO [TestRunner] 🔍 Умный поиск страницы регистрации...
+2025-07-19 06:52:04 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/register
+2025-07-19 06:52:09 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/auth/register
+2025-07-19 06:52:11 INFO [TestRunner] 🔍 Проверяем URL регистрации: /register
+2025-07-19 06:52:17 INFO [TestRunner] 🔍 Проверяем URL регистрации: /auth/register
+2025-07-19 06:52:19 INFO [TestRunner] 🔍 Проверяем URL регистрации: /signup
+2025-07-19 06:52:26 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/signup
+2025-07-19 06:52:33 INFO [TestRunner] 🔍 Проверяем URL регистрации: /sign-up
+2025-07-19 06:52:40 INFO [TestRunner] 🔍 Проверяем URL регистрации: /en/sign-up
+2025-07-19 06:52:43 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 06:52:43 INFO [TestRunner] 🔍 Ищем ссылки на регистрацию в навигации...
+2025-07-19 06:52:48 INFO [TestRunner] 🔗 Найдена ссылка на регистрацию: /en/signup
+2025-07-19 06:52:50 ERROR [TestRunner] ❌ Тест "Проверка формы регистрации" провален: Не удалось найти страницу регистрации ни одним способом
+2025-07-19 06:52:50 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:52:50 INFO [TestRunner] 🧪 AI-тест: Валидация полей
+2025-07-19 06:52:50 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:53:21 ERROR [TestRunner] ❌ Тест "Валидация полей" провален: page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+
+2025-07-19 06:53:21 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:53:21 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:53:21 INFO [TestRunner] 🧪 AI-тест: Процесс логина
+2025-07-19 06:53:21 INFO [TestRunner] 🔐 Умный тест процесса логина...
+2025-07-19 06:53:21 INFO [TestRunner] 🔍 Умный поиск страницы логина...
+2025-07-19 06:53:21 INFO [TestRunner] 🔍 Проверяем URL: /en/login
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Найдена форма логина: form:has(input[type="email"], input[type="password"])
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Найдена страница логина: /en/login
+2025-07-19 06:53:24 WARN [TestRunner] Обнаружены ошибки в консоли: Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (), Failed to load resource: the server responded with a status of 404 (Not Found), Failed to load resource: the server responded with a status of 404 ()
+2025-07-19 06:53:24 INFO [ScreenshotManager] Screenshot taken: login-page-loaded-2025-07-19T03-53-24-011Z.png
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Страница логина успешно загружена: /en/login
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Найдено поле email: input[type="email"]
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Найдено поле пароля: input[type="password"]
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Найдена кнопка отправки: button[type="submit"]
+2025-07-19 06:53:24 INFO [TestRunner] ✅ Все поля формы найдены, начинаем логин...
+2025-07-19 06:53:26 INFO [ScreenshotManager] Screenshot taken: before-login-2025-07-19T03-53-25-376Z.png
+2025-07-19 06:53:26 INFO [TestRunner] ⏳ Ожидание результата логина...
+2025-07-19 06:53:27 INFO [ScreenshotManager] Screenshot taken: login-error-2025-07-19T03-53-27-285Z.png
+2025-07-19 06:53:28 INFO [ScreenshotManager] Screenshot taken: login-timeout-2025-07-19T03-53-27-835Z.png
+2025-07-19 06:53:28 ERROR [TestRunner] ❌ Тест "Процесс логина" провален: Таймаут ожидания результата логина: Ошибка логина: 
+2025-07-19 06:53:28 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:53:28 INFO [TestRunner] 🧪 AI-тест: Процесс регистрации
+2025-07-19 06:53:28 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:54:01 ERROR [TestRunner] ❌ Тест "Процесс регистрации" провален: page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[name="name"]')[22m
+
+2025-07-19 06:54:01 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:54:01 INFO [TestRunner] 🧪 AI-тест: Редирект после логина
+2025-07-19 06:54:01 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:54:28 ERROR [TestRunner] ❌ Тест "Редирект после логина" провален: page.waitForURL: Timeout 15000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/auth/login" until "load"
+  navigated to "http://localhost:3000/en/login"
+============================================================
+2025-07-19 06:54:28 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:54:28 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:54:28 INFO [TestRunner] 🧪 AI-тест: Проверка сессии
+2025-07-19 06:54:58 ERROR [TestRunner] ❌ Тест "Проверка сессии" провален: page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+
+2025-07-19 06:54:58 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:54:58 INFO [TestRunner] 🧠 Выполнение AI-анализа результатов...
+2025-07-19 06:54:59 INFO [TestRunner] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:54:58 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 06:54:58 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 06:54:58 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:54:58 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:54:58 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 06:54:58 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async TestRunner.performAIAnalysis (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:265:26)
+    at async TestRunner.runAuthTests (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:170:7)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:135:23)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+2025-07-19 06:54:58 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 06:54:59 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 06:54:59 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 06:54:59 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 06:54:59 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 06:54:59 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 06:54:59 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 06:54:59 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:156:28)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:479:3
+2025-07-19 06:54:59 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:08:09 INFO [TestRunner] 🤖 AI система готова к работе
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:08:09 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:08:09 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:08:09 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:08:09 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:08:09 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:08:09 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:08:09 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:08:09 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:08:09 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:08:09 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:08:09 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:08:09 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:08:09 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:08:09 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:08:09 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:08:09 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:08:44 INFO [TestRunner] 🔐 Запуск AI-powered тестов аутентификации
+2025-07-19 07:08:44 INFO [TestRunner] 🔍 Проверка доступности H-AI Platform...
+2025-07-19 07:08:46 INFO [TestRunner] ✅ H-AI Platform доступна на http://localhost:3000
+2025-07-19 07:08:46 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 07:08:54 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 07:08:54 INFO [AIAgent] 💡 Генерация AI-инсайтов...
+2025-07-19 07:08:54 INFO [TestRunner] 🤖 Получение AI-инсайтов...
+2025-07-19 07:08:54 INFO [TestRunner] 🧪 AI-тест: Загрузка страницы логина
+2025-07-19 07:08:54 INFO [TestRunner] 🔍 Умный поиск страницы логина с обработкой ошибок...
+2025-07-19 07:08:54 INFO [TestRunner] 🧭 Умная навигация к login...
+2025-07-19 07:08:54 INFO [TestRunner] 🔍 Пробуем URL: /en/login
+2025-07-19 07:08:54 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:09:03 INFO [TestRunner] ✅ Найдена форма логина: form:has(input[type="email"], input[type="password"])
+2025-07-19 07:09:03 INFO [TestRunner] ✅ Найдена страница login: /en/login
+2025-07-19 07:09:03 WARN [TestRunner] Обнаружены ошибки в консоли: Failed to load resource: the server responded with a status of 404 ()
+2025-07-19 07:09:03 INFO [ScreenshotManager] Screenshot taken: login-page-loaded-2025-07-19T04-09-03-274Z.png
+2025-07-19 07:09:03 INFO [TestRunner] ✅ Страница логина успешно загружена: /en/login
+2025-07-19 07:09:03 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:09:03 INFO [TestRunner] ✅ Тест "Загрузка страницы логина" пройден (9716ms)
+2025-07-19 07:09:03 INFO [TestRunner] 🧪 AI-тест: Проверка формы регистрации
+2025-07-19 07:09:03 INFO [TestRunner] 🔍 Умный поиск страницы регистрации с обработкой ошибок...
+2025-07-19 07:09:03 INFO [TestRunner] 🧭 Умная навигация к register...
+2025-07-19 07:09:03 INFO [TestRunner] 🔍 Пробуем URL: /en/register
+2025-07-19 07:09:09 WARN [TestRunner] 🚨 Обнаружена ошибка на странице: Oops! Page Not Found
+2025-07-19 07:09:11 INFO [ScreenshotManager] Screenshot taken: error-page-detected-2025-07-19T04-09-09-393Z.png
+2025-07-19 07:09:11 WARN [TestRunner] ⚠️ Страница /en/register содержит ошибку
+2025-07-19 07:09:11 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:09:19 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:09:24 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-09-19-308Z.png
+2025-07-19 07:09:24 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:09:24 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:09:25 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:09:27 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:09:33 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:09:38 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-09-33-777Z.png
+2025-07-19 07:09:38 INFO [TestRunner] 🔍 Пробуем URL: /en/auth/register
+2025-07-19 07:09:43 WARN [TestRunner] 🚨 Обнаружена ошибка на странице: Oops! Page Not Found
+2025-07-19 07:09:44 INFO [ScreenshotManager] Screenshot taken: error-page-detected-2025-07-19T04-09-43-127Z.png
+2025-07-19 07:09:44 WARN [TestRunner] ⚠️ Страница /en/auth/register содержит ошибку
+2025-07-19 07:09:44 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:09:52 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:09:57 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-09-52-469Z.png
+2025-07-19 07:09:57 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:09:58 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:09:58 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:09:59 INFO [TestRunner] 🔍 Пробуем URL: /register
+2025-07-19 07:10:08 INFO [TestRunner] 🔍 Пробуем URL: /auth/register
+2025-07-19 07:10:11 WARN [TestRunner] 🚨 Обнаружена ошибка на странице: Oops! Page Not Found
+2025-07-19 07:10:11 INFO [ScreenshotManager] Screenshot taken: error-page-detected-2025-07-19T04-10-11-346Z.png
+2025-07-19 07:10:11 WARN [TestRunner] ⚠️ Страница /auth/register содержит ошибку
+2025-07-19 07:10:11 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:10:19 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:10:24 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-10-19-098Z.png
+2025-07-19 07:10:24 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:10:24 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:10:24 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:10:26 INFO [TestRunner] 🔍 Пробуем URL: /signup
+2025-07-19 07:10:33 INFO [TestRunner] 🔍 Пробуем URL: /en/signup
+2025-07-19 07:10:37 INFO [TestRunner] 🔍 Пробуем URL: /sign-up
+2025-07-19 07:10:44 INFO [TestRunner] 🔍 Пробуем URL: /en/sign-up
+2025-07-19 07:10:46 WARN [TestRunner] 🚨 Обнаружена ошибка на странице: Oops! Page Not Found
+2025-07-19 07:10:47 INFO [ScreenshotManager] Screenshot taken: error-page-detected-2025-07-19T04-10-46-663Z.png
+2025-07-19 07:10:47 WARN [TestRunner] ⚠️ Страница /en/sign-up содержит ошибку
+2025-07-19 07:10:47 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:10:55 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:11:00 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-10-55-917Z.png
+2025-07-19 07:11:00 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:11:00 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:01 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:02 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 07:11:02 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:11:12 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:11:19 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-11-12-324Z.png
+2025-07-19 07:11:19 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:11:20 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:20 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:21 ERROR [TestRunner] ❌ Тест "Проверка формы регистрации" провален: Не удалось найти страницу регистрации ни одним способом
+2025-07-19 07:11:21 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:11:21 INFO [TestRunner] 🧪 AI-тест: Полный цикл регистрации
+2025-07-19 07:11:21 INFO [TestRunner] 🔄 Полный цикл регистрации нового пользователя...
+2025-07-19 07:11:21 INFO [TestRunner] 👤 Создаем пользователя: test.user.1752898281940@h-ai.com
+2025-07-19 07:11:21 INFO [TestRunner] 🧭 Умная навигация к register...
+2025-07-19 07:11:21 INFO [TestRunner] 🔍 Пробуем URL: /en/signup
+2025-07-19 07:11:21 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:11:31 INFO [TestRunner] 🔍 Пробуем URL: /en/register
+2025-07-19 07:11:37 WARN [TestRunner] 🚨 Обнаружена ошибка на странице: Oops! Page Not Found
+2025-07-19 07:11:39 INFO [ScreenshotManager] Screenshot taken: error-page-detected-2025-07-19T04-11-37-041Z.png
+2025-07-19 07:11:39 WARN [TestRunner] ⚠️ Страница /en/register содержит ошибку
+2025-07-19 07:11:39 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:11:49 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:11:58 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-11-49-942Z.png
+2025-07-19 07:11:58 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:11:58 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:59 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:11:59 INFO [TestRunner] 🔍 Пробуем URL: /signup
+2025-07-19 07:12:09 INFO [TestRunner] 🔍 Пробуем URL: /register
+2025-07-19 07:12:16 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:12:23 INFO [TestRunner] ✅ Успешно перешли на главную: /
+2025-07-19 07:12:30 INFO [ScreenshotManager] Screenshot taken: homepage-recovery-2025-07-19T04-12-23-849Z.png
+2025-07-19 07:12:30 INFO [TestRunner] 🔍 Поиск register через навигацию...
+2025-07-19 07:12:30 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:12:31 INFO [TestRunner] 🔗 Найдена ссылка: /en/signup
+2025-07-19 07:12:31 ERROR [TestRunner] ❌ Ошибка регистрации: Не удалось найти страницу регистрации
+2025-07-19 07:12:31 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:12:31 ERROR [TestRunner] ❌ Тест "Полный цикл регистрации" провален: Не удалось найти страницу регистрации
+2025-07-19 07:12:31 INFO [TestRunner] 🧪 AI-тест: Полный цикл логина
+2025-07-19 07:12:31 INFO [TestRunner] 🔐 Полный цикл логина...
+2025-07-19 07:12:31 INFO [TestRunner] 🔑 Вход пользователя: admin@h-ai.com
+2025-07-19 07:12:31 INFO [TestRunner] 🧭 Умная навигация к login...
+2025-07-19 07:12:31 INFO [TestRunner] 🔍 Пробуем URL: /en/login
+2025-07-19 07:12:31 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:12:37 INFO [TestRunner] ✅ Найдена форма логина: form:has(input[type="email"], input[type="password"])
+2025-07-19 07:12:37 INFO [TestRunner] ✅ Найдена страница login: /en/login
+2025-07-19 07:12:37 INFO [TestRunner] 📝 Заполнение формы логина...
+2025-07-19 07:12:37 INFO [TestRunner] ✅ Найдено поле email: input[type="email"]
+2025-07-19 07:12:37 INFO [TestRunner] ✅ Найдено поле пароля: input[type="password"]
+2025-07-19 07:12:38 INFO [ScreenshotManager] Screenshot taken: login-form-filled-2025-07-19T04-12-37-749Z.png
+2025-07-19 07:12:38 INFO [TestRunner] ✅ Форма логина заполнена
+2025-07-19 07:12:38 INFO [TestRunner] 📤 Отправка формы логина...
+2025-07-19 07:12:38 INFO [TestRunner] ✅ Найдена кнопка отправки: button[type="submit"]
+2025-07-19 07:12:38 INFO [TestRunner] ⏳ Ожидание обработки логина...
+2025-07-19 07:12:41 INFO [TestRunner] ✅ Проверка успешного логина...
+2025-07-19 07:12:43 INFO [TestRunner] 🔍 Поиск аватарки пользователя...
+2025-07-19 07:12:43 WARN [TestRunner] ⚠️ Аватарка пользователя не найдена
+2025-07-19 07:12:44 INFO [ScreenshotManager] Screenshot taken: user-avatar-not-found-2025-07-19T04-12-43-721Z.png
+2025-07-19 07:12:44 ERROR [TestRunner] ❌ Ошибка логина: Ошибка логина: 
+2025-07-19 07:12:44 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:12:44 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:12:44 ERROR [TestRunner] ❌ Тест "Полный цикл логина" провален: Ошибка логина: 
+2025-07-19 07:12:44 INFO [TestRunner] 🧪 AI-тест: Проверка аватарки в навигации
+2025-07-19 07:12:44 INFO [TestRunner] 👤 Проверка отображения аватарки пользователя...
+2025-07-19 07:12:44 INFO [TestRunner] 🔍 Поиск аватарки пользователя...
+2025-07-19 07:12:44 WARN [TestRunner] ⚠️ Аватарка пользователя не найдена
+2025-07-19 07:12:44 INFO [ScreenshotManager] Screenshot taken: user-avatar-not-found-2025-07-19T04-12-44-264Z.png
+2025-07-19 07:12:44 ERROR [TestRunner] ❌ Ошибка проверки аватарки: Аватарка пользователя не найдена в навигации
+2025-07-19 07:12:44 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:12:44 ERROR [TestRunner] ❌ Тест "Проверка аватарки в навигации" провален: Аватарка пользователя не найдена в навигации
+2025-07-19 07:12:44 INFO [TestRunner] 🧪 AI-тест: Проверка сессии
+2025-07-19 07:12:44 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:13:18 ERROR [TestRunner] ❌ Тест "Проверка сессии" провален: page.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[type="email"]')[22m
+
+2025-07-19 07:13:18 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:13:18 INFO [TestRunner] 🧠 Выполнение AI-анализа результатов...
+2025-07-19 07:13:18 INFO [TestRunner] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:13:18 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 07:13:18 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 07:13:18 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:13:18 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:13:18 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 07:13:18 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async TestRunner.performAIAnalysis (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:264:26)
+    at async TestRunner.runAuthTests (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:169:7)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:135:23)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+2025-07-19 07:13:18 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:13:20 INFO [TestRunner] 🧹 Браузер закрыт
+2025-07-19 07:13:20 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 07:13:20 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 07:13:20 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:13:20 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:13:20 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 07:13:20 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:156:28)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+    at async file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:479:3
+2025-07-19 07:13:20 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:17:58 INFO [TestRunner] 🤖 AI система готова к работе
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:17:58 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:17:58 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:17:58 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация продвинутой AI системы...
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:17:58 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:17:58 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:17:58 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:17:58 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:17:58 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:17:58 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:17:58 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:17:58 INFO [AIAgent] 🧠 Инициализация нейронной сети...
+2025-07-19 07:17:58 INFO [AIAgent] 🎯 Настройка адаптивных стратегий...
+2025-07-19 07:17:58 INFO [AIAgent] 📚 Загрузка обучающих данных...
+2025-07-19 07:17:58 WARN [AIAgent] ⚠️ Не удалось загрузить обучающие данные, начинаем с чистого листа
+2025-07-19 07:17:58 INFO [AIAgent] 🔮 Инициализация модели предсказаний...
+2025-07-19 07:17:58 INFO [AIAgent] ✅ AI система полностью инициализирована
+2025-07-19 07:18:25 INFO [TestRunner] 🔐 Запуск AI-powered тестов аутентификации
+2025-07-19 07:18:25 INFO [TestRunner] 🔍 Проверка доступности H-AI Platform...
+2025-07-19 07:18:27 INFO [TestRunner] ✅ H-AI Platform доступна на http://localhost:3000
+2025-07-19 07:18:27 INFO [TestRunner] 🚀 Инициализация браузера: chromium
+2025-07-19 07:18:36 INFO [TestRunner] ✅ Браузер инициализирован
+2025-07-19 07:18:36 INFO [AIAgent] 💡 Генерация AI-инсайтов...
+2025-07-19 07:18:36 INFO [TestRunner] 🤖 Получение AI-инсайтов...
+2025-07-19 07:18:36 INFO [TestRunner] 🧪 AI-тест: Загрузка страницы логина
+2025-07-19 07:18:36 INFO [TestRunner] 🔍 Умный поиск страницы логина с обработкой ошибок...
+2025-07-19 07:18:36 INFO [TestRunner] 🧭 Умная навигация к login...
+2025-07-19 07:18:36 INFO [TestRunner] 🔍 Пробуем URL: /en/login
+2025-07-19 07:18:36 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:18:46 INFO [TestRunner] 🔍 Пробуем URL: /en/auth/login
+2025-07-19 07:18:56 INFO [TestRunner] 🔍 Пробуем URL: /login
+2025-07-19 07:19:06 INFO [TestRunner] 🔍 Пробуем URL: /auth/login
+2025-07-19 07:19:16 INFO [TestRunner] 🔍 Пробуем URL: /signin
+2025-07-19 07:19:26 INFO [TestRunner] 🔍 Пробуем URL: /en/signin
+2025-07-19 07:19:36 INFO [TestRunner] 🔍 Прямые URL не сработали, пробуем через навигацию...
+2025-07-19 07:19:36 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:20:36 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:20:36 INFO [TestRunner] 🔍 Поиск через навигацию сайта...
+2025-07-19 07:20:36 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:21:36 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:21:36 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:21:36 ERROR [TestRunner] ❌ Тест "Загрузка страницы логина" провален: Не удалось найти страницу логина ни одним способом
+2025-07-19 07:21:36 INFO [TestRunner] 🧪 AI-тест: Проверка формы регистрации
+2025-07-19 07:21:36 INFO [TestRunner] 🔍 Умный поиск страницы регистрации с обработкой ошибок...
+2025-07-19 07:21:36 INFO [TestRunner] 🧭 Умная навигация к register...
+2025-07-19 07:21:36 INFO [TestRunner] 🔍 Пробуем URL: /en/signup
+2025-07-19 07:21:36 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:21:46 INFO [TestRunner] 🔍 Пробуем URL: /signup
+2025-07-19 07:21:56 INFO [TestRunner] 🔍 Пробуем URL: /en/register
+2025-07-19 07:22:06 INFO [TestRunner] 🔍 Пробуем URL: /en/auth/register
+2025-07-19 07:22:16 INFO [TestRunner] 🔍 Пробуем URL: /register
+2025-07-19 07:22:26 INFO [TestRunner] 🔍 Пробуем URL: /auth/register
+2025-07-19 07:22:36 INFO [TestRunner] 🔍 Пробуем URL: /sign-up
+2025-07-19 07:22:46 INFO [TestRunner] 🔍 Пробуем URL: /en/sign-up
+2025-07-19 07:22:56 INFO [TestRunner] 🔍 Прямые URL не сработали, пробуем через навигацию...
+2025-07-19 07:22:56 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:23:56 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:23:56 INFO [TestRunner] 🔍 Поиск регистрации через навигацию сайта...
+2025-07-19 07:23:56 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:24:56 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:24:56 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:24:56 ERROR [TestRunner] ❌ Тест "Проверка формы регистрации" провален: Не удалось найти страницу регистрации ни одним способом
+2025-07-19 07:24:56 INFO [TestRunner] 🧪 AI-тест: Полный цикл регистрации
+2025-07-19 07:24:56 INFO [TestRunner] 🔄 Полный цикл регистрации нового пользователя...
+2025-07-19 07:24:56 INFO [TestRunner] 👤 Создаем пользователя: test.user.1752899096607@h-ai.com
+2025-07-19 07:24:56 INFO [TestRunner] 🧭 Умная навигация к register...
+2025-07-19 07:24:56 INFO [TestRunner] 🔍 Пробуем URL: /en/signup
+2025-07-19 07:24:56 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:25:06 INFO [TestRunner] 🔍 Пробуем URL: /signup
+2025-07-19 07:25:16 INFO [TestRunner] 🔍 Пробуем URL: /en/register
+2025-07-19 07:25:26 INFO [TestRunner] 🔍 Пробуем URL: /register
+2025-07-19 07:25:36 INFO [TestRunner] 🔍 Прямые URL не сработали, пробуем через навигацию...
+2025-07-19 07:25:36 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:26:36 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:26:36 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:27:36 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:27:36 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:27:36 ERROR [TestRunner] ❌ Ошибка регистрации: Не удалось найти страницу регистрации
+2025-07-19 07:27:36 ERROR [TestRunner] ❌ Тест "Полный цикл регистрации" провален: Не удалось найти страницу регистрации
+2025-07-19 07:27:36 INFO [TestRunner] 🧪 AI-тест: Полный цикл логина
+2025-07-19 07:27:36 INFO [TestRunner] 🔐 Полный цикл логина...
+2025-07-19 07:27:36 INFO [TestRunner] 🔑 Вход пользователя: admin@h-ai.com
+2025-07-19 07:27:36 INFO [TestRunner] 🧭 Умная навигация к login...
+2025-07-19 07:27:36 INFO [TestRunner] 🔍 Пробуем URL: /en/login
+2025-07-19 07:27:36 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:27:46 INFO [TestRunner] 🔍 Пробуем URL: /login
+2025-07-19 07:27:56 INFO [TestRunner] 🔍 Пробуем URL: /signin
+2025-07-19 07:28:06 INFO [TestRunner] 🔍 Пробуем URL: /en/signin
+2025-07-19 07:28:16 INFO [TestRunner] 🔍 Прямые URL не сработали, пробуем через навигацию...
+2025-07-19 07:28:16 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:29:16 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:29:16 INFO [TestRunner] 🏠 Переход на главную страницу...
+2025-07-19 07:30:16 ERROR [TestRunner] ❌ Не удалось найти рабочую главную страницу
+2025-07-19 07:30:16 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:30:16 ERROR [TestRunner] ❌ Ошибка логина: Не удалось найти страницу логина
+2025-07-19 07:30:16 ERROR [TestRunner] ❌ Тест "Полный цикл логина" провален: Не удалось найти страницу логина
+2025-07-19 07:30:16 INFO [TestRunner] 🧪 AI-тест: Проверка аватарки в навигации
+2025-07-19 07:30:16 INFO [TestRunner] 👤 Проверка отображения аватарки пользователя...
+2025-07-19 07:30:16 INFO [TestRunner] 🔍 Поиск аватарки пользователя...
+2025-07-19 07:30:16 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:30:41 ERROR [TestRunner] ❌ Ошибка проверки аватарки: page.$: Target page, context or browser has been closed
+2025-07-19 07:30:41 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:30:41 ERROR [TestRunner] ❌ Тест "Проверка аватарки в навигации" провален: page.$: Target page, context or browser has been closed
+2025-07-19 07:30:41 INFO [TestRunner] 🧠 Выполнение AI-анализа результатов...
+2025-07-19 07:30:41 INFO [TestRunner] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:30:41 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации
+2025-07-19 07:30:41 INFO [AIAgent] 🤖 AI-классификация проблем...
+2025-07-19 07:30:41 INFO [AIAgent] 🔮 AI-предсказание успешности исправлений...
+2025-07-19 07:30:41 INFO [AIAgent] 🎯 Генерация адаптивных стратегий...
+2025-07-19 07:30:41 INFO [AIAgent] 📚 Обучение AI на основе результатов...
+2025-07-19 07:30:41 ERROR [AIAgent] ❌ Ошибка сохранения обучающих данных
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1250:7)
+    at AIAgent.saveLearningData (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:1004:29)
+    at AIAgent.learnFromResults (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:974:16)
+    at AIAgent.analyzeAuthIssues (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/ai-agent.js:254:16)
+    at async TestRunner.performAIAnalysis (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:287:26)
+    at async TestRunner.runAuthTests (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/core/test-runner.js:189:7)
+    at async HAITestingBot.runQuickAuthTest (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:135:23)
+    at async HAITestingBot.handleAction (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:99:9)
+    at async HAITestingBot.showMainMenu (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:93:5)
+    at async HAITestingBot.start (file:///Users/alexandr/Desktop/CODeAPPs/H-Ai/testing-bot/src/index.js:45:5)
+2025-07-19 07:30:41 INFO [AIAgent] ✅ AI-анализ завершен. Уверенность: 80%
+2025-07-19 07:30:41 ERROR [TestRunner] ❌ Ошибка при закрытии браузера: browserContext.close: Target page, context or browser has been closed
+2025-07-19 07:30:41 INFO [AIAgent] 🧠 Продвинутый AI-анализ проблем аутентификации

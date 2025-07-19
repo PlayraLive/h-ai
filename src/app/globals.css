@@ -134,3 +134,27 @@ body {
   from { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
   to { box-shadow: 0 0 30px rgba(102, 126, 234, 0.6); }
 }
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .mobile-padding {
+    padding: 0.625rem; /* 10px */
+  }
+
+  .mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .mobile-gap-2 {
+    gap: 0.5rem;
+  }
+}
+
+/* Touch targets for mobile */
+@media (max-width: 768px) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

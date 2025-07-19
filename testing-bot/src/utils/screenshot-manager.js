@@ -40,10 +40,14 @@ export class ScreenshotManager {
       const screenshotOptions = {
         path: filepath,
         type: config.screenshots.format,
-        quality: config.screenshots.quality,
         fullPage: options.fullPage || config.screenshots.fullPage,
         ...options.screenshotOptions
       };
+
+      // Добавляем quality только для JPEG
+      if (config.screenshots.format === 'jpeg') {
+        screenshotOptions.quality = config.screenshots.quality;
+      }
 
       // Делаем скриншот
       await page.screenshot(screenshotOptions);

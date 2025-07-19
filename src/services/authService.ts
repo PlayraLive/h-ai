@@ -107,7 +107,12 @@ class AuthService {
     try {
       console.log('AuthService: Checking auth status...');
 
-      // Проверяем сохраненного пользователя
+      // Проверяем сохраненного пользователя (только на клиенте)
+      if (typeof window === 'undefined') {
+        this.updateState({ isLoading: false });
+        return;
+      }
+
       const savedUser = localStorage.getItem('user');
       const savedAuth = localStorage.getItem('isAuthenticated');
 

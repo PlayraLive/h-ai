@@ -3,19 +3,32 @@ import { ID, Query } from 'appwrite';
 import type { User } from '@/types';
 
 export class AuthService {
-  // Register new user
-  async register(email: string, password: string, name: string, userType: 'freelancer' | 'client') {
+  // Enhanced register with better error handling and validation
+  async register(email: string, password: string, name: string, userType: 'freelancer' | 'client' = 'freelancer') {
     try {
-      console.log('AuthService.register called with:', { email, name, userType });
+      console.log('🚀 AuthService.register called with:', { email, name, userType });
 
-      // Create account
-      console.log('Creating Appwrite account...');
+      // Enhanced validation
+      if (!email || !password || !name) {
+        throw new Error('All fields are required');
+      }
+
+      if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Create account with enhanced error handling
+      console.log('🔐 Creating Appwrite account...');
       const account_response = await account.create(ID.unique(), email, password, name);
-      console.log('Account created:', account_response);
-      
-      // Create user profile in database
-      const profile = await createUserProfile(account_response, userType);
-      console.log('Profile created in database:', profile);
+      console.log('✅ Account created:', account_response.$id);
+
+      // Create user profile in database with retry logic
+      const profile = await this.createUserProfileWithRetry(account_response, userType);
+      console.log('✅ Profile created in database:', profile.$id);
 
       const userProfile = profile;
 
