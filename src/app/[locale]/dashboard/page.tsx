@@ -16,6 +16,7 @@ import AchievementsGrid from '@/components/gamification/AchievementsGrid';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import UserProfileDropdown from '@/components/UserProfileDropdown';
 import Navbar from '@/components/Navbar';
+import TopNav from '@/components/TopNav';
 import {
   TrendingUp,
   DollarSign,
@@ -43,6 +44,9 @@ export default function DashboardPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
+  const [runningDiagnostics, setRunningDiagnostics] = useState(false);
+  const [creatingDemoMessages, setCreatingDemoMessages] = useState(false);
+  const [creatingDemoNotifications, setCreatingDemoNotifications] = useState(false);
 
 
 
@@ -572,16 +576,21 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-[#0A0A0F]">
       {/* Top Navigation */}
       <Navbar />
+      <TopNav />
 
       {/* Main Content */}
-      <div className="pt-20 p-2.5 sm:p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="w-full pb-20 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-800/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative bg-gradient-to-r from-[#1A1A2E] via-[#1A1A2E] to-[#2A1A3E] border-b border-gray-700/50 p-4 md:p-6 lg:p-8 overflow-hidden rounded-t-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
+
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
                   Welcome back, {user?.name || 'User'}! 👋
@@ -638,11 +647,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl hover:bg-gray-900/70 transition-all duration-200 group">
+                <div key={index} className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 rounded-2xl hover:bg-[#1A1A2E]/70 transition-all duration-200 group">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.bgGradient} flex items-center justify-center shadow-lg ${stat.shadowColor} group-hover:scale-110 transition-transform duration-200`}>
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />

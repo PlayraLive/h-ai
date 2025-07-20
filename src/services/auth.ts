@@ -85,7 +85,7 @@ export class AuthService {
         name: account_user.name,
         email: account_user.email,
         userType: 'freelancer', // Default for now
-        verified: account_user.emailVerification,
+        verification_status: account_user.emailVerification ? 'verified' : 'pending',
         online: true,
         rating: 0,
         reviewCount: 0,
@@ -228,7 +228,7 @@ export class AuthService {
       }
       
       if (filters?.verified) {
-        queries.push(Query.equal('verified', filters.verified));
+        queries.push(Query.equal('verification_status', 'verified'));
       }
 
       const users = await databases.listDocuments(

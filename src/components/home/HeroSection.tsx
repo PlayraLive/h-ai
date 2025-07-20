@@ -74,7 +74,7 @@ export function HeroSection({ locale }: HeroSectionProps) {
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950 pt-20">
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950">
           <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>

@@ -37,7 +37,7 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
           process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
           [
             Query.equal('userType', 'freelancer'),
-            Query.equal('verified', true),
+            Query.equal('verification_status', 'verified'),
             Query.orderDesc('rating'),
             Query.limit(6)
           ]

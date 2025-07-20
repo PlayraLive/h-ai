@@ -136,10 +136,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
 
 
-            {/* Debug Auth State */}
-            <div className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
-              {initializing ? 'Loading...' : isAuthenticated ? `✅ ${user?.name || user?.email || 'User'}` : '❌ Not logged in'}
-            </div>
+
 
             {/* Auth Buttons */}
             {!isAuthenticated && !initializing && (
@@ -186,16 +183,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Create Job Button for authenticated users */}
-            {isAuthenticated && user && (
-              <Link
-                href={`/${locale}/jobs/create`}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Post Job</span>
-              </Link>
-            )}
+
 
             {/* Auth State */}
             {initializing ? (
@@ -296,14 +284,7 @@ export default function Navbar() {
                   </div>
                 </div>
 
-                <Link
-                  href={`/${locale}/jobs/create`}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Post Job</span>
-                </Link>
+
                 <Link
                   href={`/${locale}/dashboard`}
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"

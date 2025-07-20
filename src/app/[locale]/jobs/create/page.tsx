@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Sidebar from '@/components/Sidebar';
+import Navbar from '@/components/Navbar';
 import {
   ArrowLeft,
   Upload,
@@ -13,7 +13,11 @@ import {
   Palette,
   Code,
   Video,
-  Gamepad2
+  Gamepad2,
+  Briefcase,
+  Target,
+  Clock,
+  MapPin
 } from 'lucide-react';
 
 import { JobService } from '@/services/jobs';
@@ -169,34 +173,39 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
   };
 
   return (
-    <div className="flex h-screen bg-gray-950">
-      <Sidebar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black">
+      <Navbar />
 
-      <div className="flex-1 lg:ml-0">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto px-4 pt-24 pb-8">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <Link 
-              href={`/${locale}/jobs`}
-              className="inline-flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Jobs</span>
-            </Link>
-            <h1 className="text-3xl font-bold text-white mb-2">Post a New Job</h1>
-            <p className="text-gray-400">Find the perfect AI specialist for your project</p>
+          <div className="glass-card p-8 rounded-3xl mb-8">
+            <div className="flex items-center space-x-4 mb-6">
+              <Link
+                href={`/${locale}/jobs`}
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 group"
+              >
+                <ArrowLeft className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+              </Link>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">Post a New Job</h1>
+                <p className="text-gray-300">Find the perfect AI specialist for your project</p>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <div className="glass-card p-6 rounded-2xl">
-              <h2 className="text-xl font-semibold text-white mb-6">Basic Information</h2>
+            <div className="glass-card p-8 rounded-3xl">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
+                <Briefcase className="w-6 h-6 mr-3 text-purple-400" />
+                Basic Information
+              </h2>
               
               <div className="space-y-6">
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-200 mb-3">
                     Job Title *
                   </label>
                   <input
@@ -211,7 +220,7 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-200 mb-3">
                     Job Description *
                   </label>
                   <textarea
@@ -226,7 +235,7 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
 
                 {/* Category */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-4">
+                  <label className="block text-sm font-semibold text-gray-200 mb-4">
                     Category *
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -238,16 +247,16 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
                           type="button"
                           onClick={() => setFormData({ ...formData, category: category.id })}
                           className={cn(
-                            "flex flex-col items-center space-y-3 p-4 rounded-xl border-2 transition-all duration-300",
+                            "flex flex-col items-center space-y-4 p-6 rounded-2xl border-2 transition-all duration-300 group",
                             formData.category === category.id
-                              ? "border-purple-500 bg-purple-500/10"
-                              : "border-gray-600 bg-gray-800/50 hover:border-gray-500"
+                              ? "border-purple-500 bg-gradient-to-br from-purple-500/20 to-blue-500/20 shadow-lg shadow-purple-500/25"
+                              : "border-white/20 bg-white/5 hover:border-purple-400/50 hover:bg-white/10"
                           )}
                         >
-                          <div className={`w-12 h-12 bg-gradient-to-r ${category.color} rounded-xl flex items-center justify-center`}>
-                            <Icon className="w-6 h-6 text-white" />
+                          <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                            <Icon className="w-8 h-8 text-white" />
                           </div>
-                          <span className="text-sm font-medium text-white">{category.label}</span>
+                          <span className="text-sm font-semibold text-white">{category.label}</span>
                         </button>
                       );
                     })}
@@ -257,8 +266,11 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
             </div>
 
             {/* Skills & Requirements */}
-            <div className="glass-card p-6 rounded-2xl">
-              <h2 className="text-xl font-semibold text-white mb-6">Skills & Requirements</h2>
+            <div className="glass-card p-8 rounded-3xl">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
+                <Target className="w-6 h-6 mr-3 text-purple-400" />
+                Skills & Requirements
+              </h2>
               
               <div className="space-y-6">
                 {/* Skills */}
@@ -333,8 +345,11 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
             </div>
 
             {/* Budget & Timeline */}
-            <div className="glass-card p-6 rounded-2xl">
-              <h2 className="text-xl font-semibold text-white mb-6">Budget & Timeline</h2>
+            <div className="glass-card p-8 rounded-3xl">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
+                <DollarSign className="w-6 h-6 mr-3 text-green-400" />
+                Budget & Timeline
+              </h2>
               
               <div className="space-y-6">
                 {/* Budget Type */}
@@ -482,7 +497,6 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
               </button>
             </div>
           </form>
-          </div>
         </div>
       </div>
     </div>

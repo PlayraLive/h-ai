@@ -234,24 +234,45 @@ export class ApplicationsService {
     userId: string
   ): Promise<ApplicationDocument> {
     try {
+      console.log('Submitting application with data:', applicationData);
+
+      // Проверяем обязательные поля
+      if (!applicationData.jobId || !applicationData.freelancerId || !applicationData.coverLetter) {
+        throw new Error('Missing required fields');
+      }
+
       const application = await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.APPLICATIONS,
         ID.unique(),
         {
           ...applicationData,
-          status: 'pending'
+          status: 'pending',
+          freelancerAvatar: applicationData.freelancerAvatar || '',
+          freelancerRating: applicationData.freelancerRating || 0,
+          clientResponse: '',
+          attachments: JSON.stringify(applicationData.attachments || [])
         },
         createPublicReadPermissions(userId)
       );
 
+      console.log('Application created successfully:', application.$id);
+
       // Increment applications count for the job
-      await JobsService.incrementApplicationsCount(applicationData.jobId);
+      try {
+        await JobsService.incrementApplicationsCount(applicationData.jobId);
+      } catch (countError) {
+        console.warn('Failed to increment applications count:', countError);
+        // Не прерываем процесс, если не удалось обновить счетчик
+      }
 
       return application as ApplicationDocument;
     } catch (error) {
       console.error('Error submitting application:', error);
-      throw new Error('Failed to submit application');
+      if (error.message?.includes('Collection with the requested ID could not be found')) {
+        throw new Error('Applications system is not properly configured. Please contact support.');
+      }
+      throw new Error(`Failed to submit application: ${error.message || 'Unknown error'}`);
     }
   }
 

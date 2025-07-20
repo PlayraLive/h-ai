@@ -3,28 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Sidebar from '@/components/Sidebar';
-import { 
+import Navbar from '@/components/Navbar';
+import TopNav from '@/components/TopNav';
+import {
   ArrowLeft,
-  MapPin,
-  Clock,
-  DollarSign,
   Star,
+  MapPin,
+  DollarSign,
   MessageCircle,
-  Heart,
-  HeartHandshake,
-  Users,
-  Calendar,
   Share2,
   Flag,
   CheckCircle,
-  Award,
   Briefcase,
-  Globe,
-  ExternalLink,
-  Download,
-  Eye,
-  ThumbsUp
+  Clock,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -266,9 +258,10 @@ I've worked with startups and Fortune 500 companies, delivering high-quality pro
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-950">
-        <Sidebar />
-        <div className="flex-1 lg:ml-0 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0A0A0F]">
+        <Navbar />
+        <TopNav />
+        <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-400">Loading freelancer profile...</p>
@@ -280,13 +273,17 @@ I've worked with startups and Fortune 500 companies, delivering high-quality pro
 
   if (!freelancer) {
     return (
-      <div className="flex h-screen bg-gray-950">
-        <Sidebar />
-        <div className="flex-1 lg:ml-0 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0A0A0F]">
+        <Navbar />
+        <TopNav />
+        <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white mb-4">Freelancer Not Found</h1>
             <p className="text-gray-400 mb-6">The freelancer you're looking for doesn't exist.</p>
-            <Link href="/en/freelancers" className="btn-primary">
+            <Link
+              href="/en/freelancers"
+              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+            >
               Back to Freelancers
             </Link>
           </div>
@@ -296,52 +293,63 @@ I've worked with startups and Fortune 500 companies, delivering high-quality pro
   }
 
   return (
-    <div className="flex h-screen bg-gray-950">
-      <Sidebar />
-      
-      <div className="flex-1 lg:ml-0">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0A0A0F]">
+      <Navbar />
+      <TopNav />
+
+      <div className="w-full pb-20 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <Link 
+            <div className="flex items-center justify-between mb-6">
+              <Link
                 href="/en/freelancers"
-                className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
                 <span>Back to Freelancers</span>
               </Link>
-              
+
               <div className="flex items-center space-x-3">
-                <button className="p-3 bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors">
+                <button className="p-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50">
                   <Share2 className="w-5 h-5" />
                 </button>
-                <button className="p-3 bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors">
+                <button className="p-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50">
                   <Flag className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
             {/* Cover & Profile */}
-            <div className="glass-card rounded-2xl overflow-hidden mb-8">
-              <div 
-                className="h-48 bg-cover bg-center relative"
-                style={{ backgroundImage: `url(${freelancer.coverImage})` }}
-              >
-                <div className="absolute inset-0 bg-black/50"></div>
+            <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden mb-8">
+              <div className="relative h-48 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-pink-600/20 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
               </div>
               
               <div className="p-8">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between -mt-20 relative">
                   <div className="flex flex-col md:flex-row md:items-end md:space-x-6">
                     <div className="relative">
-                      <img
-                        src={freelancer.avatar}
-                        alt={freelancer.name}
-                        className="w-32 h-32 rounded-2xl object-cover border-4 border-gray-900"
-                      />
+                      {freelancer.avatar ? (
+                        <img
+                          src={freelancer.avatar}
+                          alt={freelancer.name}
+                          className="w-32 h-32 rounded-2xl object-cover border-4 border-[#1A1A2E]"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className={`w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 border-4 border-[#1A1A2E] flex items-center justify-center ${freelancer.avatar ? 'hidden' : 'flex'}`}
+                      >
+                        <span className="text-white font-bold text-3xl">
+                          {freelancer.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
                       {freelancer.verified && (
-                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-[#1A1A2E]">
                           <CheckCircle className="w-5 h-5 text-white" />
                         </div>
                       )}
@@ -634,11 +642,9 @@ I've worked with startups and Fortune 500 companies, delivering high-quality pro
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Contact Modal */}
-      {showContactModal && (
+          {/* Contact Modal */}
+          {showContactModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-lg">
             <h2 className="text-2xl font-bold text-white mb-6">Send Message to {freelancer.name}</h2>
@@ -675,6 +681,8 @@ I've worked with startups and Fortune 500 companies, delivering high-quality pro
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

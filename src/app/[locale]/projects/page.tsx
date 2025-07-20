@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Sidebar from '@/components/Sidebar';
-import { 
+import Navbar from '@/components/Navbar';
+import TopNav from '@/components/TopNav';
+import {
   Plus,
   Search,
-  Filter,
   Calendar,
   Clock,
   DollarSign,
-  Users,
   MoreHorizontal,
   Eye,
   Edit,
@@ -21,8 +20,7 @@ import {
   PauseCircle,
   FileText,
   MessageCircle,
-  Star,
-  TrendingUp
+  Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/Toast';
@@ -56,7 +54,7 @@ interface Project {
 }
 
 export default function ProjectsPage() {
-  const { success, error } = useToast();
+  const { success } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,35 +149,9 @@ export default function ProjectsPage() {
     }, 1000);
   }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-400 bg-green-400/20';
-      case 'completed': return 'text-blue-400 bg-blue-400/20';
-      case 'paused': return 'text-yellow-400 bg-yellow-400/20';
-      case 'cancelled': return 'text-red-400 bg-red-400/20';
-      default: return 'text-gray-400 bg-gray-400/20';
-    }
-  };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'text-red-400 bg-red-400/20';
-      case 'high': return 'text-orange-400 bg-orange-400/20';
-      case 'medium': return 'text-yellow-400 bg-yellow-400/20';
-      case 'low': return 'text-green-400 bg-green-400/20';
-      default: return 'text-gray-400 bg-gray-400/20';
-    }
-  };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active': return <PlayCircle className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      case 'paused': return <PauseCircle className="w-4 h-4" />;
-      case 'cancelled': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
+
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,9 +170,10 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-950">
-        <Sidebar />
-        <div className="flex-1 lg:ml-0 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0A0A0F]">
+        <Navbar />
+        <TopNav />
+        <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-400">Loading projects...</p>
@@ -211,54 +184,62 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-950">
-      <Sidebar />
-      
-      <div className="flex-1 lg:ml-0">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0A0A0F]">
+      <Navbar />
+      <TopNav />
+
+      <div className="w-full pb-20 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Projects</h1>
-                <p className="text-gray-400">Manage and track your ongoing projects</p>
-              </div>
-              
-              <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                <Link
-                  href="/en/jobs/create"
-                  className="btn-primary flex items-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>New Project</span>
-                </Link>
+            <div className="relative bg-gradient-to-r from-[#1A1A2E] via-[#1A1A2E] to-[#2A1A3E] border-b border-gray-700/50 p-4 md:p-6 lg:p-8 overflow-hidden rounded-t-2xl">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5"></div>
+              <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
+
+              <div className="relative flex flex-col md:flex-row md:items-center justify-between">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Projects</h1>
+                  <p className="text-gray-400">Manage and track your ongoing projects</p>
+                </div>
+
+                <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                  <Link
+                    href="/en/projects/create"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span>New Project</span>
+                  </Link>
+                </div>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="glass-card p-6 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6 mb-8">
+              <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Total Projects</p>
-                    <p className="text-2xl font-bold text-white">{projects.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-xs md:text-sm">Total Projects</p>
+                    <p className="text-xl md:text-2xl font-bold text-white">{projects.length}</p>
+                    <p className="text-purple-400 text-xs md:text-sm">All time</p>
                   </div>
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-purple-400" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
                   </div>
                 </div>
               </div>
-              
-              <div className="glass-card p-6 rounded-2xl">
+
+              <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Active</p>
-                    <p className="text-2xl font-bold text-white">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-xs md:text-sm">Active</p>
+                    <p className="text-xl md:text-2xl font-bold text-white">
                       {projects.filter(p => p.status === 'active').length}
                     </p>
+                    <p className="text-green-400 text-xs md:text-sm">In progress</p>
                   </div>
-                  <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <PlayCircle className="w-6 h-6 text-green-400" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <PlayCircle className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
                   </div>
                 </div>
               </div>
@@ -389,7 +370,6 @@ export default function ProjectsPage() {
                 ))}
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>

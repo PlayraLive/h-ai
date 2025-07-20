@@ -11,11 +11,12 @@ export const databases = new Databases(client);
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 export const COLLECTIONS = {
   JOBS: 'jobs',
-  USERS: 'users', 
+  USERS: 'users',
   APPLICATIONS: 'applications',
   PROJECTS: 'projects',
   REVIEWS: 'reviews',
-  MESSAGES: 'messages'
+  MESSAGES: 'messages',
+  INVITATIONS: 'invitations'
 };
 
 // Job Status Types

@@ -21,7 +21,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { JobCardSkeleton } from '@/components/Loading';
 import { useToast } from '@/components/Toast';
-import { JobService } from '@/services/jobs';
+import { JobsService } from '@/lib/appwrite/jobs';
 import { cn } from '@/lib/utils';
 interface Job {
   id: string;
@@ -170,50 +170,39 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
         filters.search = searchQuery;
       }
 
-      console.log('Calling JobService.getJobs with filters:', filters);
-      const jobService = new JobService();
-      const { jobs: loadedJobs } = await jobService.getJobs(filters);
+      console.log('Loading jobs from Appwrite...');
+      const loadedJobs = await JobsService.getJobs();
       console.log('Loaded jobs:', loadedJobs);
 
       // Если нет джобов из БД, используем mock данные
-      if (!loadedJobs || loadedJobs.length === 0) {
+      if (!loadedJobs || !loadedJobs.jobs || loadedJobs.jobs.length === 0) {
         console.log('No jobs found in database, using mock data');
         setJobs(mockJobs);
         return;
       }
 
       // Convert Appwrite documents to Job interface
-      const convertedJobs = loadedJobs.map(job => ({
+      const convertedJobs = loadedJobs.jobs.map((job: any) => ({
         id: job.$id!,
         title: job.title,
         description: job.description,
         company: job.clientCompany || job.clientName,
-        location: job.location,
+        companyLogo: job.clientAvatar || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40',
+        location: job.location || 'Remote',
         type: job.budgetType,
         budget: {
           min: job.budgetMin,
           max: job.budgetMax,
-          currency: job.currency
+          currency: job.currency || 'USD'
         },
-        skills: job.skills,
+        skills: job.skills || [],
         postedAt: job.$createdAt!,
-        deadline: job.deadline,
-        proposals: job.applicationsCount,
+        deadline: job.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        proposals: job.applicationsCount || 0,
         rating: 4.5, // Default rating
         category: job.category,
-        featured: job.featured,
-        urgent: job.urgent,
-        experienceLevel: job.experienceLevel,
-        client: {
-          name: job.clientName,
-          avatar: job.clientAvatar || '',
-          company: job.clientCompany || '',
-          rating: 4.5,
-          jobsPosted: 1,
-          totalSpent: job.budgetMax,
-          memberSince: job.$createdAt!,
-          verified: true
-        }
+        featured: job.featured || false,
+        urgent: job.urgent || false
       }));
 
       setJobs(convertedJobs);

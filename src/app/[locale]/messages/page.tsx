@@ -16,8 +16,6 @@ import {
   MoreVertical,
   Phone,
   Video,
-  Star,
-  Clock,
   CheckCircle2,
   Plus
 } from 'lucide-react';
@@ -208,6 +206,7 @@ export default function MessagesPage() {
     }
   ];
 
+  /*
   const mockMessages: Record<string, any[]> = {
     '1': [
       {
@@ -279,6 +278,7 @@ export default function MessagesPage() {
       }
     ]
   };
+  */
 
   // Use real data or fallback to mock data
   const chatsToShow = conversations.length > 0 ? conversations : mockChats;
@@ -286,8 +286,8 @@ export default function MessagesPage() {
                      mockChats.find(chat => chat.id === selectedChat);
 
   const filteredChats = chatsToShow.filter(chat => {
-    const name = 'user' in chat ? chat.user.name : chat.name;
-    const projectTitle = 'project_title' in chat ? chat.project_title : chat.projectTitle;
+    const name = 'user' in chat ? chat.user.name : (chat as any).name;
+    const projectTitle = 'project_title' in chat ? (chat as any).project_title : (chat as any).projectTitle;
 
     return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            projectTitle?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -519,11 +519,11 @@ export default function MessagesPage() {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <img
-                      src={currentChat.avatar}
-                      alt={currentChat.name}
+                      src={(currentChat as any).avatar}
+                      alt={'user' in currentChat ? currentChat.user.name : (currentChat as any).name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
-                    {currentChat.online && (
+                    {(currentChat as any).online && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
                     )}
                   </div>
@@ -532,10 +532,10 @@ export default function MessagesPage() {
                     <h2 className="text-white font-medium">
                       {'user' in currentChat ? currentChat.user.name : currentChat.name}
                     </h2>
-                    {(('project_title' in currentChat && currentChat.project_title) ||
-                      ('projectTitle' in currentChat && currentChat.projectTitle)) && (
+                    {(('project_title' in currentChat && (currentChat as any).project_title) ||
+                      ('projectTitle' in currentChat && (currentChat as any).projectTitle)) && (
                       <p className="text-sm text-purple-400">
-                        {'project_title' in currentChat ? currentChat.project_title : currentChat.projectTitle}
+                        {'project_title' in currentChat ? (currentChat as any).project_title : (currentChat as any).projectTitle}
                       </p>
                     )}
                     <p className="text-xs text-gray-400">
@@ -618,7 +618,7 @@ export default function MessagesPage() {
                       type="text"
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Type a message..."
                       className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />

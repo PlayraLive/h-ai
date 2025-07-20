@@ -79,7 +79,7 @@ export class MockAuthManager {
             avatar: null,
             role: 'freelancer', // По умолчанию freelancer для тестирования
             userType: 'freelancer',
-            verified: false,
+            verification_status: 'pending',
             online: true,
             rating: 4.8,
             reviewCount: 12,
