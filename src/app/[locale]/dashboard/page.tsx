@@ -1,22 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
-
-import MessagesSetupGuide from '@/components/MessagesSetupGuide';
-// import { UserProfileService, UserProfile, FreelancerStats, ClientStats } from '@/lib/user-profile-service';
-// import Navbar from '@/components/Navbar';
 
 import PortfolioGrid from '@/components/portfolio/PortfolioGrid';
 import AddPortfolioForm from '@/components/portfolio/AddPortfolioForm';
 import UserLevelCard from '@/components/gamification/UserLevelCard';
 import AchievementsGrid from '@/components/gamification/AchievementsGrid';
-import { NotificationDropdown } from '@/components/NotificationDropdown';
-import UserProfileDropdown from '@/components/UserProfileDropdown';
 import Navbar from '@/components/Navbar';
-import TopNav from '@/components/TopNav';
 import {
   TrendingUp,
   DollarSign,
@@ -31,23 +24,34 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Bell,
   Home,
   Search,
-  FileText
+  FileText,
+  Video as VideoIcon,
+  Play,
+  Heart,
+  Trash2
 } from 'lucide-react';
 // Navbar removed - using Sidebar instead
 import { cn, formatCurrency, formatRelativeTime } from '@/lib/utils';
+import { ReelsService, Reel } from '@/lib/appwrite/reels';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Check URL params for tab
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
   const [filterStatus, setFilterStatus] = useState('all');
   const [userType, setUserType] = useState<'freelancer' | 'client'>('freelancer');
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
-  const [runningDiagnostics, setRunningDiagnostics] = useState(false);
-  const [creatingDemoMessages, setCreatingDemoMessages] = useState(false);
-  const [creatingDemoNotifications, setCreatingDemoNotifications] = useState(false);
-
+  const [solutions, setSolutions] = useState<Reel[]>([]);
+  const [loadingSolutions, setLoadingSolutions] = useState(false);
 
 
 
@@ -78,6 +82,21 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
 
+  // Load user's solutions
+  const loadSolutions = useCallback(async () => {
+    if (!user) return;
+
+    setLoadingSolutions(true);
+    try {
+      const userSolutions = await ReelsService.getReelsByCreator(user.$id);
+      setSolutions(userSolutions);
+    } catch (error) {
+      console.error('Error loading solutions:', error);
+    } finally {
+      setLoadingSolutions(false);
+    }
+  }, [user]);
+
   // Set user type based on user data
   useEffect(() => {
     if (user && user.userType) {
@@ -85,130 +104,47 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  // Run Appwrite diagnostics
-  const runDiagnostics = async () => {
-    setRunningDiagnostics(true);
-    try {
-      console.log('🔍 Running Appwrite diagnostics...');
-      const results = await AppwriteSetup.runDiagnostics();
-
-      let message = '🔍 Appwrite Diagnostics Results:\n\n';
-
-      if (results.connection.success) {
-        message += '✅ Connection: OK\n';
-      } else {
-        message += `❌ Connection: ${results.connection.error}\n`;
-        message += `💡 ${results.connection.message}\n\n`;
-      }
-
-      if (results.database.success) {
-        message += '✅ Database: OK\n';
-      } else {
-        message += `❌ Database: ${results.database.error}\n`;
-        message += `💡 ${results.database.message}\n\n`;
-      }
-
-      if (results.collections.success) {
-        message += `✅ Collections: ${results.collections.collections?.length || 0} found\n`;
-      } else {
-        message += `❌ Collections: ${results.collections.error}\n`;
-      }
-
-      alert(message);
-    } catch (error: any) {
-      console.error('❌ Error running diagnostics:', error);
-      alert(`❌ Diagnostics failed:\n\n${error.message}\n\nCheck console for details.`);
-    } finally {
-      setRunningDiagnostics(false);
+  // Load solutions when user changes or tab becomes active
+  useEffect(() => {
+    if (user && activeTab === 'solutions') {
+      loadSolutions();
     }
+  }, [user, activeTab, loadSolutions]);
+
+  // Format number helper
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
   };
 
-  // Setup messages collections
-  const setupMessagesCollections = async () => {
-    setSettingUpCollections(true);
-    try {
-      console.log('🚀 Setting up messages collections...');
-      const result = await messagesSetup.setupMessagesCollections();
+  // Handle edit solution
+  const handleEditSolution = (solution: Reel) => {
+    // Redirect to edit page
+    router.push(`/en/dashboard/solutions/edit/${solution.$id}`);
+  };
 
-      if (result.success) {
-        if (result.created) {
-          console.log('🎉 Collections created successfully!');
-          alert('✅ Messages collections created successfully! You can now use the messaging system.');
-        } else {
-          console.log('✅ Collections already exist!');
-          alert('✅ Collections already exist and are ready to use!');
-        }
-      } else {
-        console.error('❌ Failed to setup collections:', result.error);
-        alert('❌ Failed to setup collections. Check console for details.');
-      }
+  // Handle delete solution
+  const handleDeleteSolution = async (solutionId: string) => {
+    if (!confirm('Are you sure you want to delete this solution?')) {
+      return;
+    }
+
+    try {
+      await ReelsService.deleteReel(solutionId);
+      // Reload solutions
+      loadSolutions();
+      alert('Solution deleted successfully!');
     } catch (error) {
-      console.error('❌ Error setting up collections:', error);
-      alert('❌ Error setting up collections. Check console for details.');
-    } finally {
-      setSettingUpCollections(false);
+      console.error('Error deleting solution:', error);
+      alert('Failed to delete solution. Please try again.');
     }
   };
 
-  // Create demo messages
-  const createDemoMessages = async () => {
-    setCreatingDemoMessages(true);
-    try {
-      console.log('🚀 Creating demo messages...');
-      const result = await demoMessagesCreator.createDemoMessages();
-      console.log('✅ Demo messages created:', result);
 
-      if (result) {
-        alert(`🎉 Demo messages created successfully!\n\nCreated:\n• ${result.conversations} conversations\n• ${result.messages} messages\n\nGo to Messages page to see them!`);
-      }
-    } catch (error: any) {
-      console.error('❌ Error creating demo messages:', error);
-      alert(`❌ Error creating demo messages:\n\n${error.message}\n\nCheck console for details.`);
-    } finally {
-      setCreatingDemoMessages(false);
-    }
-  };
-
-  // Create demo notifications
-  const createDemoNotifications = async () => {
-    if (!user) return;
-
-    setCreatingDemoNotifications(true);
-    try {
-      console.log('🔔 Creating demo notifications...');
-
-      // Создаем разные типы уведомлений
-      await Promise.all([
-        NotificationService.createMessageNotification(
-          user.$id,
-          'John Doe',
-          'Hi! I\'m interested in your AI development services.',
-          'demo-conversation-1'
-        ),
-        NotificationService.createProjectNotification(
-          user.$id,
-          'AI Chatbot Development',
-          'demo-project-1',
-          'new_project'
-        ),
-        NotificationService.createPaymentNotification(
-          user.$id,
-          500,
-          'USD',
-          'demo-payment-1',
-          'payment_received'
-        )
-      ]);
-
-      console.log('✅ Demo notifications created');
-      alert('🔔 Demo notifications created! Check the notification bell.');
-    } catch (error: any) {
-      console.error('❌ Error creating demo notifications:', error);
-      alert(`❌ Error creating demo notifications:\n\n${error.message}`);
-    } finally {
-      setCreatingDemoNotifications(false);
-    }
-  };
 
   // Debug: log auth state
   useEffect(() => {
@@ -221,42 +157,12 @@ export default function DashboardPage() {
 
   // Проверка аутентификации
   useEffect(() => {
-    const checkAuth = async () => {
-      // Проверяем, есть ли mock сессия
-      const mockSession = localStorage.getItem('mockSession');
-      const savedUser = localStorage.getItem('user');
-
-      if (mockSession === 'true' && savedUser) {
-        console.log('Dashboard: Mock session detected, skipping Appwrite check');
-        return; // Не проверяем Appwrite для mock пользователей
-      }
-
-      // Для реальных пользователей проверяем Appwrite
-      try {
-        const { account } = await import('@/lib/appwrite');
-        const { authService } = await import('@/services/authService');
-
-        const user = await account.get();
-        authService.setAuthenticated(user);
-
-        if (!isAuthenticated) {
-          setTimeout(() => window.location.reload(), 500);
-        }
-      } catch (error: any) {
-        console.log('Dashboard: No Appwrite session, checking auth context...');
-
-        // Даем время для инициализации контекста
-        setTimeout(() => {
-          if (!isLoading && !isAuthenticated) {
-            console.log('Dashboard: Redirecting to login');
-            router.push('/en/login');
-          }
-        }, 1000);
-      }
-    };
-
-    checkAuth();
-  }, [isAuthenticated, isLoading, router]);
+    // Простая проверка без перезагрузки
+    if (!isLoading && !isAuthenticated && !user) {
+      console.log('Dashboard: User not authenticated, redirecting to login');
+      router.push('/en/auth/login');
+    }
+  }, [isAuthenticated, isLoading, user, router]);
 
 
 
@@ -567,11 +473,13 @@ export default function DashboardPage() {
   const tabs = userType === 'freelancer' ? [
     { id: 'overview', label: 'Overview' },
     { id: 'portfolio', label: 'Portfolio' },
+    { id: 'solutions', label: 'Solutions' },
     { id: 'achievements', label: 'Achievements' },
     { id: 'earnings', label: 'Earnings' }
   ] : [
     { id: 'overview', label: 'Overview' },
     { id: 'projects', label: 'Projects' },
+    { id: 'solutions', label: 'Solutions' },
     { id: 'earnings', label: 'Earnings' }
   ];
 
@@ -579,7 +487,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#0A0A0F]">
       {/* Top Navigation */}
       <Navbar />
-      <TopNav />
 
       {/* Main Content */}
       <div className="w-full pb-20 lg:pb-0">
@@ -1099,6 +1006,115 @@ export default function DashboardPage() {
                 <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-400">Earnings analytics coming soon...</p>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'solutions' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">My Solutions</h2>
+                <Link
+                  href="/en/dashboard/solutions/create"
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Create Solution</span>
+                </Link>
+              </div>
+
+              {loadingSolutions ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : solutions.length === 0 ? (
+                <div className="text-center py-12">
+                  <VideoIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No solutions yet</h3>
+                  <p className="text-gray-400 mb-6">Create your first AI solution to start earning</p>
+                  <Link
+                    href="/en/dashboard/solutions/create"
+                    className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Create Your First Solution</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {solutions.map((solution) => (
+                    <div key={solution.$id} className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-xl overflow-hidden hover:border-gray-700/50 transition-all duration-300">
+                      {/* Thumbnail */}
+                      <div className="relative aspect-[9/16] bg-gray-800">
+                        {solution.thumbnailUrl ? (
+                          <img
+                            src={solution.thumbnailUrl}
+                            alt={solution.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <VideoIcon className="w-12 h-12 text-gray-600" />
+                          </div>
+                        )}
+
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Play className="w-8 h-8 text-white" />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="absolute top-2 right-2 flex space-x-1">
+                          <button
+                            onClick={() => handleEditSolution(solution)}
+                            className="p-1.5 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSolution(solution.$id!)}
+                            className="p-1.5 bg-black/50 backdrop-blur-sm text-red-400 rounded-lg hover:bg-black/70 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-white mb-2 line-clamp-2">{solution.title}</h3>
+
+                        {/* Stats */}
+                        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-1">
+                              <Eye className="w-3 h-3" />
+                              <span>{solution.views}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Heart className="w-3 h-3" />
+                              <span>{solution.likes}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-3 h-3 text-yellow-400" />
+                            <span>{solution.rating}</span>
+                          </div>
+                        </div>
+
+                        {/* Revenue */}
+                        <div className="flex items-center justify-between">
+                          <div className="text-green-400 font-semibold">
+                            ${Math.floor(solution.views * 0.02)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {Math.floor(solution.views * 0.15)} orders
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

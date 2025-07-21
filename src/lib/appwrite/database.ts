@@ -16,7 +16,17 @@ export const COLLECTIONS = {
   PROJECTS: 'projects',
   REVIEWS: 'reviews',
   MESSAGES: 'messages',
-  INVITATIONS: 'invitations'
+  INVITATIONS: 'invitations',
+  // AI Solutions & Reels Collections
+  REELS: 'reels',
+  SOLUTION_PACKAGES: 'solution_packages',
+  FREELANCER_SETUPS: 'freelancer_setups',
+  AI_SOLUTIONS: 'ai_solutions',
+  USER_PROJECTS: 'user_projects',
+  ORDERS: 'orders',
+  PROJECT_CUSTOMIZATIONS: 'project_customizations',
+  REEL_INTERACTIONS: 'reel_interactions',
+  AI_SERVICE_ORDERS: 'ai_service_orders'
 };
 
 // Job Status Types

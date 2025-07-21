@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  Briefcase, 
-  MessageCircle, 
-  DollarSign, 
-  User, 
-  Settings, 
+import {
+  Home,
+  Briefcase,
+  MessageCircle,
+  DollarSign,
+  User,
+  Settings,
   Bell,
   Search,
   Plus,
@@ -18,7 +18,8 @@ import {
   Star,
   FileText,
   BarChart3,
-  LogOut
+  LogOut,
+  Video
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,12 @@ const navigation = [
     href: '/en/projects',
     icon: Briefcase,
     description: 'Manage your projects'
+  },
+  {
+    name: 'Solutions',
+    href: '/en/dashboard/solutions',
+    icon: Video,
+    description: 'Your AI solutions'
   },
   {
     name: 'Messages',

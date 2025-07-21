@@ -228,7 +228,7 @@ export class AuthService {
       }
       
       if (filters?.verified) {
-        queries.push(Query.equal('verification_status', 'verified'));
+        queries.push(Query.equal('verified', true));
       }
 
       const users = await databases.listDocuments(

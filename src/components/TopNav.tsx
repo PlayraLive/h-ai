@@ -28,12 +28,6 @@ export default function TopNav({ locale = 'en' }: TopNavProps) {
       description: 'Overview & Analytics'
     },
     {
-      href: `/${locale}/jobs`,
-      label: 'Jobs',
-      icon: Briefcase,
-      description: 'Browse & Manage Jobs'
-    },
-    {
       href: `/${locale}/projects`,
       label: 'Projects',
       icon: Settings,

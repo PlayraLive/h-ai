@@ -23,7 +23,7 @@ export class UsersService {
           jobsCompleted: 0,
           rating: 0,
           reviewsCount: 0,
-          verification_status: 'pending',
+          verified: false,
           topRated: false,
           availability: 'available'
         },
