@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Filter,
@@ -20,12 +20,13 @@ import {
   SlidersHorizontal,
   ArrowRight,
   Verified,
-  Briefcase
-} from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import { FreelancerCardSkeleton } from '@/components/Loading';
-import { useToast } from '@/components/Toast';
-import { cn } from '@/lib/utils';
+  Briefcase,
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
+import { FreelancerCardSkeleton } from "@/components/Loading";
+import { useToast } from "@/components/Toast";
+import { cn } from "@/lib/utils";
+import UserJobsModal from "@/components/UserJobsModal";
 
 interface Freelancer {
   id: string;
@@ -41,88 +42,123 @@ interface Freelancer {
   skills: string[];
   description: string;
   languages: string[];
-  availability: 'available' | 'busy' | 'offline';
+  availability: "available" | "busy" | "offline";
   verified: boolean;
   topRated: boolean;
   category: string;
   portfolio: string[];
 }
 
-export default function FreelancersPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function FreelancersPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedAvailability, setSelectedAvailability] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedAvailability, setSelectedAvailability] = useState("all");
   const [rateRange, setRateRange] = useState([0, 200]);
   const [showFilters, setShowFilters] = useState(false);
-  const [favoriteFreelancers, setFavoriteFreelancers] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState('rating');
+  const [favoriteFreelancers, setFavoriteFreelancers] = useState<Set<string>>(
+    new Set(),
+  );
+  const [sortBy, setSortBy] = useState("rating");
+  const [showUserJobsModal, setShowUserJobsModal] = useState(false);
+  const [selectedFreelancer, setSelectedFreelancer] =
+    useState<Freelancer | null>(null);
 
   const searchParams = useSearchParams();
   const { success, info } = useToast();
 
   const mockFreelancers: Freelancer[] = [
     {
-      id: 'freelancer-alex-001',
-      name: 'Alex Rodriguez',
-      title: 'Full-Stack AI Developer',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      id: "freelancer-alex-001",
+      name: "Alex Rodriguez",
+      title: "Full-Stack AI Developer",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
       rating: 4.9,
       reviewCount: 47,
       hourlyRate: 95,
       completedJobs: 23,
-      responseTime: '1 hour',
-      location: 'San Francisco, CA',
-      skills: ['React', 'Node.js', 'AI/ML', 'Python', 'TypeScript', 'Next.js'],
-      description: 'Passionate full-stack developer specializing in AI-powered web applications. 5+ years of experience building scalable solutions for startups and enterprises.',
-      languages: ['English', 'Spanish'],
-      availability: 'available',
+      responseTime: "1 hour",
+      location: "San Francisco, CA",
+      skills: ["React", "Node.js", "AI/ML", "Python", "TypeScript", "Next.js"],
+      description:
+        "Passionate full-stack developer specializing in AI-powered web applications. 5+ years of experience building scalable solutions for startups and enterprises.",
+      languages: ["English", "Spanish"],
+      availability: "available",
       verified: true,
       topRated: true,
-      category: 'ai_design',
-      portfolio: ['/api/placeholder/300/200', '/api/placeholder/300/200']
+      category: "ai_design",
+      portfolio: ["/api/placeholder/300/200", "/api/placeholder/300/200"],
     },
     {
-      id: 'freelancer-sarah-002',
-      name: 'Sarah Chen',
-      title: 'AI Artist & Creative Technologist',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
+      id: "freelancer-sarah-002",
+      name: "Sarah Chen",
+      title: "AI Artist & Creative Technologist",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
       rating: 4.8,
       reviewCount: 32,
       hourlyRate: 85,
       completedJobs: 18,
-      responseTime: '2 hours',
-      location: 'New York, NY',
-      skills: ['AI Art', 'Python', 'TensorFlow', 'Creative Coding', 'NFTs', 'Stable Diffusion'],
-      description: 'Creative technologist combining art and AI to create stunning digital experiences. Expert in generative art and neural network applications.',
-      languages: ['English', 'Mandarin'],
-      availability: 'available',
+      responseTime: "2 hours",
+      location: "New York, NY",
+      skills: [
+        "AI Art",
+        "Python",
+        "TensorFlow",
+        "Creative Coding",
+        "NFTs",
+        "Stable Diffusion",
+      ],
+      description:
+        "Creative technologist combining art and AI to create stunning digital experiences. Expert in generative art and neural network applications.",
+      languages: ["English", "Mandarin"],
+      availability: "available",
       verified: true,
       topRated: true,
-      category: 'ai_design',
-      portfolio: ['https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=300', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300']
+      category: "ai_design",
+      portfolio: [
+        "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=300",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300",
+      ],
     },
     {
-      id: 'freelancer-mike-003',
-      name: 'Mike Johnson',
-      title: 'IoT & Hardware Engineer',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      id: "freelancer-mike-003",
+      name: "Mike Johnson",
+      title: "IoT & Hardware Engineer",
+      avatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
       rating: 4.7,
       reviewCount: 28,
       hourlyRate: 80,
       completedJobs: 15,
-      responseTime: '3 hours',
-      location: 'Austin, TX',
-      skills: ['IoT', 'Arduino', 'React Native', 'Node.js', 'Hardware', 'Smart Home'],
-      description: 'IoT specialist with expertise in smart home systems and industrial automation. Bridging the gap between hardware and software.',
-      languages: ['English'],
-      availability: 'available',
+      responseTime: "3 hours",
+      location: "Austin, TX",
+      skills: [
+        "IoT",
+        "Arduino",
+        "React Native",
+        "Node.js",
+        "Hardware",
+        "Smart Home",
+      ],
+      description:
+        "IoT specialist with expertise in smart home systems and industrial automation. Bridging the gap between hardware and software.",
+      languages: ["English"],
+      availability: "available",
       verified: true,
       topRated: false,
-      category: 'ai_development',
-      portfolio: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300', 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300']
-    }
+      category: "ai_development",
+      portfolio: [
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300",
+        "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300",
+      ],
+    },
   ];
 
   useEffect(() => {
@@ -134,8 +170,8 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
     }, 1500);
 
     // Получение параметров из URL
-    const category = searchParams.get('category');
-    const search = searchParams.get('search');
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
 
     if (category) {
       setSelectedCategory(category);
@@ -149,35 +185,61 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
     const newFavorites = new Set(favoriteFreelancers);
     if (favoriteFreelancers.has(freelancerId)) {
       newFavorites.delete(freelancerId);
-      info('Removed from favorites', 'Freelancer has been removed from your favorites.');
+      info(
+        "Removed from favorites",
+        "Freelancer has been removed from your favorites.",
+      );
     } else {
       newFavorites.add(freelancerId);
-      success('Added to favorites!', 'Freelancer has been added to your favorites.');
+      success(
+        "Added to favorites!",
+        "Freelancer has been added to your favorites.",
+      );
     }
     setFavoriteFreelancers(newFavorites);
   };
 
-  const filteredFreelancers = freelancers.filter(freelancer => {
-    const matchesSearch = freelancer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         freelancer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         freelancer.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+  const handleHire = (freelancer: Freelancer) => {
+    setSelectedFreelancer(freelancer);
+    setShowUserJobsModal(true);
+  };
 
-    const matchesCategory = selectedCategory === 'all' || freelancer.category === selectedCategory;
-    const matchesAvailability = selectedAvailability === 'all' || freelancer.availability === selectedAvailability;
-    const matchesRate = freelancer.hourlyRate >= rateRange[0] && freelancer.hourlyRate <= rateRange[1];
+  const handleCloseJobsModal = () => {
+    setShowUserJobsModal(false);
+    setSelectedFreelancer(null);
+  };
 
-    return matchesSearch && matchesCategory && matchesAvailability && matchesRate;
+  const filteredFreelancers = freelancers.filter((freelancer) => {
+    const matchesSearch =
+      freelancer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      freelancer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      freelancer.skills.some((skill) =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+    const matchesCategory =
+      selectedCategory === "all" || freelancer.category === selectedCategory;
+    const matchesAvailability =
+      selectedAvailability === "all" ||
+      freelancer.availability === selectedAvailability;
+    const matchesRate =
+      freelancer.hourlyRate >= rateRange[0] &&
+      freelancer.hourlyRate <= rateRange[1];
+
+    return (
+      matchesSearch && matchesCategory && matchesAvailability && matchesRate
+    );
   });
 
   const sortedFreelancers = [...filteredFreelancers].sort((a, b) => {
     switch (sortBy) {
-      case 'rating':
+      case "rating":
         return b.rating - a.rating;
-      case 'rate_low':
+      case "rate_low":
         return a.hourlyRate - b.hourlyRate;
-      case 'rate_high':
+      case "rate_high":
         return b.hourlyRate - a.hourlyRate;
-      case 'experience':
+      case "experience":
         return b.completedJobs - a.completedJobs;
       default:
         return 0;
@@ -192,8 +254,12 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Find AI Freelancers</h1>
-            <p className="text-xl text-gray-400">Connect with top AI specialists worldwide</p>
+            <h1 className="text-4xl font-bold text-white mb-4">
+              Find AI Freelancers
+            </h1>
+            <p className="text-xl text-gray-400">
+              Connect with top AI specialists worldwide
+            </p>
           </div>
 
           {/* Search and Filters */}
@@ -240,7 +306,7 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
                     "btn-secondary flex items-center space-x-2",
-                    showFilters && "bg-purple-500/20 text-purple-400"
+                    showFilters && "bg-purple-500/20 text-purple-400",
                   )}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
@@ -253,7 +319,9 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
             {showFilters && (
               <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Availability</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Availability
+                  </label>
                   <select
                     value={selectedAvailability}
                     onChange={(e) => setSelectedAvailability(e.target.value)}
@@ -276,7 +344,9 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
                     max="200"
                     step="5"
                     value={rateRange[1]}
-                    onChange={(e) => setRateRange([rateRange[0], parseInt(e.target.value)])}
+                    onChange={(e) =>
+                      setRateRange([rateRange[0], parseInt(e.target.value)])
+                    }
                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
@@ -284,9 +354,9 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
                 <div className="flex items-end">
                   <button
                     onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory('all');
-                      setSelectedAvailability('all');
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setSelectedAvailability("all");
                       setRateRange([0, 200]);
                     }}
                     className="btn-secondary w-full"
@@ -301,7 +371,9 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
           {/* Results */}
           <div className="flex justify-between items-center mb-6">
             <p className="text-gray-400">
-              {loading ? 'Loading...' : `${sortedFreelancers.length} freelancers found`}
+              {loading
+                ? "Loading..."
+                : `${sortedFreelancers.length} freelancers found`}
             </p>
           </div>
 
@@ -318,16 +390,19 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
                   freelancer={freelancer}
                   isFavorite={favoriteFreelancers.has(freelancer.id)}
                   onFavorite={() => handleFavoriteFreelancer(freelancer.id)}
+                  onHire={handleHire}
                 />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
-                <div className="text-gray-400 text-lg mb-4">No freelancers found matching your criteria</div>
+                <div className="text-gray-400 text-lg mb-4">
+                  No freelancers found matching your criteria
+                </div>
                 <button
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
-                    setSelectedAvailability('all');
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                    setSelectedAvailability("all");
                     setRateRange([0, 200]);
                   }}
                   className="btn-primary"
@@ -339,38 +414,62 @@ export default function FreelancersPage({ params }: { params: Promise<{ locale: 
           </div>
         </div>
       </div>
+
+      {/* User Jobs Modal */}
+      <UserJobsModal
+        isOpen={showUserJobsModal}
+        onClose={handleCloseJobsModal}
+        freelancerId={selectedFreelancer?.id}
+        freelancerName={selectedFreelancer?.name}
+      />
     </div>
   );
 }
 
-function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
+function FreelancerCard({
+  freelancer,
+  isFavorite,
+  onFavorite,
+  onHire,
+}: {
   freelancer: Freelancer;
   isFavorite: boolean;
-  onFavorite: () => void
+  onFavorite: () => void;
+  onHire: (freelancer: Freelancer) => void;
 }) {
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-      case 'available': return 'bg-green-500';
-      case 'busy': return 'bg-yellow-500';
-      case 'offline': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+      case "available":
+        return "bg-green-500";
+      case "busy":
+        return "bg-yellow-500";
+      case "offline":
+        return "bg-gray-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-      case 'available': return 'Available';
-      case 'busy': return 'Busy';
-      case 'offline': return 'Offline';
-      default: return 'Unknown';
+      case "available":
+        return "Available";
+      case "busy":
+        return "Busy";
+      case "offline":
+        return "Offline";
+      default:
+        return "Unknown";
     }
   };
 
   return (
-    <div className={cn(
-      "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
-      freelancer.topRated && "ring-2 ring-purple-500/30"
-    )}>
+    <div
+      className={cn(
+        "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
+        freelancer.topRated && "ring-2 ring-purple-500/30",
+      )}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -380,10 +479,12 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
               alt={freelancer.name}
               className="w-12 h-12 rounded-full object-cover"
             />
-            <div className={cn(
-              "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-950",
-              getAvailabilityColor(freelancer.availability)
-            )}></div>
+            <div
+              className={cn(
+                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-950",
+                getAvailabilityColor(freelancer.availability),
+              )}
+            ></div>
           </div>
           <div>
             <div className="flex items-center space-x-2">
@@ -401,7 +502,11 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
           onClick={onFavorite}
           className="p-2 text-gray-400 hover:text-red-400 transition-colors"
         >
-          {isFavorite ? <HeartHandshake className="w-5 h-5 text-red-400" /> : <Heart className="w-5 h-5" />}
+          {isFavorite ? (
+            <HeartHandshake className="w-5 h-5 text-red-400" />
+          ) : (
+            <Heart className="w-5 h-5" />
+          )}
         </button>
       </div>
 
@@ -417,12 +522,16 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
             Verified
           </span>
         )}
-        <span className={cn(
-          "px-2 py-1 text-xs rounded-full",
-          freelancer.availability === 'available' ? 'bg-green-500/20 text-green-400' :
-          freelancer.availability === 'busy' ? 'bg-yellow-500/20 text-yellow-400' :
-          'bg-gray-500/20 text-gray-400'
-        )}>
+        <span
+          className={cn(
+            "px-2 py-1 text-xs rounded-full",
+            freelancer.availability === "available"
+              ? "bg-green-500/20 text-green-400"
+              : freelancer.availability === "busy"
+                ? "bg-yellow-500/20 text-yellow-400"
+                : "bg-gray-500/20 text-gray-400",
+          )}
+        >
           {getAvailabilityText(freelancer.availability)}
         </span>
       </div>
@@ -432,20 +541,28 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-white font-semibold">{freelancer.rating}</span>
+            <span className="text-white font-semibold">
+              {freelancer.rating}
+            </span>
           </div>
-          <div className="text-xs text-gray-400">({freelancer.reviewCount} reviews)</div>
+          <div className="text-xs text-gray-400">
+            ({freelancer.reviewCount} reviews)
+          </div>
         </div>
         <div className="text-center">
           <div className="text-white font-semibold mb-1">
             ${freelancer.hourlyRate}/hr
           </div>
-          <div className="text-xs text-gray-400">{freelancer.completedJobs} jobs</div>
+          <div className="text-xs text-gray-400">
+            {freelancer.completedJobs} jobs
+          </div>
         </div>
       </div>
 
       {/* Description */}
-      <p className="text-gray-300 text-sm mb-4 line-clamp-2">{freelancer.description}</p>
+      <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+        {freelancer.description}
+      </p>
 
       {/* Skills */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -502,16 +619,15 @@ function FreelancerCard({ freelancer, isFavorite, onFavorite }: {
             <MessageCircle className="w-4 h-4" />
             <span>Message</span>
           </Link>
-          <Link
-            href={`/en/jobs/create?freelancer=${freelancer.id}`}
+          <button
+            onClick={() => onHire(freelancer)}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors text-center flex items-center justify-center space-x-2"
           >
             <Briefcase className="w-4 h-4" />
             <span>Hire</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>
   );
 }
-

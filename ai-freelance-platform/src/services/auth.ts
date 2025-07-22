@@ -1,14 +1,29 @@
-import { account, databases, DATABASE_ID, USERS_COLLECTION_ID } from '@/lib/appwrite';
-import { ID, Query } from 'appwrite';
-import type { User } from '@/types';
+import {
+  account,
+  databases,
+  DATABASE_ID,
+  USERS_COLLECTION_ID,
+} from "@/lib/appwrite";
+import { ID, Query } from "appwrite";
+import type { User } from "@/types";
 
 export class AuthService {
   // Register new user
-  async register(email: string, password: string, name: string, userType: 'freelancer' | 'client') {
+  async register(
+    email: string,
+    password: string,
+    name: string,
+    userType: "freelancer" | "client",
+  ) {
     try {
       // Create account
-      const account_response = await account.create(ID.unique(), email, password, name);
-      
+      const account_response = await account.create(
+        ID.unique(),
+        email,
+        password,
+        name,
+      );
+
       // Create user profile in database
       const userProfile = await databases.createDocument(
         DATABASE_ID,
@@ -19,25 +34,25 @@ export class AuthService {
           name,
           email,
           userType,
-          verification_status: 'pending',
+          verification_status: "pending",
           online: false,
           rating: 0,
           reviewCount: 0,
           completedJobs: 0,
           totalEarnings: 0,
           successRate: 0,
-          responseTime: '24 hours',
+          responseTime: "24 hours",
           memberSince: new Date().toISOString(),
           skills: [],
-          languages: ['English'],
+          languages: ["English"],
           badges: [],
-          portfolioItems: []
-        }
+          portfolioItems: [],
+        },
       );
 
       // Create session
       await account.createEmailPasswordSession(email, password);
-      
+
       return { success: true, user: userProfile };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -58,7 +73,7 @@ export class AuthService {
   // Logout user
   async logout() {
     try {
-      await account.deleteSession('current');
+      await account.deleteSession("current");
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -69,16 +84,16 @@ export class AuthService {
   async getCurrentUser() {
     try {
       const account_user = await account.get();
-      
+
       // Get user profile from database
       const userProfiles = await databases.listDocuments(
         DATABASE_ID,
         USERS_COLLECTION_ID,
-        [Query.equal('userId', account_user.$id)]
+        [Query.equal("userId", account_user.$id)],
       );
 
       if (userProfiles.documents.length === 0) {
-        throw new Error('User profile not found');
+        throw new Error("User profile not found");
       }
 
       return userProfiles.documents[0] as User;
@@ -94,7 +109,7 @@ export class AuthService {
         DATABASE_ID,
         USERS_COLLECTION_ID,
         userId,
-        data
+        data,
       );
       return { success: true, user: updatedUser };
     } catch (error: any) {
@@ -115,7 +130,10 @@ export class AuthService {
   // Send password recovery email
   async forgotPassword(email: string) {
     try {
-      await account.createRecovery(email, `${window.location.origin}/reset-password`);
+      await account.createRecovery(
+        email,
+        `${window.location.origin}/reset-password`,
+      );
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -145,7 +163,9 @@ export class AuthService {
   // Send verification email
   async sendVerificationEmail() {
     try {
-      await account.createVerification(`${window.location.origin}/verify-email`);
+      await account.createVerification(
+        `${window.location.origin}/verify-email`,
+      );
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -153,12 +173,12 @@ export class AuthService {
   }
 
   // OAuth login
-  async loginWithOAuth(provider: 'google' | 'github') {
+  async loginWithOAuth(provider: "google" | "github") {
     try {
       account.createOAuth2Session(
         provider,
         `${window.location.origin}/auth/callback`,
-        `${window.location.origin}/auth/failure`
+        `${window.location.origin}/auth/failure`,
       );
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -181,7 +201,7 @@ export class AuthService {
       const user = await databases.getDocument(
         DATABASE_ID,
         USERS_COLLECTION_ID,
-        userId
+        userId,
       );
       return { success: true, user: user as User };
     } catch (error: any) {
@@ -192,22 +212,23 @@ export class AuthService {
   // Search users
   async searchUsers(query: string, filters?: any) {
     try {
-      const queries = [Query.search('name', query)];
-      
+      const queries = [Query.search("name", query)];
+
       if (filters?.userType) {
-        queries.push(Query.equal('userType', filters.userType));
+        queries.push(Query.equal("userType", filters.userType));
       }
-      
-      if (filters?.verified) {
-        queries.push(Query.equal('verification_status', 'verified'));
-      }
+
+      // Note: verification_status attribute may not exist in database yet
+      // if (filters?.verified) {
+      //   queries.push(Query.equal('verification_status', 'verified'));
+      // }
 
       const users = await databases.listDocuments(
         DATABASE_ID,
         USERS_COLLECTION_ID,
-        queries
+        queries,
       );
-      
+
       return { success: true, users: users.documents as User[] };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -217,12 +238,10 @@ export class AuthService {
   // Update user online status
   async updateOnlineStatus(userId: string, online: boolean) {
     try {
-      await databases.updateDocument(
-        DATABASE_ID,
-        USERS_COLLECTION_ID,
-        userId,
-        { online, lastSeen: new Date().toISOString() }
-      );
+      await databases.updateDocument(DATABASE_ID, USERS_COLLECTION_ID, userId, {
+        online,
+        lastSeen: new Date().toISOString(),
+      });
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };

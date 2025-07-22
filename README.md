@@ -1,153 +1,173 @@
-# 🚀 H-AI Platform - Complete AI-Powered Freelancing Ecosystem
+# 🚀 H-AI Platform - Полная экосистема AI-фриланса
 
-> **The Future of AI Freelancing is Here**
-> A comprehensive, production-ready platform connecting AI specialists with clients worldwide. Built with cutting-edge technologies and designed for scale.
+> **Будущее AI-фриланса уже здесь**
+> Комплексная, готовая к продакшену платформа, соединяющая AI-специалистов с клиентами по всему миру. Построена на передовых технологиях и спроектирована для масштабирования.
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Appwrite](https://img.shields.io/badge/Appwrite-Backend-red?style=for-the-badge&logo=appwrite)](https://appwrite.io/)
-[![Stripe](https://img.shields.io/badge/Stripe-Payments-purple?style=for-the-badge&logo=stripe)](https://stripe.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 
 ---
 
-## 📋 Table of Contents
+## 📋 Содержание
 
-- [🎯 Project Overview](#-project-overview)
-- [✅ Current Features](#-current-features)
-- [🚧 Planned Features](#-planned-features)
-- [🛠️ Technical Architecture](#️-technical-architecture)
-- [🚀 Quick Start Guide](#-quick-start-guide)
-- [📱 User Journeys](#-user-journeys)
-- [💰 Business Model](#-business-model)
-- [🔧 Development Guide](#-development-guide)
-- [📊 Analytics & Monitoring](#-analytics--monitoring)
-- [🚀 Deployment](#-deployment)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-
----
-
-## 🎯 Project Overview
-
-H-AI Platform is a next-generation freelancing marketplace specifically designed for the AI revolution. We connect talented AI specialists, developers, and creative professionals with forward-thinking clients who need cutting-edge AI solutions.
-
-### 🌟 **Why H-AI Platform?**
-
-- **AI-First Approach**: Built specifically for AI professionals and AI-powered projects
-- **Modern Tech Stack**: Leveraging the latest technologies for optimal performance
-- **Secure Payments**: Stripe-powered escrow system with automatic commission handling
-- **Beautiful UX**: Minimalist, Figma-inspired design with smooth animations
-- **Scalable Architecture**: Ready to handle thousands of users and transactions
-- **Comprehensive Analytics**: Deep insights for platform owners and users
-
-### 🎨 **Design Philosophy**
-
-- **Minimalist & Clean**: Inspired by modern design systems like Figma
-- **AI-Centric**: Highlighting AI tools, services, and capabilities
-- **User-Focused**: Intuitive workflows for both freelancers and clients
-- **Mobile-First**: Responsive design that works perfectly on all devices
-- **Performance-Optimized**: Fast loading times and smooth interactions
+- [🎯 Обзор проекта](#-обзор-проекта)
+- [✅ Текущие функции](#-текущие-функции)
+- [🚧 Планируемые функции](#-планируемые-функции)
+- [🛠️ Техническая архитектура](#️-техническая-архитектура)
+- [🚀 Быстрый старт](#-быстрый-старт)
+- [📱 Пользовательские сценарии](#-пользовательские-сценарии)
+- [💰 Бизнес-модель](#-бизнес-модель)
+- [🔧 Руководство разработчика](#-руководство-разработчика)
+- [📊 Аналитика и мониторинг](#-аналитика-и-мониторинг)
+- [🚀 Развертывание](#-развертывание)
+- [🤝 Участие в разработке](#-участие-в-разработке)
+- [📄 Лицензия](#-лицензия)
 
 ---
 
-## ✅ Current Features
+## 🎯 Обзор проекта
 
-### 🎨 **Portfolio System** *(Fully Implemented)*
+H-AI Platform - это платформа фриланса нового поколения, специально разработанная для AI-революции. Мы соединяем талантливых AI-специалистов, разработчиков и креативных профессионалов с прогрессивными клиентами, которым нужны передовые AI-решения.
 
-**Overview**: A comprehensive portfolio showcase system that allows freelancers to display their AI-powered projects beautifully.
+### 🌟 **Почему H-AI Platform?**
 
-**Key Features**:
-- ✅ **Beautiful Gallery Layout**: Grid-based portfolio display with hover effects
-- ✅ **AI Service Integration**: Tags for OpenAI, Stable Diffusion, Midjourney, ChatGPT, etc.
-- ✅ **Rich Media Support**: Images, videos, and detailed project descriptions
-- ✅ **Social Features**: Likes, views, ratings, and sharing capabilities
-- ✅ **Search & Filtering**: Filter by category, AI services, skills, and ratings
-- ✅ **Freelancer Integration**: Direct links from freelancer profiles to portfolios
-- ✅ **Responsive Design**: Perfect display on desktop, tablet, and mobile
+- **AI-первый подход**: Создана специально для AI-профессионалов и AI-проектов
+- **Современный стек технологий**: Использует новейшие технологии для оптимальной производительности
+- **Безопасные платежи**: Система эскроу на базе Appwrite с автоматической обработкой комиссий
+- **Красивый UX**: Минималистичный дизайн в стиле Figma с плавными анимациями
+- **Масштабируемая архитектура**: Готова к обработке тысяч пользователей и транзакций
+- **Комплексная аналитика**: Глубокая аналитика для владельцев платформы и пользователей
 
-**Technical Implementation**:
-- React components with TypeScript
-- Appwrite database for portfolio storage
-- Image optimization with Next.js
-- Real-time updates and interactions
-- SEO-optimized portfolio pages
+### 🎨 **Философия дизайна**
 
-**User Experience**:
-- Browse all portfolios: `/en/portfolio`
-- Individual freelancer portfolios: `/en/freelancer/[id]/portfolio`
-- Portfolio integration in freelancer cards
-- Social sharing capabilities
+- **Минималистичный и чистый**: Вдохновлен современными дизайн-системами как Figma
+- **AI-центричный**: Подчеркивает AI-инструменты, сервисы и возможности
+- **Ориентированный на пользователя**: Интуитивные рабочие процессы для фрилансеров и клиентов
+- **Mobile-first**: Адаптивный дизайн, который идеально работает на всех устройствах
+- **Оптимизированная производительность**: Быстрая загрузка и плавные взаимодействия
 
-### 💼 **Project Management System** *(Fully Implemented)*
+---
 
-**Overview**: Complete project lifecycle management from posting to payment, designed specifically for AI projects.
+## ✅ Текущие функции
 
-**Project Workflow**:
+### � **Система Solutions (AI-решения)** *(Полностью реализована)*
+
+**Обзор**: Революционная система создания, управления и продажи AI-решений в формате коротких видео (рилсов).
+
+**Ключевые функции**:
+- ✅ **Создание Solutions**: Полная форма создания с загрузкой видео и превью
+- ✅ **Управление контентом**: Редактирование и удаление существующих решений
+- ✅ **Категории и теги**: Система классификации по типам AI-сервисов
+- ✅ **Ценообразование**: Гибкая настройка цен и времени доставки
+- ✅ **Интеграция с дашбордом**: Полное управление через личный кабинет
+- ✅ **Файловое хранилище**: Загрузка видео и изображений в Appwrite Storage
+- ✅ **Адаптивный дизайн**: Идеальное отображение на всех устройствах
+
+**Техническая реализация**:
+- React компоненты с TypeScript
+- База данных Appwrite для хранения решений
+- Система загрузки файлов
+- Real-time обновления
+- CRUD операции через ReelsService
+
+**Пользовательский опыт**:
+- Создание решений: `/en/dashboard/solutions/create`
+- Редактирование: `/en/dashboard/solutions/edit/[id]`
+- Просмотр в дашборде: `/en/dashboard?tab=solutions`
+- Публичная страница: `/en/solutions`
+
+### 🎨 **Система портфолио** *(Полностью реализована)*
+
+**Обзор**: Комплексная система демонстрации портфолио, позволяющая фрилансерам красиво представлять свои AI-проекты.
+
+**Ключевые функции**:
+- ✅ **Красивая галерея**: Сетка портфолио с эффектами при наведении
+- ✅ **Интеграция AI-сервисов**: Теги для OpenAI, Stable Diffusion, Midjourney, ChatGPT и др.
+- ✅ **Поддержка медиа**: Изображения, видео и подробные описания проектов
+- ✅ **Социальные функции**: Лайки, просмотры, рейтинги и возможности шеринга
+- ✅ **Поиск и фильтрация**: Фильтр по категориям, AI-сервисам, навыкам и рейтингам
+- ✅ **Интеграция с фрилансерами**: Прямые ссылки из профилей фрилансеров
+- ✅ **Адаптивный дизайн**: Идеальное отображение на десктопе, планшете и мобильном
+
+**Техническая реализация**:
+- React компоненты с TypeScript
+- База данных Appwrite для хранения портфолио
+- Оптимизация изображений с Next.js
+- Real-time обновления и взаимодействия
+- SEO-оптимизированные страницы портфолио
+
+### 💼 **Система управления проектами** *(Полностью реализована)*
+
+**Обзор**: Полное управление жизненным циклом проекта от публикации до оплаты, специально разработанное для AI-проектов.
+
+**Рабочий процесс проекта**:
 ```
-📝 Posted → 📋 Applied → 👤 Assigned → ⚡ In Progress → 🔍 Review → ✅ Completed → 💰 Paid
+📝 Опубликован → 📋 Подана заявка → 👤 Назначен → ⚡ В работе → 🔍 Проверка → ✅ Завершен → 💰 Оплачен
 ```
 
-**Key Features**:
-- ✅ **Smart Job Listings**: AI-focused project categories and requirements
-- ✅ **Application System**: Comprehensive application forms with portfolio integration
-- ✅ **Status Tracking**: Real-time project status updates for all parties
-- ✅ **Portfolio Integration**: Freelancers can attach relevant portfolio items to applications
-- ✅ **Budget Management**: Flexible pricing (fixed/hourly) with automatic calculations
-- ✅ **Communication Tools**: Built-in messaging and notification system
-- ✅ **Deadline Management**: Project timelines and milestone tracking
+**Ключевые функции**:
+- ✅ **Умные списки работ**: AI-ориентированные категории проектов и требования
+- ✅ **Система заявок**: Комплексные формы заявок с интеграцией портфолио
+- ✅ **Отслеживание статуса**: Real-time обновления статуса проекта для всех сторон
+- ✅ **Интеграция портфолио**: Фрилансеры могут прикреплять релевантные работы к заявкам
+- ✅ **Управление бюджетом**: Гибкое ценообразование (фиксированное/почасовое) с автоматическими расчетами
+- ✅ **Инструменты коммуникации**: Встроенная система сообщений и уведомлений
+- ✅ **Управление дедлайнами**: Временные рамки проектов и отслеживание этапов
 
-**Technical Implementation**:
-- Appwrite collections for projects and applications
-- Real-time status synchronization
-- Email notifications (infrastructure ready)
-- Advanced filtering and search
-- Mobile-responsive project management
+**Техническая реализация**:
+- Коллекции Appwrite для проектов и заявок
+- Real-time синхронизация статусов
+- Email уведомления (инфраструктура готова)
+- Продвинутая фильтрация и поиск
+- Адаптивное управление проектами
 
-**User Experience**:
-- Browse projects: `/en/jobs`
-- Apply to projects: `/en/jobs/[id]/apply`
-- Application success: `/en/application-success`
-- Project management in dashboard
+**Пользовательский опыт**:
+- Просмотр проектов: `/en/jobs`
+- Подача заявок: `/en/jobs/[id]/apply`
+- Успешная заявка: `/en/application-success`
+- Управление проектами в дашборде
 
-### 💳 **Payment System** *(Fully Implemented)*
+### 💳 **Система платежей** *(Полностью реализована)*
 
-**Overview**: Secure, automated payment processing with Stripe Connect, designed for freelancing transactions.
+**Обзор**: Безопасная, автоматизированная обработка платежей с интеграцией Appwrite, разработанная для фриланс-транзакций.
 
-**Key Features**:
-- ✅ **Stripe Connect Integration**: Secure payments with automatic splits
-- ✅ **10% Platform Commission**: Automatically deducted from each transaction
-- ✅ **Escrow System**: Client funds held securely until project completion
-- ✅ **Multi-Currency Support**: Global payment processing
-- ✅ **Refund Management**: Automated refund processing for disputes
-- ✅ **Payment Analytics**: Detailed transaction tracking and reporting
-- ✅ **Payout Management**: Automatic payouts to freelancers
+**Ключевые функции**:
+- ✅ **Интеграция Appwrite**: Безопасные платежи с автоматическим разделением
+- ✅ **10% комиссия платформы**: Автоматически вычитается с каждой транзакции
+- ✅ **Система эскроу**: Средства клиента надежно хранятся до завершения проекта
+- ✅ **Поддержка мультивалют**: Глобальная обработка платежей
+- ✅ **Управление возвратами**: Автоматизированная обработка возвратов при спорах
+- ✅ **Аналитика платежей**: Детальное отслеживание транзакций и отчетность
+- ✅ **Управление выплатами**: Автоматические выплаты фрилансерам
 
-**Technical Implementation**:
-- Stripe Connect for marketplace payments
-- Webhook handling for real-time updates
-- Secure API endpoints for payment processing
-- Database tracking of all transactions
-- Automated commission calculations
+**Техническая реализация**:
+- Appwrite для marketplace платежей
+- Обработка webhook для real-time обновлений
+- Безопасные API endpoints для обработки платежей
+- Отслеживание всех транзакций в базе данных
+- Автоматизированные расчеты комиссий
 
-**Business Model**:
-- 10% commission on completed projects
-- Transparent fee structure
-- No hidden charges
-- Instant payouts to freelancers
+**Бизнес-модель**:
+- 10% комиссия с завершенных проектов
+- Прозрачная структура комиссий
+- Никаких скрытых платежей
+- Мгновенные выплаты фрилансерам
 
-### 👑 **Admin Dashboard** *(Fully Implemented)*
+### 👑 **Админ-панель** *(Полностью реализована)*
 
-**Overview**: Comprehensive analytics and management dashboard for platform owners.
+**Обзор**: Комплексная аналитика и панель управления для владельцев платформы.
 
-**Key Metrics**:
-- ✅ **User Analytics**: Total users, freelancers vs clients, growth trends
-- ✅ **Financial Metrics**: Revenue, commissions, transaction volume
-- ✅ **Project Analytics**: Success rates, completion times, categories
-- ✅ **Platform Health**: Conversion rates, user engagement, retention
+**Ключевые метрики**:
+- ✅ **Аналитика пользователей**: Общее количество пользователей, фрилансеры vs клиенты, тренды роста
+- ✅ **Финансовые метрики**: Доходы, комиссии, объем транзакций
+- ✅ **Аналитика проектов**: Показатели успеха, время завершения, категории
+- ✅ **Здоровье платформы**: Коэффициенты конверсии, вовлеченность пользователей, удержание
 
-**Features**:
-- ✅ **Real-Time Data**: Live updates from Appwrite and Stripe
+**Функции**:
+- ✅ **Real-time данные**: Живые обновления из Appwrite
 - ✅ **Time Filtering**: 7 days, 30 days, 90 days, 1 year views
 - ✅ **Export Capabilities**: Data export for external analysis
 - ✅ **User Management**: View and manage platform users
@@ -213,765 +233,288 @@ H-AI Platform is a next-generation freelancing marketplace specifically designed
 
 ---
 
-## 🚧 Planned Features
-
-### 🔔 **Notification System** *(High Priority)*
-
-**Overview**: Real-time notification system to keep users informed about project updates, messages, and platform activities.
-
-**Planned Features**:
-- 🔲 **Real-Time Notifications**: WebSocket-based instant notifications
-- 🔲 **Email Notifications**: Automated email alerts for important events
-- 🔲 **Push Notifications**: Browser and mobile push notifications
-- 🔲 **Notification Center**: In-app notification management
-- 🔲 **Customizable Preferences**: User-controlled notification settings
-- 🔲 **SMS Notifications**: Optional SMS alerts for critical updates
-
-**Use Cases**:
-- New project applications
-- Project status changes
-- Payment confirmations
-- Message notifications
-- Deadline reminders
-
-### 💬 **Advanced Messaging System** *(High Priority)*
-
-**Overview**: Comprehensive communication platform for freelancers and clients.
-
-**Planned Features**:
-- 🔲 **Real-Time Chat**: Instant messaging with typing indicators
-- 🔲 **File Sharing**: Secure file upload and sharing
-- 🔲 **Video Calls**: Integrated video conferencing
-- 🔲 **Screen Sharing**: For project reviews and collaboration
-- 🔲 **Message History**: Searchable conversation archives
-- 🔲 **Group Chats**: Multi-participant project discussions
-- 🔲 **Message Encryption**: End-to-end encrypted communications
-
-### 🎯 **AI-Powered Matching** *(Medium Priority)*
-
-**Overview**: Intelligent matching system to connect the right freelancers with the right projects.
-
-**Planned Features**:
-- 🔲 **Smart Recommendations**: AI-powered project suggestions for freelancers
-- 🔲 **Skill Analysis**: Automatic skill extraction from portfolios
-- 🔲 **Success Prediction**: ML models to predict project success rates
-- 🔲 **Automated Screening**: AI-assisted freelancer screening for clients
-- 🔲 **Price Optimization**: Dynamic pricing suggestions based on market data
-- 🔲 **Talent Discovery**: Advanced search with AI-powered filters
-
-### 📊 **Advanced Analytics** *(Medium Priority)*
-
-**Overview**: Deep analytics and insights for all platform participants.
-
-**Planned Features**:
-- 🔲 **Freelancer Analytics**: Earnings, performance, and growth metrics
-- 🔲 **Client Analytics**: Project success rates, spending analysis
-- 🔲 **Market Insights**: Industry trends and pricing analytics
-- 🔲 **Performance Tracking**: Detailed project and user performance metrics
-- 🔲 **Predictive Analytics**: Future trend predictions and recommendations
-- 🔲 **Custom Reports**: User-generated analytics reports
-
-### 🏆 **Reputation & Review System** *(Medium Priority)*
-
-**Overview**: Comprehensive reputation management system to build trust and quality.
-
-**Planned Features**:
-- 🔲 **Detailed Reviews**: Multi-criteria rating system
-- 🔲 **Skill Endorsements**: Peer-to-peer skill validation
-- 🔲 **Achievement Badges**: Gamified achievement system
-- 🔲 **Reputation Scores**: Algorithmic reputation calculation
-- 🔲 **Review Verification**: Anti-fraud review validation
-- 🔲 **Dispute Resolution**: Automated and manual dispute handling
-
-### 📱 **Mobile Applications** *(Medium Priority)*
-
-**Overview**: Native mobile apps for iOS and Android platforms.
-
-**Planned Features**:
-- 🔲 **React Native Apps**: Cross-platform mobile applications
-- 🔲 **Offline Capabilities**: Work offline with sync when connected
-- 🔲 **Push Notifications**: Native mobile notifications
-- 🔲 **Camera Integration**: Photo/video capture for portfolios
-- 🔲 **Biometric Authentication**: Fingerprint and face recognition
-- 🔲 **Mobile-Optimized UX**: Touch-friendly interface design
-
-### 🔗 **API & Integrations** *(Low Priority)*
-
-**Overview**: Public API and third-party integrations for extended functionality.
-
-**Planned Features**:
-- 🔲 **Public API**: RESTful API for third-party developers
-- 🔲 **Webhook System**: Real-time event notifications
-- 🔲 **Calendar Integration**: Google Calendar, Outlook sync
-- 🔲 **Time Tracking**: Integration with time tracking tools
-- 🔲 **Accounting Software**: QuickBooks, Xero integration
-- 🔲 **Social Media**: LinkedIn, Twitter profile integration
-
-### 🌍 **Global Expansion** *(Low Priority)*
-
-**Overview**: Features to support global marketplace expansion.
-
-**Planned Features**:
-- 🔲 **Multi-Currency**: Support for 50+ currencies
-- 🔲 **Tax Management**: Automated tax calculation and reporting
-- 🔲 **Legal Compliance**: GDPR, CCPA, and regional compliance
-- 🔲 **Localization**: Support for 10+ languages
-- 🔲 **Regional Payment Methods**: Local payment options by country
-- 🔲 **Cultural Adaptation**: Region-specific UI/UX adaptations
-
-### 🤖 **AI Integration** *(Future Vision)*
-
-**Overview**: Deep AI integration to enhance platform capabilities.
-
-**Planned Features**:
-- 🔲 **AI Project Assistant**: Automated project scoping and planning
-- 🔲 **Code Review AI**: Automated code quality assessment
-- 🔲 **Content Generation**: AI-powered project descriptions and proposals
-- 🔲 **Quality Assurance**: AI-powered work quality evaluation
-- 🔲 **Fraud Detection**: ML-based fraud and spam detection
-- 🔲 **Personalization**: AI-driven personalized user experiences
-
 ---
 
-## 🛠️ Technical Architecture
+## �️ Техническая архитектура
 
-### **Frontend Stack**
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript 5.0+
-- **Styling**: Tailwind CSS 3.0+
-- **Components**: Custom React components
-- **Icons**: Heroicons v2
-- **Animations**: CSS transitions and transforms
-- **State Management**: React Context + useState/useEffect
+### 🏗️ **Технический стек**
 
-### **Backend Stack**
-- **BaaS**: Appwrite (Database, Auth, Storage, Functions)
-- **Database**: Appwrite Database (NoSQL)
-- **Authentication**: Appwrite Auth with email/password
-- **File Storage**: Appwrite Storage for images and documents
-- **Real-time**: Appwrite Realtime (WebSocket)
+**Frontend**:
+- ⚡ **Next.js 15** - React фреймворк с App Router
+- 🎨 **Tailwind CSS** - Utility-first CSS фреймворк
+- 📱 **TypeScript** - Типизированный JavaScript
+- 🎭 **Lucide React** - Современные иконки
+- 🌐 **next-intl** - Интернационализация
 
-### **Payment Processing**
-- **Payment Gateway**: Stripe Connect
-- **Marketplace Payments**: Automatic commission splits
-- **Supported Methods**: Credit/Debit cards, Digital wallets
-- **Security**: PCI DSS compliant
-- **Webhooks**: Real-time payment status updates
+**Backend & Database**:
+- 🔥 **Appwrite** - Backend-as-a-Service
+- 📊 **Appwrite Database** - NoSQL база данных
+- 🔐 **Appwrite Auth** - Система аутентификации
+- 📁 **Appwrite Storage** - Файловое хранилище
+- 🔔 **Appwrite Realtime** - Real-time обновления
 
-### **Infrastructure**
-- **Hosting**: Vercel (Frontend)
-- **CDN**: Vercel Edge Network
-- **Domain**: Custom domain with SSL
-- **Monitoring**: Vercel Analytics
-- **Error Tracking**: Built-in error boundaries
+**Развертывание**:
+- ▲ **Vercel** - Хостинг и CI/CD
+- 🌍 **CDN** - Глобальная доставка контента
+- 🔒 **HTTPS** - Безопасное соединение
 
-### **Development Tools**
-- **Package Manager**: npm
-- **Code Quality**: ESLint + Prettier
-- **Type Checking**: TypeScript strict mode
-- **Git Hooks**: Husky (planned)
-- **Testing**: Jest + React Testing Library (planned)
+### 🏛️ **Архитектура приложения**
 
-### **Security Measures**
-- **HTTPS**: Enforced SSL/TLS encryption
-- **Authentication**: Secure session management
-- **API Security**: Rate limiting and input validation
-- **Data Protection**: Encrypted data storage
-- **CORS**: Configured cross-origin policies
-
----
-
-## 🚀 Quick Start Guide
-
-### 📋 Prerequisites
-
-Before you begin, ensure you have the following installed and configured:
-
-- **Node.js 18+**: [Download from nodejs.org](https://nodejs.org/)
-- **npm or yarn**: Package manager (npm comes with Node.js)
-- **Git**: Version control system
-- **Appwrite Account**: [Sign up at appwrite.io](https://appwrite.io/)
-- **Stripe Account**: [Sign up at stripe.com](https://stripe.com/)
-- **Code Editor**: VS Code recommended with TypeScript extensions
-
-### 🛠️ Installation Steps
-
-#### **Step 1: Clone the Repository**
-```bash
-# Clone the repository
-git clone https://github.com/sacralpro/h-ai.git
-
-# Navigate to project directory
-cd h-ai
-
-# Check Node.js version (should be 18+)
-node --version
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Appwrite      │    │   Storage       │
+│   (Next.js)     │◄──►│   Backend       │◄──►│   (Files)       │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   User Auth     │    │   Database      │    │   Media Files   │
+│   & Sessions    │    │   Collections   │    │   & Assets      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-#### **Step 2: Install Dependencies**
+---
+
+## � Быстрый старт
+
+### 📋 **Предварительные требования**
+
+- Node.js 18+
+- npm или yarn
+- Аккаунт Appwrite
+- Git
+
+### ⚡ **Установка**
+
+1. **Клонирование репозитория**:
 ```bash
-# Install all project dependencies
+git clone https://github.com/sacraltrack/H-AI-Platform.git
+cd H-AI-Platform
+```
+
+2. **Установка зависимостей**:
+```bash
 npm install
-
-# Or if you prefer yarn
+# или
 yarn install
-
-# Verify installation
-npm list --depth=0
 ```
 
-#### **Step 3: Environment Configuration**
+3. **Настройка переменных окружения**:
+```bash
+cp .env.example .env.local
+```
 
-Create a `.env.local` file in the root directory:
-
+Заполните `.env.local`:
 ```env
-# ===========================================
-# APPWRITE CONFIGURATION
-# ===========================================
 NEXT_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
-NEXT_PUBLIC_APPWRITE_PROJECT_ID=your_project_id_here
-NEXT_PUBLIC_APPWRITE_DATABASE_ID=your_database_id_here
-APPWRITE_API_KEY=your_server_api_key_here
-
-# ===========================================
-# STRIPE CONFIGURATION
-# ===========================================
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-
-# ===========================================
-# APPLICATION CONFIGURATION
-# ===========================================
-NEXT_PUBLIC_APP_URL=http://localhost:3001
-NODE_ENV=development
-
-# ===========================================
-# OPTIONAL: EMAIL CONFIGURATION (Future)
-# ===========================================
-# SMTP_HOST=smtp.gmail.com
-# SMTP_PORT=587
-# SMTP_USER=your_email@gmail.com
-# SMTP_PASS=your_app_password
+NEXT_PUBLIC_APPWRITE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_APPWRITE_DATABASE_ID=your_database_id
+NEXT_PUBLIC_APPWRITE_BUCKET_ID=your_bucket_id
+APPWRITE_API_KEY=your_api_key
 ```
 
-#### **Step 4: Appwrite Setup**
-
-1. **Create Appwrite Project**:
-   - Go to [Appwrite Console](https://cloud.appwrite.io/)
-   - Create a new project
-   - Copy the Project ID
-
-2. **Create Database**:
-   - In your project, go to "Databases"
-   - Create a new database
-   - Copy the Database ID
-
-3. **Generate API Key**:
-   - Go to "Settings" → "API Keys"
-   - Create a new API key with full permissions
-   - Copy the API key
-
-4. **Configure Platform**:
-   - Go to "Settings" → "Platforms"
-   - Add a new Web platform
-   - Set hostname to `localhost` for development
-
-#### **Step 5: Stripe Setup**
-
-1. **Get API Keys**:
-   - Go to [Stripe Dashboard](https://dashboard.stripe.com/)
-   - Navigate to "Developers" → "API keys"
-   - Copy your Publishable key and Secret key
-
-2. **Enable Stripe Connect**:
-   - Go to "Connect" → "Settings"
-   - Enable Express accounts
-   - Set up your platform profile
-
-3. **Configure Webhooks** (Optional for development):
-   - Go to "Developers" → "Webhooks"
-   - Add endpoint: `your-domain.com/api/stripe/webhooks`
-   - Select relevant events
-
-#### **Step 6: Database Setup**
-
-Run the database setup scripts to create all necessary collections:
-
+4. **Создание коллекций Appwrite**:
 ```bash
-# Create core collections (users, sessions, etc.)
-node scripts/create-collections.js
-
-# Create portfolio collections
-node scripts/create-portfolio-collections.js
-
-# Create project management collections
-node scripts/create-project-collections.js
-
-# Create admin user account
-node scripts/create-admin-user.js
+node scripts/create-reels-collection.js
 ```
 
-#### **Step 7: Seed Test Data**
-
-Populate your database with sample data for testing:
-
+5. **Запуск в режиме разработки**:
 ```bash
-# Create sample portfolio items
-node scripts/create-test-portfolio.js
-
-# Create user-specific portfolio
-node scripts/create-user-portfolio.js
-
-# Create sample projects (optional)
-node scripts/create-test-projects.js
-```
-
-#### **Step 8: Start Development Server**
-
-```bash
-# Start the development server
 npm run dev
-
-# Or with yarn
+# или
 yarn dev
-
-# Server will start on http://localhost:3001
 ```
 
-#### **Step 9: Verify Installation**
+6. **Открыть в браузере**: http://localhost:3000
 
-1. **Open your browser** and navigate to `http://localhost:3001`
-2. **Check the landing page** loads correctly
-3. **Test authentication** by creating an account
-4. **Verify database connection** by checking if data loads
-5. **Test admin access** with `admin@h-ai.com` / `AdminH-AI2024!`
+---
 
-### 🔧 Development Commands
+## 🚧 Планируемые функции
 
+### 🔔 **Система уведомлений** *(Высокий приоритет)*
+- 🔲 Real-time уведомления через WebSocket
+- 🔲 Email уведомления для важных событий
+- 🔲 Push уведомления в браузере
+- 🔲 Центр уведомлений в приложении
+- 🔲 Настраиваемые предпочтения пользователей
+
+### 💬 **Расширенная система сообщений**
+- 🔲 Групповые чаты для проектов
+- 🔲 Файловые вложения в сообщениях
+- 🔲 Видеозвонки и скриншеринг
+- 🔲 Интеграция с AI-ассистентами
+
+### 🤖 **AI-интеграции**
+- 🔲 AI-рекомендации проектов
+- 🔲 Автоматическое сопоставление фрилансеров
+- 🔲 AI-анализ портфолио
+- 🔲 Умная система ценообразования
+
+### 📊 **Расширенная аналитика**
+- 🔲 Детальная аналитика для фрилансеров
+- 🔲 ROI трекинг для клиентов
+- 🔲 Прогнозирование трендов
+- 🔲 Экспорт данных в различных форматах
+
+---
+
+## 💰 Бизнес-модель
+
+### 💸 **Структура доходов**
+- **10% комиссия** с каждого завершенного проекта
+- **Премиум подписки** для расширенных функций
+- **Рекламные размещения** для продвижения услуг
+- **Сертификационные программы** для фрилансеров
+
+### 📈 **Монетизация Solutions**
+- **Комиссия с продаж** AI-решений
+- **Премиум размещение** в каталоге
+- **Аналитика и инсайты** для создателей
+- **Брендинг и кастомизация** решений
+
+---
+
+## 🔧 Руководство разработчика
+
+### 📁 **Структура проекта**
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── [locale]/          # Интернационализация
+│   │   ├── dashboard/     # Личный кабинет
+│   │   ├── solutions/     # Система Solutions
+│   │   ├── jobs/          # Проекты и работы
+│   │   └── ...
+├── components/            # React компоненты
+│   ├── ui/               # UI компоненты
+│   ├── forms/            # Формы
+│   └── ...
+├── lib/                  # Утилиты и конфигурация
+│   ├── appwrite/         # Appwrite интеграция
+│   └── utils.ts          # Общие утилиты
+├── contexts/             # React контексты
+├── hooks/                # Кастомные хуки
+└── types/                # TypeScript типы
+```
+
+### 🔄 **Workflow разработки**
+1. Создайте feature branch: `git checkout -b feature/new-feature`
+2. Внесите изменения и протестируйте
+3. Запустите линтер: `npm run lint`
+4. Создайте билд: `npm run build`
+5. Создайте Pull Request
+
+### 🧪 **Тестирование**
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Run type checking
-npm run type-check
-
-# Run linting
+# Запуск линтера
 npm run lint
 
-# Run linting with auto-fix
-npm run lint:fix
+# Проверка типов TypeScript
+npm run type-check
+
+# Создание production билда
+npm run build
 ```
-
-### 🐛 Troubleshooting
-
-#### **Common Issues and Solutions**:
-
-1. **Port 3001 already in use**:
-   ```bash
-   # Kill process on port 3001
-   lsof -ti:3001 | xargs kill -9
-
-   # Or use a different port
-   npm run dev -- -p 3002
-   ```
-
-2. **Appwrite connection errors**:
-   - Verify your endpoint URL (should include `/v1`)
-   - Check if Project ID and Database ID are correct
-   - Ensure API key has proper permissions
-
-3. **Stripe webhook errors**:
-   - Use Stripe CLI for local testing
-   - Verify webhook secret matches your configuration
-
-4. **Environment variables not loading**:
-   - Ensure `.env.local` is in the root directory
-   - Restart the development server after changes
-   - Check for typos in variable names
-
-5. **Database script errors**:
-   - Ensure Appwrite is properly configured
-   - Check if collections already exist
-   - Verify API key permissions
-
-### 📱 Testing the Platform
-
-#### **User Journeys to Test**:
-
-1. **Freelancer Journey**:
-   - Register as a freelancer
-   - Create portfolio items
-   - Browse and apply to jobs
-   - Check application status
-
-2. **Client Journey**:
-   - Register as a client
-   - Browse freelancer profiles
-   - View portfolios
-   - Post a project (when implemented)
-
-3. **Admin Journey**:
-   - Login with admin credentials
-   - Access admin dashboard
-   - View platform analytics
-   - Monitor user activity
-
-#### **Key Pages to Verify**:
-
-- `/` - Landing page
-- `/en/jobs` - Job listings
-- `/en/freelancers` - Freelancer directory
-- `/en/portfolio` - Portfolio showcase
-- `/en/dashboard` - User dashboard
-- `/en/admin` - Admin panel (admin only)
-- `/en/demo` - Platform demonstration
-
-Visit `http://localhost:3001` to start exploring the platform!
 
 ---
 
-## 📱 User Journeys
+## 📊 Аналитика и мониторинг
 
-### 🎨 **Freelancer Journey**
+### 📈 **Ключевые метрики**
+- **DAU/MAU**: Ежедневные/месячные активные пользователи
+- **Конверсия**: От регистрации до первого проекта
+- **Retention**: Удержание пользователей
+- **GMV**: Общий объем транзакций
+- **ARPU**: Средний доход с пользователя
 
-#### **1. Registration & Profile Setup**
-```
-Register → Verify Email → Complete Profile → Upload Portfolio → Go Live
-```
-
-**Detailed Steps**:
-1. **Sign Up**: Create account with email/password
-2. **Profile Creation**: Add skills, experience, bio, and rates
-3. **Portfolio Upload**: Showcase AI projects with detailed descriptions
-4. **Skill Verification**: Tag AI services used (OpenAI, Stable Diffusion, etc.)
-5. **Profile Review**: Ensure all information is complete and professional
-
-#### **2. Finding & Applying to Projects**
-```
-Browse Jobs → Filter by Skills → View Details → Apply with Portfolio → Track Status
-```
-
-**Detailed Steps**:
-1. **Job Discovery**: Browse `/en/jobs` with AI-focused filters
-2. **Project Analysis**: Review requirements, budget, and timeline
-3. **Application Preparation**: Write compelling cover letter
-4. **Portfolio Selection**: Choose relevant portfolio items to attach
-5. **Proposal Submission**: Submit application with custom pricing
-6. **Status Monitoring**: Track application status in dashboard
-
-#### **3. Project Execution & Payment**
-```
-Get Hired → Start Work → Submit Deliverables → Get Paid → Leave Review
-```
-
-**Detailed Steps**:
-1. **Project Kickoff**: Communicate with client about requirements
-2. **Work Progress**: Update project status and communicate regularly
-3. **Deliverable Submission**: Upload final work for client review
-4. **Revision Handling**: Address any client feedback
-5. **Payment Release**: Receive payment automatically via Stripe
-6. **Relationship Building**: Maintain good client relationships for repeat work
-
-### 👔 **Client Journey**
-
-#### **1. Registration & Project Planning**
-```
-Register → Verify Business → Define Project → Set Budget → Post Job
-```
-
-**Detailed Steps**:
-1. **Account Creation**: Sign up with business email
-2. **Company Profile**: Add company information and verification
-3. **Project Scoping**: Define AI project requirements clearly
-4. **Budget Planning**: Set realistic budget based on project complexity
-5. **Job Posting**: Create detailed job listing with requirements
-
-#### **2. Freelancer Selection**
-```
-Review Applications → Check Portfolios → Interview Candidates → Make Decision
-```
-
-**Detailed Steps**:
-1. **Application Review**: Evaluate freelancer proposals and experience
-2. **Portfolio Analysis**: Review relevant AI projects and quality
-3. **Communication**: Message potential candidates with questions
-4. **Decision Making**: Select the best freelancer for the project
-5. **Contract Setup**: Agree on terms, timeline, and milestones
-
-#### **3. Project Management & Completion**
-```
-Monitor Progress → Provide Feedback → Review Deliverables → Release Payment
-```
-
-**Detailed Steps**:
-1. **Progress Tracking**: Monitor project status and milestones
-2. **Regular Communication**: Provide feedback and clarifications
-3. **Quality Review**: Evaluate deliverables against requirements
-4. **Revision Requests**: Request changes if needed
-5. **Final Approval**: Approve work and release payment
-6. **Relationship Building**: Build long-term relationships with top freelancers
-
-### 👑 **Admin Journey**
-
-#### **1. Platform Monitoring**
-```
-Login → Review Metrics → Analyze Trends → Identify Issues → Take Action
-```
-
-**Detailed Steps**:
-1. **Dashboard Access**: Login to `/en/admin` with admin credentials
-2. **Metrics Review**: Check user growth, revenue, and engagement
-3. **Trend Analysis**: Identify patterns in user behavior and platform usage
-4. **Issue Detection**: Spot potential problems or opportunities
-5. **Strategic Decisions**: Make data-driven decisions for platform improvement
-
-#### **2. User & Content Management**
-```
-Monitor Users → Review Content → Handle Disputes → Ensure Quality
-```
-
-**Detailed Steps**:
-1. **User Oversight**: Monitor user activity and behavior
-2. **Content Moderation**: Review portfolios and job postings for quality
-3. **Dispute Resolution**: Handle conflicts between freelancers and clients
-4. **Quality Assurance**: Maintain high standards across the platform
-5. **Community Building**: Foster a positive and professional environment
+### 🔍 **Инструменты мониторинга**
+- **Vercel Analytics**: Производительность и Core Web Vitals
+- **Appwrite Console**: Мониторинг базы данных
+- **Custom Dashboard**: Бизнес-метрики в админ-панели
 
 ---
 
-## 💰 Business Model
+## 🚀 Развертывание
 
-### 📊 **Revenue Streams**
+### 🌐 **Production развертывание**
+Проект автоматически развертывается на Vercel при push в main ветку.
 
-#### **Primary Revenue: Transaction Fees**
-- **Commission Rate**: 10% on all completed projects
-- **Automatic Deduction**: Seamlessly handled by Stripe Connect
-- **Transparent Pricing**: Clear fee structure for all users
-- **Scalable Model**: Revenue grows with platform usage
+**URL**: https://h-ai-platform.vercel.app
 
-#### **Revenue Breakdown**:
+### 🔧 **Переменные окружения для продакшена**
+```env
+NEXT_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+NEXT_PUBLIC_APPWRITE_PROJECT_ID=production_project_id
+NEXT_PUBLIC_APPWRITE_DATABASE_ID=production_database_id
+NEXT_PUBLIC_APPWRITE_BUCKET_ID=production_bucket_id
+APPWRITE_API_KEY=production_api_key
 ```
-Project Value: $1,000
-├── Freelancer Receives: $900 (90%)
-├── Platform Commission: $100 (10%)
-└── Payment Processing: ~$30 (3% - covered by platform)
-```
-
-#### **Projected Revenue Scenarios**:
-
-**Conservative Growth (Year 1)**:
-- Monthly Transactions: $50,000
-- Platform Revenue: $5,000/month
-- Annual Revenue: $60,000
-
-**Moderate Growth (Year 2)**:
-- Monthly Transactions: $200,000
-- Platform Revenue: $20,000/month
-- Annual Revenue: $240,000
-
-**Aggressive Growth (Year 3)**:
-- Monthly Transactions: $500,000
-- Platform Revenue: $50,000/month
-- Annual Revenue: $600,000
-
-### 🎯 **Target Market**
-
-#### **Primary Markets**:
-
-1. **AI Specialists & Developers**:
-   - Machine Learning Engineers
-   - AI Researchers and Scientists
-   - Prompt Engineers
-   - AI Tool Specialists (Midjourney, Stable Diffusion, etc.)
-   - Chatbot Developers
-   - Computer Vision Experts
-
-2. **Creative Professionals**:
-   - AI Artists and Designers
-   - Content Creators using AI tools
-   - Video Editors with AI expertise
-   - Digital Marketing Specialists
-   - Social Media Managers
-
-3. **Businesses Seeking AI Solutions**:
-   - Startups needing AI integration
-   - SMEs looking for automation
-   - Marketing agencies requiring AI content
-   - E-commerce businesses needing AI tools
-   - Tech companies outsourcing AI projects
-
-#### **Market Size & Opportunity**:
-
-- **Global Freelancing Market**: $400+ billion
-- **AI Services Market**: $150+ billion (growing 40% annually)
-- **Target Addressable Market**: $20+ billion
-- **Serviceable Market**: $2+ billion
-
-### 💡 **Competitive Advantages**
-
-#### **1. AI-First Approach**:
-- Specialized platform for AI professionals
-- AI-specific project categories and filters
-- Integration with popular AI tools and services
-- Community of AI experts and enthusiasts
-
-#### **2. Superior User Experience**:
-- Modern, intuitive interface design
-- Mobile-responsive platform
-- Fast loading times and smooth interactions
-- Comprehensive portfolio showcase system
-
-#### **3. Secure & Transparent Payments**:
-- Stripe-powered escrow system
-- Automatic commission handling
-- Multi-currency support
-- Transparent fee structure
-
-#### **4. Data-Driven Insights**:
-- Comprehensive analytics for all users
-- Market insights and trends
-- Performance tracking and optimization
-- AI-powered matching (planned)
-
-### 📈 **Growth Strategy**
-
-#### **Phase 1: Foundation (Months 1-6)**
-- Launch MVP with core features
-- Onboard initial freelancers and clients
-- Establish payment processing
-- Build initial user base (100+ users)
-
-#### **Phase 2: Growth (Months 6-18)**
-- Implement advanced features (messaging, notifications)
-- Expand marketing efforts
-- Build strategic partnerships
-- Scale to 1,000+ active users
-
-#### **Phase 3: Scale (Months 18-36)**
-- Launch mobile applications
-- Expand internationally
-- Implement AI-powered features
-- Achieve 10,000+ active users
-
-#### **Phase 4: Expansion (Year 3+)**
-- Additional revenue streams
-- Enterprise solutions
-- API marketplace
-- Global market leadership
-
-### 🎯 **Key Performance Indicators (KPIs)**
-
-#### **User Metrics**:
-- Monthly Active Users (MAU)
-- User Retention Rate
-- Freelancer-to-Client Ratio
-- Average Session Duration
-
-#### **Business Metrics**:
-- Monthly Recurring Revenue (MRR)
-- Average Transaction Value
-- Commission Revenue
-- Customer Acquisition Cost (CAC)
-
-#### **Platform Metrics**:
-- Project Success Rate
-- Time to Hire
-- User Satisfaction Score
-- Platform Utilization Rate
 
 ---
 
-## 📱 Platform Pages & Features
+## 🤝 Участие в разработке
 
-### 🌐 **Public Pages**
+### 🎯 **Как внести вклад**
+1. Fork репозитория
+2. Создайте feature branch
+3. Внесите изменения
+4. Добавьте тесты (если применимо)
+5. Создайте Pull Request
 
-#### **Landing Page** (`/`)
-- **Purpose**: Platform introduction and user acquisition
-- **Features**: Hero section, feature highlights, testimonials, CTA buttons
-- **Target Audience**: New visitors, potential users
-- **Key Metrics**: Conversion rate, bounce rate, time on page
+### 📝 **Стандарты кода**
+- Используйте TypeScript для всех новых файлов
+- Следуйте ESLint правилам
+- Пишите понятные commit сообщения
+- Документируйте новые функции
 
-#### **Job Listings** (`/en/jobs`)
-- **Purpose**: Browse available AI projects
-- **Features**: Advanced filtering, search, project details, application CTA
-- **Target Audience**: Freelancers looking for work
-- **Key Metrics**: Job views, application rate, filter usage
-
-#### **Freelancer Directory** (`/en/freelancers`)
-- **Purpose**: Discover talented AI professionals
-- **Features**: Freelancer profiles, skill filtering, portfolio previews
-- **Target Audience**: Clients seeking freelancers
-- **Key Metrics**: Profile views, contact rate, hire rate
-
-#### **Portfolio Showcase** (`/en/portfolio`)
-- **Purpose**: Display AI project portfolios
-- **Features**: Gallery view, project details, social sharing
-- **Target Audience**: Potential clients, freelancers, general public
-- **Key Metrics**: Portfolio views, likes, shares
-
-#### **Platform Demo** (`/en/demo`)
-- **Purpose**: Comprehensive platform overview
-- **Features**: Feature explanations, workflow demonstration, CTA
-- **Target Audience**: Potential users, investors, partners
-- **Key Metrics**: Demo completion rate, conversion to signup
-
-### 🔐 **User Pages**
-
-#### **User Dashboard** (`/en/dashboard`)
-- **Purpose**: Central hub for user activity
-- **Features**: Project management, analytics, notifications, profile
-- **Target Audience**: Registered users (freelancers and clients)
-- **Key Metrics**: Daily active usage, feature adoption, session length
-
-#### **Job Application** (`/en/jobs/[id]/apply`)
-- **Purpose**: Apply to specific projects
-- **Features**: Application form, portfolio integration, proposal submission
-- **Target Audience**: Freelancers applying to projects
-- **Key Metrics**: Application completion rate, success rate
-
-#### **Individual Portfolios** (`/en/freelancer/[id]/portfolio`)
-- **Purpose**: Showcase individual freelancer work
-- **Features**: Project galleries, skill highlights, contact options
-- **Target Audience**: Potential clients evaluating freelancers
-- **Key Metrics**: Portfolio views, contact rate, hire rate
-
-#### **Application Success** (`/en/application-success`)
-- **Purpose**: Confirm successful job application
-- **Features**: Success message, next steps, navigation options
-- **Target Audience**: Freelancers who just applied
-- **Key Metrics**: User satisfaction, next action rate
-
-### 👑 **Admin Pages**
-
-#### **Admin Dashboard** (`/en/admin`)
-- **Purpose**: Platform management and analytics
-- **Features**: User metrics, financial data, platform health
-- **Target Audience**: Platform administrators and founders
-- **Key Metrics**: Data accuracy, decision support effectiveness
-
-#### **User Management** (Planned)
-- **Purpose**: Manage platform users
-- **Features**: User profiles, activity monitoring, moderation tools
-- **Target Audience**: Platform administrators
-- **Key Metrics**: User satisfaction, moderation efficiency
-
-## 💰 Monetization
+### 🐛 **Сообщение об ошибках**
+Создайте issue с подробным описанием:
+- Шаги для воспроизведения
+- Ожидаемое поведение
+- Фактическое поведение
+- Скриншоты (если применимо)
 
 ---
 
-## 🔧 Development Guide
+## 📄 Лицензия
 
-### 📁 **Project Structure**
+Этот проект лицензирован под MIT License - см. файл [LICENSE](LICENSE) для деталей.
 
-```
-h-ai/
+---
+
+## 📞 Контакты
+
+- **Email**: sacralprojects8@gmail.com
+- **GitHub**: [@sacraltrack](https://github.com/sacraltrack)
+- **Проект**: [H-AI Platform](https://github.com/sacraltrack/H-AI-Platform)
+
+---
+
+<div align="center">
+
+**🚀 Построено с ❤️ для AI-сообщества**
+
+[![GitHub stars](https://img.shields.io/github/stars/sacraltrack/H-AI-Platform?style=social)](https://github.com/sacraltrack/H-AI-Platform/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/sacraltrack/H-AI-Platform?style=social)](https://github.com/sacraltrack/H-AI-Platform/network/members)
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ├── 📁 src/
 │   ├── 📁 app/                    # Next.js App Router
 │   │   ├── 📁 [locale]/           # Internationalization routes

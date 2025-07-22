@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { authService } from '@/services/authService';
-import Navbar from '@/components/Navbar';
+import { useEffect, useState } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { authService } from "@/services/authService";
+import Navbar from "@/components/Navbar";
 
 export default function AuthTestPage() {
   const { user, isAuthenticated, initializing } = useAuthContext();
@@ -11,23 +11,27 @@ export default function AuthTestPage() {
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    setLogs((prev) => [...prev, `[${timestamp}] ${message}`]);
   };
 
   useEffect(() => {
-    addLog('Component mounted');
-    addLog(`Initial state: authenticated=${isAuthenticated}, initializing=${initializing}, user=${user ? user.name || user.email : 'null'}`);
+    addLog("Component mounted");
+    addLog(
+      `Initial state: authenticated=${isAuthenticated}, initializing=${initializing}, user=${user ? user.name || user.email : "null"}`,
+    );
 
     // Подписываемся на изменения состояния
     const unsubscribe = authService.subscribe((state) => {
-      addLog(`State changed: authenticated=${state.isAuthenticated}, loading=${state.isLoading}, user=${state.user ? state.user.name || state.user.email : 'null'}`);
+      addLog(
+        `State changed: authenticated=${state.isAuthenticated}, loading=${state.isLoading}, user=${state.user ? state.user.name || state.user.email : "null"}`,
+      );
     });
 
     return unsubscribe;
   }, []);
 
   const handleForceCheck = async () => {
-    addLog('Force checking auth status...');
+    addLog("Force checking auth status...");
     await authService.forceCheckAuth();
   };
 
@@ -38,33 +42,39 @@ export default function AuthTestPage() {
   return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
-      
-      <div className="container mx-auto px-4 py-8">
+
+      <div className="container mx-auto px-4 page-content">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8">Auth Test Page</h1>
-          
+
           {/* Current State */}
           <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Current Auth State</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Current Auth State
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-700 rounded p-4">
                 <div className="text-sm text-gray-400">Authenticated</div>
-                <div className={`text-lg font-semibold ${isAuthenticated ? 'text-green-400' : 'text-red-400'}`}>
-                  {isAuthenticated ? '✅ Yes' : '❌ No'}
+                <div
+                  className={`text-lg font-semibold ${isAuthenticated ? "text-green-400" : "text-red-400"}`}
+                >
+                  {isAuthenticated ? "✅ Yes" : "❌ No"}
                 </div>
               </div>
-              
+
               <div className="bg-gray-700 rounded p-4">
                 <div className="text-sm text-gray-400">Initializing</div>
-                <div className={`text-lg font-semibold ${initializing ? 'text-yellow-400' : 'text-green-400'}`}>
-                  {initializing ? '⏳ Yes' : '✅ No'}
+                <div
+                  className={`text-lg font-semibold ${initializing ? "text-yellow-400" : "text-green-400"}`}
+                >
+                  {initializing ? "⏳ Yes" : "✅ No"}
                 </div>
               </div>
-              
+
               <div className="bg-gray-700 rounded p-4">
                 <div className="text-sm text-gray-400">User</div>
                 <div className="text-lg font-semibold text-white">
-                  {user ? (user.name || user.email) : 'None'}
+                  {user ? user.name || user.email : "None"}
                 </div>
               </div>
             </div>
@@ -73,7 +83,9 @@ export default function AuthTestPage() {
           {/* User Details */}
           {user && (
             <div className="bg-gray-800 rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold text-white mb-4">User Details</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">
+                User Details
+              </h2>
               <pre className="bg-gray-900 rounded p-4 text-sm text-gray-300 overflow-auto">
                 {JSON.stringify(user, null, 2)}
               </pre>
@@ -90,7 +102,7 @@ export default function AuthTestPage() {
               >
                 Force Check Auth
               </button>
-              
+
               <button
                 onClick={handleClearLogs}
                 className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -108,7 +120,10 @@ export default function AuthTestPage() {
                 <div className="text-gray-500 text-center">No logs yet...</div>
               ) : (
                 logs.map((log, index) => (
-                  <div key={index} className="text-sm text-gray-300 mb-1 font-mono">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-300 mb-1 font-mono"
+                  >
                     {log}
                   </div>
                 ))
@@ -118,7 +133,9 @@ export default function AuthTestPage() {
 
           {/* Instructions */}
           <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 mt-6">
-            <h2 className="text-xl font-semibold text-blue-400 mb-4">Testing Instructions</h2>
+            <h2 className="text-xl font-semibold text-blue-400 mb-4">
+              Testing Instructions
+            </h2>
             <ol className="text-gray-300 space-y-2">
               <li>1. Check the current auth state above</li>
               <li>2. Try logging in via Google OAuth on the login page</li>

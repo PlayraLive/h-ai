@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 import {
   Home,
   Briefcase,
@@ -10,53 +10,55 @@ import {
   CreditCard,
   Star,
   BarChart3,
-  Settings
-} from 'lucide-react';
+  Settings,
+  Bell,
+} from "lucide-react";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 interface TopNavProps {
   locale?: string;
 }
 
-export default function TopNav({ locale = 'en' }: TopNavProps) {
+export default function TopNav({ locale = "en" }: TopNavProps) {
   const pathname = usePathname();
 
   const navItems = [
     {
       href: `/${locale}/dashboard`,
-      label: 'Dashboard',
+      label: "Dashboard",
       icon: Home,
-      description: 'Overview & Analytics'
+      description: "Overview & Analytics",
     },
     {
       href: `/${locale}/projects`,
-      label: 'Projects',
+      label: "Projects",
       icon: Settings,
-      description: 'Manage Projects'
+      description: "Manage Projects",
     },
     {
       href: `/${locale}/freelancers`,
-      label: 'Freelancers',
+      label: "Freelancers",
       icon: Users,
-      description: 'Find Talent'
+      description: "Find Talent",
     },
     {
       href: `/${locale}/payments`,
-      label: 'Payments',
+      label: "Payments",
       icon: CreditCard,
-      description: 'Billing & Transactions'
+      description: "Billing & Transactions",
     },
     {
       href: `/${locale}/reviews`,
-      label: 'Reviews',
+      label: "Reviews",
       icon: Star,
-      description: 'Feedback & Ratings'
+      description: "Feedback & Ratings",
     },
     {
       href: `/${locale}/reports`,
-      label: 'Reports',
+      label: "Reports",
       icon: BarChart3,
-      description: 'Analytics & Insights'
-    }
+      description: "Analytics & Insights",
+    },
   ];
 
   const isActive = (href: string) => {
@@ -75,25 +77,29 @@ export default function TopNav({ locale = 'en' }: TopNavProps) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
-              
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'group relative flex items-center space-x-2 px-4 py-4 text-sm font-medium transition-all duration-300 whitespace-nowrap',
-                    'hover:bg-gray-700/30 rounded-t-xl',
+                    "group relative flex items-center space-x-2 px-4 py-4 text-sm font-medium transition-all duration-300 whitespace-nowrap",
+                    "hover:bg-gray-700/30 rounded-t-xl",
                     active
-                      ? 'text-purple-400 bg-gray-700/20 border-b-2 border-purple-500'
-                      : 'text-gray-400 hover:text-white'
+                      ? "text-purple-400 bg-gray-700/20 border-b-2 border-purple-500"
+                      : "text-gray-400 hover:text-white",
                   )}
                 >
-                  <Icon className={cn(
-                    'w-4 h-4 transition-colors',
-                    active ? 'text-purple-400' : 'text-gray-400 group-hover:text-white'
-                  )} />
+                  <Icon
+                    className={cn(
+                      "w-4 h-4 transition-colors",
+                      active
+                        ? "text-purple-400"
+                        : "text-gray-400 group-hover:text-white",
+                    )}
+                  />
                   <span className="hidden sm:block">{item.label}</span>
-                  
+
                   {/* Tooltip for mobile */}
                   <div className="sm:hidden absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                     {item.label}
@@ -103,8 +109,9 @@ export default function TopNav({ locale = 'en' }: TopNavProps) {
             })}
           </nav>
 
-          {/* Right side - Settings or additional actions */}
+          {/* Right side - Notifications and Settings */}
           <div className="flex items-center space-x-2">
+            <NotificationDropdown />
             <Link
               href={`/${locale}/settings`}
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-lg transition-all duration-300"

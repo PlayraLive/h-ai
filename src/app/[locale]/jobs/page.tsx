@@ -1,28 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
-  Filter,
   MapPin,
   Clock,
   DollarSign,
   Star,
+  Eye,
   Bookmark,
   BookmarkCheck,
-  Eye,
   Users,
-  Calendar,
   ArrowRight,
-  SlidersHorizontal
-} from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import { JobCardSkeleton } from '@/components/Loading';
-import { useToast } from '@/components/Toast';
-import { JobsService } from '@/lib/appwrite/jobs';
-import { cn } from '@/lib/utils';
+  SlidersHorizontal,
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
+import { JobCardSkeleton } from "@/components/Loading";
+import { useToast } from "@/components/Toast";
+import { JobsService } from "@/lib/appwrite/jobs";
+import { cn } from "@/lib/utils";
+import ApplyJobModal from "@/components/ApplyJobModal";
 interface Job {
   id: string;
   title: string;
@@ -30,7 +29,7 @@ interface Job {
   company: string;
   companyLogo: string;
   location: string;
-  type: 'full-time' | 'part-time' | 'contract' | 'freelance';
+  type: "full-time" | "part-time" | "contract" | "freelance";
   budget: {
     min: number;
     max: number;
@@ -46,83 +45,93 @@ interface Job {
   urgent: boolean;
 }
 
-export default function JobsPage({ params }: { params: Promise<{ locale: string }> }) {
+const mockJobs: Job[] = [
+  {
+    id: "1",
+    title: "AI-Powered Logo Design for Tech Startup",
+    description:
+      "We need a creative AI designer to create a modern, minimalist logo for our AI startup. The logo should convey innovation, trust, and cutting-edge technology.",
+    company: "TechFlow AI",
+    companyLogo: "/api/placeholder/40/40",
+    location: "Remote",
+    type: "freelance",
+    budget: { min: 500, max: 1500, currency: "USD" },
+    skills: ["AI Design", "Logo Design", "Branding", "Figma"],
+    postedAt: "2024-01-15",
+    deadline: "2024-01-30",
+    proposals: 12,
+    rating: 4.8,
+    category: "ai_design",
+    featured: true,
+    urgent: false,
+  },
+  {
+    id: "2",
+    title: "Machine Learning Model Development",
+    description:
+      "Looking for an experienced ML engineer to develop a recommendation system for our e-commerce platform. Must have experience with Python, TensorFlow, and large datasets.",
+    company: "ShopSmart Inc",
+    companyLogo: "/api/placeholder/40/40",
+    location: "New York, NY",
+    type: "contract",
+    budget: { min: 5000, max: 15000, currency: "USD" },
+    skills: ["Machine Learning", "Python", "TensorFlow", "Data Science"],
+    postedAt: "2024-01-14",
+    deadline: "2024-02-15",
+    proposals: 8,
+    rating: 4.9,
+    category: "ai_development",
+    featured: false,
+    urgent: true,
+  },
+  {
+    id: "3",
+    title: "AI Video Editing for YouTube Channel",
+    description:
+      "Need an AI video editor to create engaging content for our tech YouTube channel. Experience with AI-powered editing tools required.",
+    company: "TechTalks Media",
+    companyLogo: "/api/placeholder/40/40",
+    location: "Remote",
+    type: "part-time",
+    budget: { min: 1000, max: 3000, currency: "USD" },
+    skills: [
+      "AI Video Editing",
+      "After Effects",
+      "Premiere Pro",
+      "Motion Graphics",
+    ],
+    postedAt: "2024-01-13",
+    deadline: "2024-01-25",
+    proposals: 15,
+    rating: 4.7,
+    category: "ai_video",
+    featured: false,
+    urgent: false,
+  },
+];
+
+export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
-  const [experienceLevel, setExperienceLevel] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLocation] = useState("all");
+  const [experienceLevel] = useState("all");
   const [budgetRange, setBudgetRange] = useState([0, 20000]);
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState("newest");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [showApplyModal, setShowApplyModal] = useState(false);
 
   const searchParams = useSearchParams();
   const { success, info } = useToast();
 
-  const mockJobs: Job[] = [
-    {
-      id: '1',
-      title: 'AI-Powered Logo Design for Tech Startup',
-      description: 'We need a creative AI designer to create a modern, minimalist logo for our AI startup. The logo should convey innovation, trust, and cutting-edge technology.',
-      company: 'TechFlow AI',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'Remote',
-      type: 'freelance',
-      budget: { min: 500, max: 1500, currency: 'USD' },
-      skills: ['AI Design', 'Logo Design', 'Branding', 'Figma'],
-      postedAt: '2024-01-15',
-      deadline: '2024-01-30',
-      proposals: 12,
-      rating: 4.8,
-      category: 'ai_design',
-      featured: true,
-      urgent: false
-    },
-    {
-      id: '2',
-      title: 'Machine Learning Model Development',
-      description: 'Looking for an experienced ML engineer to develop a recommendation system for our e-commerce platform. Must have experience with Python, TensorFlow, and large datasets.',
-      company: 'ShopSmart Inc',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'New York, NY',
-      type: 'contract',
-      budget: { min: 5000, max: 15000, currency: 'USD' },
-      skills: ['Machine Learning', 'Python', 'TensorFlow', 'Data Science'],
-      postedAt: '2024-01-14',
-      deadline: '2024-02-15',
-      proposals: 8,
-      rating: 4.9,
-      category: 'ai_development',
-      featured: false,
-      urgent: true
-    },
-    {
-      id: '3',
-      title: 'AI Video Editing for YouTube Channel',
-      description: 'Need an AI video editor to create engaging content for our tech YouTube channel. Experience with AI-powered editing tools required.',
-      company: 'TechTalks Media',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'Remote',
-      type: 'part-time',
-      budget: { min: 1000, max: 3000, currency: 'USD' },
-      skills: ['AI Video Editing', 'After Effects', 'Premiere Pro', 'Motion Graphics'],
-      postedAt: '2024-01-13',
-      deadline: '2024-01-25',
-      proposals: 15,
-      rating: 4.7,
-      category: 'ai_video',
-      featured: false,
-      urgent: false
-    }
-  ];
-
   useEffect(() => {
     // Получение параметров из URL
-    const category = searchParams.get('category');
-    const search = searchParams.get('search');
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
 
     if (category) {
       setSelectedCategory(category);
@@ -136,21 +145,23 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     setLoading(true);
     try {
       // Проверяем наличие переменных окружения
-      if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
-          !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
-          !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
-        console.warn('Appwrite not configured, using mock data');
+      if (
+        !process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+        !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
+        !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+      ) {
+        console.warn("Appwrite not configured, using mock data");
         setJobs(mockJobs);
         return;
       }
 
-      const filters: any = {};
+      const filters: Record<string, any> = {};
 
-      if (selectedCategory && selectedCategory !== 'all') {
+      if (selectedCategory && selectedCategory !== "all") {
         filters.category = selectedCategory;
       }
 
-      if (selectedLocation && selectedLocation !== 'all') {
+      if (selectedLocation && selectedLocation !== "all") {
         filters.location = selectedLocation;
       }
 
@@ -162,7 +173,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
         filters.budgetMax = budgetRange[1];
       }
 
-      if (experienceLevel && experienceLevel !== 'all') {
+      if (experienceLevel && experienceLevel !== "all") {
         filters.experienceLevel = experienceLevel;
       }
 
@@ -170,50 +181,63 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
         filters.search = searchQuery;
       }
 
-      console.log('Loading jobs from Appwrite...');
+      console.log("Loading jobs from Appwrite...");
       const loadedJobs = await JobsService.getJobs();
-      console.log('Loaded jobs:', loadedJobs);
+      console.log("Loaded jobs:", loadedJobs);
 
       // Если нет джобов из БД, используем mock данные
       if (!loadedJobs || !loadedJobs.jobs || loadedJobs.jobs.length === 0) {
-        console.log('No jobs found in database, using mock data');
+        console.log("No jobs found in database, using mock data");
         setJobs(mockJobs);
         return;
       }
 
       // Convert Appwrite documents to Job interface
-      const convertedJobs = loadedJobs.jobs.map((job: any) => ({
-        id: job.$id!,
-        title: job.title,
-        description: job.description,
-        company: job.clientCompany || job.clientName,
-        companyLogo: job.clientAvatar || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40',
-        location: job.location || 'Remote',
-        type: job.budgetType,
-        budget: {
-          min: job.budgetMin,
-          max: job.budgetMax,
-          currency: job.currency || 'USD'
-        },
-        skills: job.skills || [],
-        postedAt: job.$createdAt!,
-        deadline: job.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        proposals: job.applicationsCount || 0,
-        rating: 4.5, // Default rating
-        category: job.category,
-        featured: job.featured || false,
-        urgent: job.urgent || false
-      }));
+      const convertedJobs: Job[] = loadedJobs.jobs.map(
+        (job: Record<string, any>) => ({
+          id: job.$id!,
+          title: job.title,
+          description: job.description,
+          company: job.clientCompany || job.clientName,
+          companyLogo:
+            job.clientAvatar ||
+            "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40",
+          location: job.location || "Remote",
+          type: job.budgetType,
+          budget: {
+            min: job.budgetMin,
+            max: job.budgetMax,
+            currency: job.currency || "USD",
+          },
+          skills: job.skills || [],
+          postedAt: job.$createdAt!,
+          deadline:
+            job.deadline ||
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          proposals: job.applicationsCount || 0,
+          rating: 4.5, // Default rating
+          category: job.category,
+          featured: job.featured || false,
+          urgent: job.urgent || false,
+        }),
+      );
 
       setJobs(convertedJobs);
     } catch (error) {
-      console.error('Error loading jobs:', error);
+      console.error("Error loading jobs:", error);
       // Fallback to mock data if real data fails
       setJobs(mockJobs);
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, selectedLocation, budgetRange, experienceLevel, sortBy, searchQuery]);
+  }, [
+    selectedCategory,
+    selectedLocation,
+    budgetRange,
+    experienceLevel,
+    sortBy,
+    searchQuery,
+  ]);
 
   useEffect(() => {
     loadJobs();
@@ -223,35 +247,59 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     const newSavedJobs = new Set(savedJobs);
     if (savedJobs.has(jobId)) {
       newSavedJobs.delete(jobId);
-      info('Job removed from saved', 'Job has been removed from your saved list.');
+      info("Removed from saved", "Job has been removed from your saved list.");
     } else {
       newSavedJobs.add(jobId);
-      success('Job saved!', 'Job has been added to your saved list.');
+      success("Job saved!", "Job has been added to your saved list.");
     }
     setSavedJobs(newSavedJobs);
   };
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+  const handleApplyToJob = (job: Job) => {
+    setSelectedJob(job);
+    setShowApplyModal(true);
+  };
 
-    const matchesCategory = selectedCategory === 'all' || job.category === selectedCategory;
-    const matchesType = selectedType === 'all' || job.type === selectedType;
-    const matchesBudget = job.budget.min >= budgetRange[0] && job.budget.max <= budgetRange[1];
+  const handleCloseApplyModal = () => {
+    setShowApplyModal(false);
+    setSelectedJob(null);
+  };
+
+  const handleApplicationSuccess = () => {
+    success(
+      "Application Submitted!",
+      "Your application has been sent to the employer.",
+    );
+    // Optionally reload jobs to update proposal count
+    loadJobs();
+  };
+
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.skills.some((skill) =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+    const matchesCategory =
+      selectedCategory === "all" || job.category === selectedCategory;
+    const matchesType = selectedType === "all" || job.type === selectedType;
+    const matchesBudget =
+      job.budget.min >= budgetRange[0] && job.budget.max <= budgetRange[1];
 
     return matchesSearch && matchesCategory && matchesType && matchesBudget;
   });
 
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     switch (sortBy) {
-      case 'newest':
+      case "newest":
         return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-      case 'budget_high':
+      case "budget_high":
         return b.budget.max - a.budget.max;
-      case 'budget_low':
+      case "budget_low":
         return a.budget.min - b.budget.min;
-      case 'proposals':
+      case "proposals":
         return a.proposals - b.proposals;
       default:
         return 0;
@@ -267,7 +315,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-4">Find AI Jobs</h1>
-            <p className="text-xl text-gray-400">Discover amazing opportunities in AI and machine learning</p>
+            <p className="text-xl text-gray-400">
+              Discover amazing opportunities in AI and machine learning
+            </p>
           </div>
 
           {/* Search and Filters */}
@@ -314,7 +364,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
                     "btn-secondary flex items-center space-x-2",
-                    showFilters && "bg-purple-500/20 text-purple-400"
+                    showFilters && "bg-purple-500/20 text-purple-400",
                   )}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
@@ -327,7 +377,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
             {showFilters && (
               <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Job Type</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Job Type
+                  </label>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
@@ -351,7 +403,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                     max="20000"
                     step="500"
                     value={budgetRange[1]}
-                    onChange={(e) => setBudgetRange([budgetRange[0], parseInt(e.target.value)])}
+                    onChange={(e) =>
+                      setBudgetRange([budgetRange[0], parseInt(e.target.value)])
+                    }
                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
@@ -359,9 +413,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                 <div className="flex items-end">
                   <button
                     onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory('all');
-                      setSelectedType('all');
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setSelectedType("all");
                       setBudgetRange([0, 20000]);
                     }}
                     className="btn-secondary w-full"
@@ -376,7 +430,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
           {/* Results */}
           <div className="flex justify-between items-center mb-6">
             <p className="text-gray-400">
-              {loading ? 'Loading...' : `${sortedJobs.length} jobs found`}
+              {loading ? "Loading..." : `${sortedJobs.length} jobs found`}
             </p>
           </div>
 
@@ -393,16 +447,19 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                   job={job}
                   isSaved={savedJobs.has(job.id)}
                   onSave={() => handleSaveJob(job.id)}
+                  onApply={() => handleApplyToJob(job)}
                 />
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-lg mb-4">No jobs found matching your criteria</div>
+                <div className="text-gray-400 text-lg mb-4">
+                  No jobs found matching your criteria
+                </div>
                 <button
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
-                    setSelectedType('all');
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                    setSelectedType("all");
                     setBudgetRange([0, 20000]);
                   }}
                   className="btn-primary"
@@ -413,43 +470,78 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
             )}
           </div>
         </div>
+
+        {/* Apply Job Modal */}
+        {selectedJob && (
+          <ApplyJobModal
+            isOpen={showApplyModal}
+            onClose={handleCloseApplyModal}
+            job={{
+              id: selectedJob.id,
+              title: selectedJob.title,
+              budget: selectedJob.budget,
+              company: selectedJob.company,
+              skills: selectedJob.skills,
+            }}
+            onSuccess={handleApplicationSuccess}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave: () => void }) {
+function JobCard({
+  job,
+  isSaved,
+  onSave,
+  onApply,
+}: {
+  job: Job;
+  isSaved: boolean;
+  onSave: () => void;
+  onApply: () => void;
+}) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'full-time': return 'bg-green-500/20 text-green-400';
-      case 'part-time': return 'bg-blue-500/20 text-blue-400';
-      case 'contract': return 'bg-purple-500/20 text-purple-400';
-      case 'freelance': return 'bg-orange-500/20 text-orange-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      case "full-time":
+        return "bg-green-500/20 text-green-400";
+      case "part-time":
+        return "bg-blue-500/20 text-blue-400";
+      case "contract":
+        return "bg-purple-500/20 text-purple-400";
+      case "freelance":
+        return "bg-orange-500/20 text-orange-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
     }
   };
 
   return (
-    <div className={cn(
-      "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
-      job.featured && "ring-2 ring-purple-500/30",
-      job.urgent && "ring-2 ring-red-500/30"
-    )}>
+    <div
+      className={cn(
+        "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
+        job.featured && "ring-2 ring-purple-500/30",
+        job.urgent && "ring-2 ring-red-500/30",
+      )}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <img
-            src={job.companyLogo}
-            alt={job.company}
-            className="w-12 h-12 rounded-lg object-cover"
-          />
+          <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center overflow-hidden">
+            <img
+              src={job.companyLogo}
+              alt={job.company}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div>
             <h3 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">
               {job.title}
@@ -473,7 +565,11 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
             onClick={onSave}
             className="p-2 text-gray-400 hover:text-purple-400 transition-colors"
           >
-            {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+            {isSaved ? (
+              <BookmarkCheck className="w-5 h-5" />
+            ) : (
+              <Bookmark className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -506,13 +602,21 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <Clock className="w-4 h-4" />
-          <span className={cn("px-2 py-1 rounded-full text-xs", getTypeColor(job.type))}>
+          <span
+            className={cn(
+              "px-2 py-1 rounded-full text-xs",
+              getTypeColor(job.type),
+            )}
+          >
             {job.type}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <DollarSign className="w-4 h-4" />
-          <span>${job.budget.min.toLocaleString()} - ${job.budget.max.toLocaleString()}</span>
+          <span>
+            ${job.budget.min.toLocaleString()} - $
+            {job.budget.max.toLocaleString()}
+          </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <Users className="w-4 h-4" />
@@ -540,13 +644,13 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
             <Eye className="w-4 h-4" />
             <span>View Details</span>
           </Link>
-          <Link
-            href={`/en/jobs/${job.id}/apply`}
+          <button
+            onClick={onApply}
             className="btn-primary flex items-center space-x-2"
           >
             <span>Apply Now</span>
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </div>

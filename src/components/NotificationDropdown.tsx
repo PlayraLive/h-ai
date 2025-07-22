@@ -1,24 +1,41 @@
 // Компонент выпадающего списка уведомлений
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Clock, User, MessageSquare, DollarSign, Star, Filter, Trash2 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { NotificationService, Notification as AppNotification } from '@/lib/services/notifications';
-import { useAuthContext } from '@/contexts/AuthContext';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Bell,
+  X,
+  Check,
+  Clock,
+  User,
+  MessageSquare,
+  DollarSign,
+  Star,
+  Filter,
+  Trash2,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import {
+  NotificationService,
+  Notification as AppNotification,
+} from "@/lib/services/notifications";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface NotificationDropdownProps {
   className?: string;
 }
 
-export function NotificationDropdown({ className = '' }: NotificationDropdownProps) {
+export function NotificationDropdown({
+  className = "",
+}: NotificationDropdownProps) {
   const { user } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'message' | 'project' | 'payment'>('all');
+  const [filter, setFilter] = useState<
+    "all" | "unread" | "message" | "project" | "payment"
+  >("all");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Загрузка уведомлений
@@ -27,13 +44,16 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
 
     setIsLoading(true);
     try {
-      const userNotifications = await NotificationService.getUserNotifications(user.$id, 20);
+      const userNotifications = await NotificationService.getUserNotifications(
+        user.$id,
+        20,
+      );
       setNotifications(userNotifications);
 
-      const unread = userNotifications.filter(n => !n.is_read).length;
+      const unread = userNotifications.filter((n) => !n.is_read).length;
       setUnreadCount(unread);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      console.error("Error loading notifications:", error);
     } finally {
       setIsLoading(false);
     }
@@ -48,28 +68,33 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
     const unsubscribe = NotificationService.subscribeToUserNotifications(
       user.$id,
       (newNotification) => {
-        console.log('🔔 New notification:', newNotification);
-        setNotifications(prev => [newNotification, ...prev]);
-        setUnreadCount(prev => prev + 1);
+        console.log("🔔 New notification:", newNotification);
+        setNotifications((prev) => [newNotification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
 
         // Показать браузерное уведомление
-        if (window.Notification && window.Notification.permission === 'granted') {
+        if (
+          window.Notification &&
+          window.Notification.permission === "granted"
+        ) {
           new window.Notification(newNotification.title, {
             body: newNotification.message,
-            icon: '/favicon.ico'
+            icon: "/favicon.ico",
           });
         }
       },
       (updatedNotification) => {
-        console.log('📝 Updated notification:', updatedNotification);
-        setNotifications(prev =>
-          prev.map(n => n.$id === updatedNotification.$id ? updatedNotification : n)
+        console.log("📝 Updated notification:", updatedNotification);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.$id === updatedNotification.$id ? updatedNotification : n,
+          ),
         );
 
         if (updatedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
+          setUnreadCount((prev) => Math.max(0, prev - 1));
         }
-      }
+      },
     );
 
     return () => {
@@ -80,18 +105,21 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
   useEffect(() => {
     // Закрываем dropdown при клике вне его
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Запрос разрешения на уведомления
   useEffect(() => {
-    if (window.Notification && window.Notification.permission === 'default') {
+    if (window.Notification && window.Notification.permission === "default") {
       window.Notification.requestPermission();
     }
   }, []);
@@ -100,12 +128,14 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
   const markAsRead = async (notificationId: string) => {
     try {
       await NotificationService.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n.$id === notificationId ? { ...n, is_read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.$id === notificationId ? { ...n, is_read: true } : n,
+        ),
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -113,9 +143,9 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
   const deleteNotification = async (notificationId: string) => {
     try {
       await NotificationService.deleteNotification(notificationId);
-      setNotifications(prev => prev.filter(n => n.$id !== notificationId));
+      setNotifications((prev) => prev.filter((n) => n.$id !== notificationId));
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      console.error("Error deleting notification:", error);
     }
   };
 
@@ -124,17 +154,17 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
 
     try {
       await NotificationService.markAllAsRead(user.$id);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error("Error marking all notifications as read:", error);
     }
   };
 
   // Фильтрация уведомлений
-  const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'all') return true;
-    if (filter === 'unread') return !notification.is_read;
+  const filteredNotifications = notifications.filter((notification) => {
+    if (filter === "all") return true;
+    if (filter === "unread") return !notification.is_read;
     return notification.type === filter;
   });
 
@@ -153,17 +183,17 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
     setIsOpen(false);
   };
 
-  const getNotificationIcon = (type: AppNotification['type']) => {
+  const getNotificationIcon = (type: AppNotification["type"]) => {
     switch (type) {
-      case 'message':
+      case "message":
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
-      case 'payment':
+      case "payment":
         return <DollarSign className="w-4 h-4 text-green-500" />;
-      case 'review':
+      case "review":
         return <Star className="w-4 h-4 text-yellow-500" />;
-      case 'project':
+      case "project":
         return <User className="w-4 h-4 text-purple-500" />;
-      case 'system':
+      case "system":
         return <Clock className="w-4 h-4 text-gray-500" />;
       default:
         return <Bell className="w-4 h-4 text-gray-500" />;
@@ -172,12 +202,11 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
 
   const formatTime = (timestamp: string) => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { 
-        addSuffix: true, 
-        locale: ru 
+      return formatDistanceToNow(new Date(timestamp), {
+        addSuffix: true,
       });
     } catch {
-      return 'недавно';
+      return "recently";
     }
   };
 
@@ -186,13 +215,13 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
       {/* Кнопка уведомлений */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800"
-        title="Уведомления"
+        className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/30"
+        title="Notifications"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
           <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </div>
         )}
       </button>
@@ -203,7 +232,9 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
           {/* Заголовок */}
           <div className="p-4 border-b border-gray-800">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-white">Уведомления</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Notifications
+              </h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-gray-400 hover:text-white"
@@ -218,13 +249,13 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as any)}
-                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-purple-500"
               >
-                <option value="all">Все</option>
-                <option value="unread">Непрочитанные</option>
-                <option value="message">Сообщения</option>
-                <option value="project">Проекты</option>
-                <option value="payment">Платежи</option>
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="message">Messages</option>
+                <option value="project">Projects</option>
+                <option value="payment">Payments</option>
               </select>
 
               {unreadCount > 0 && (
@@ -232,7 +263,7 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
                   onClick={markAllAsRead}
                   className="text-xs text-purple-400 hover:text-purple-300 ml-auto"
                 >
-                  Прочитать все
+                  Mark all read
                 </button>
               )}
             </div>
@@ -243,19 +274,23 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
             {isLoading ? (
               <div className="p-4 text-center">
                 <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-gray-400 text-sm">Загрузка уведомлений...</p>
+                <p className="text-gray-400 text-sm">
+                  Loading notifications...
+                </p>
               </div>
             ) : filteredNotifications.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Нет уведомлений</p>
+                <p>No notifications</p>
               </div>
             ) : (
               filteredNotifications.map((notification) => (
                 <div
                   key={notification.$id}
                   className={`p-4 border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors ${
-                    !notification.is_read ? 'bg-purple-500/5 border-l-2 border-l-purple-500' : ''
+                    !notification.is_read
+                      ? "bg-purple-500/5 border-l-2 border-l-purple-500"
+                      : ""
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -268,9 +303,13 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
                     {/* Контент */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
-                        <h4 className={`font-medium text-sm ${
-                          !notification.is_read ? 'text-white' : 'text-gray-300'
-                        }`}>
+                        <h4
+                          className={`font-medium text-sm ${
+                            !notification.is_read
+                              ? "text-white"
+                              : "text-gray-300"
+                          }`}
+                        >
                           {notification.title}
                         </h4>
                         <div className="flex items-center space-x-1">
@@ -316,17 +355,17 @@ export function NotificationDropdown({ className = '' }: NotificationDropdownPro
             )}
           </div>
 
-          {/* Футер */}
+          {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
+            <div className="p-3 border-t border-gray-800 bg-gray-900/50">
               <button
                 onClick={() => {
-                  window.location.href = '/notifications';
+                  window.location.href = "/en/notifications";
                   setIsOpen(false);
                 }}
-                className="w-full text-center text-sm text-blue-500 hover:text-blue-600 transition-colors"
+                className="w-full text-center text-sm text-purple-400 hover:text-purple-300 transition-colors"
               >
-                Посмотреть все уведомления
+                View all notifications
               </button>
             </div>
           )}

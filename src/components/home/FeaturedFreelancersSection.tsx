@@ -1,19 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { UserProfileService, UserProfile } from '@/lib/user-profile-service';
-import { databases } from '@/lib/appwrite';
-import { Query } from 'appwrite';
-import { 
-  Star, 
-  MapPin, 
-  Clock, 
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { UserProfileService, UserProfile } from "@/lib/user-profile-service";
+import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
+import {
+  Star,
+  MapPin,
+  Clock,
   CheckCircle,
   TrendingUp,
   Users,
-  ArrowRight
-} from 'lucide-react';
+  ArrowRight,
+  Briefcase,
+} from "lucide-react";
+import UserJobsModal from "@/components/UserJobsModal";
 
 interface FeaturedFreelancersSectionProps {
   locale: string;
@@ -22,39 +24,65 @@ interface FeaturedFreelancersSectionProps {
 // Create service instance outside component to avoid hook issues
 const userProfileService = new UserProfileService();
 
-export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectionProps) {
+export function FeaturedFreelancersSection({
+  locale,
+}: FeaturedFreelancersSectionProps) {
   const [freelancers, setFreelancers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUserJobsModal, setShowUserJobsModal] = useState(false);
+  const [selectedFreelancer, setSelectedFreelancer] =
+    useState<UserProfile | null>(null);
 
   useEffect(() => {
     const loadFeaturedFreelancers = async () => {
       try {
-        console.log('🔄 Loading featured freelancers...');
-        
-        // Get freelancers from database
-        const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
-          [
-            Query.equal('userType', 'freelancer'),
-            Query.equal('verification_status', 'verified'),
-            Query.orderDesc('rating'),
-            Query.limit(6)
-          ]
-        );
+        console.log("🔄 Loading featured freelancers...");
+
+        let response;
+
+        // Try different query approaches in case some attributes don't exist
+        try {
+          // First try with verified filter
+          response = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+            [
+              Query.equal("userType", "freelancer"),
+              Query.equal("verification_status", "verified"),
+              Query.orderDesc("$createdAt"),
+              Query.limit(6),
+            ],
+          );
+        } catch (verifiedError) {
+          console.warn(
+            "Fallback: verification_status attribute not found, trying without it",
+          );
+          // Fallback without verification_status if it doesn't exist
+          response = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+            [
+              Query.equal("userType", "freelancer"),
+              Query.orderDesc("$createdAt"),
+              Query.limit(6),
+            ],
+          );
+        }
 
         // Load full profiles for each freelancer
-        const profilePromises = response.documents.map(doc => 
-          userProfileService.getUserProfile(doc.$id)
+        const profilePromises = response.documents.map((doc) =>
+          userProfileService.getUserProfile(doc.$id),
         );
-        
+
         const profiles = await Promise.all(profilePromises);
-        const validProfiles = profiles.filter(p => p !== null) as UserProfile[];
-        
+        const validProfiles = profiles.filter(
+          (p) => p !== null,
+        ) as UserProfile[];
+
         setFreelancers(validProfiles);
-        console.log('✅ Featured freelancers loaded:', validProfiles.length);
+        console.log("✅ Featured freelancers loaded:", validProfiles.length);
       } catch (error) {
-        console.error('❌ Error loading featured freelancers:', error);
+        console.error("❌ Error loading featured freelancers:", error);
         // Fallback to mock data
         setFreelancers([]);
       } finally {
@@ -67,20 +95,30 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleHire = (freelancer: UserProfile) => {
+    setSelectedFreelancer(freelancer);
+    setShowUserJobsModal(true);
+  };
+
+  const handleCloseJobsModal = () => {
+    setShowUserJobsModal(false);
+    setSelectedFreelancer(null);
   };
 
   if (loading) {
@@ -92,13 +130,17 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
               Featured AI Specialists
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Meet our top-rated freelancers ready to bring your AI projects to life
+              Meet our top-rated freelancers ready to bring your AI projects to
+              life
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, index) => (
-              <div key={index} className="glass-card p-6 rounded-2xl animate-pulse">
+              <div
+                key={index}
+                className="glass-card p-6 rounded-2xl animate-pulse"
+              >
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-12 h-12 bg-gray-700 rounded-xl"></div>
                   <div>
@@ -125,7 +167,8 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
             Featured AI Specialists
           </h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Meet our top-rated freelancers ready to bring your AI projects to life
+            Meet our top-rated freelancers ready to bring your AI projects to
+            life
           </p>
         </div>
 
@@ -153,7 +196,7 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
                         {getInitials(freelancer.name)}
                       </div>
                     )}
-                    
+
                     {/* Online indicator */}
                     {freelancer.isOnline && (
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full"></div>
@@ -170,7 +213,7 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
                         <CheckCircle className="w-4 h-4 text-blue-400" />
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 text-sm text-gray-400">
                       <Star className="w-3 h-3 text-yellow-400" />
                       <span>{freelancer.rating.toFixed(1)}</span>
@@ -213,19 +256,19 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
                     <TrendingUp className="w-3 h-3" />
                     <span>{freelancer.completedJobs} jobs</span>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2 text-gray-400">
                     <Clock className="w-3 h-3" />
                     <span>{freelancer.responseTime}</span>
                   </div>
-                  
+
                   {freelancer.location && (
                     <div className="flex items-center space-x-2 text-gray-400">
                       <MapPin className="w-3 h-3" />
                       <span>{freelancer.location}</span>
                     </div>
                   )}
-                  
+
                   {freelancer.hourlyRate && (
                     <div className="text-green-400 font-medium">
                       ${freelancer.hourlyRate}/hr
@@ -235,21 +278,45 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
 
                 {/* Availability */}
                 <div className="flex items-center justify-between">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    freelancer.availability === 'available' ? 'bg-green-500/20 text-green-400' :
-                    freelancer.availability === 'busy' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full mr-1 ${
-                      freelancer.availability === 'available' ? 'bg-green-400' :
-                      freelancer.availability === 'busy' ? 'bg-yellow-400' :
-                      'bg-red-400'
-                    }`}></div>
-                    {freelancer.availability === 'available' ? 'Available' :
-                     freelancer.availability === 'busy' ? 'Busy' : 'Unavailable'}
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      freelancer.availability === "available"
+                        ? "bg-green-500/20 text-green-400"
+                        : freelancer.availability === "busy"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full mr-1 ${
+                        freelancer.availability === "available"
+                          ? "bg-green-400"
+                          : freelancer.availability === "busy"
+                            ? "bg-yellow-400"
+                            : "bg-red-400"
+                      }`}
+                    ></div>
+                    {freelancer.availability === "available"
+                      ? "Available"
+                      : freelancer.availability === "busy"
+                        ? "Busy"
+                        : "Unavailable"}
                   </span>
 
-                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleHire(freelancer);
+                      }}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg transition-colors text-center flex items-center justify-center space-x-1 text-sm"
+                    >
+                      <Briefcase className="w-3 h-3" />
+                      <span>Hire</span>
+                    </button>
+                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -257,8 +324,12 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
         ) : (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Featured Freelancers Yet</h3>
-            <p className="text-gray-400">Check back soon for our top AI specialists!</p>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No Featured Freelancers Yet
+            </h3>
+            <p className="text-gray-400">
+              Check back soon for our top AI specialists!
+            </p>
           </div>
         )}
 
@@ -274,6 +345,14 @@ export function FeaturedFreelancersSection({ locale }: FeaturedFreelancersSectio
             </Link>
           </div>
         )}
+
+        {/* User Jobs Modal */}
+        <UserJobsModal
+          isOpen={showUserJobsModal}
+          onClose={handleCloseJobsModal}
+          freelancerId={selectedFreelancer?.$id}
+          freelancerName={selectedFreelancer?.name}
+        />
       </div>
     </section>
   );

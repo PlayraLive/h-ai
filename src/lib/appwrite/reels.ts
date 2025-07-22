@@ -1,5 +1,5 @@
-import { databases, DATABASE_ID, COLLECTIONS } from './database';
-import { ID, Query } from 'appwrite';
+import { databases, DATABASE_ID, COLLECTIONS } from "./database";
+import { ID, Query } from "appwrite";
 
 export interface Reel {
   $id?: string;
@@ -9,10 +9,11 @@ export interface Reel {
   description?: string;
   videoUrl: string;
   thumbnailUrl?: string;
-  category: 'video' | 'website' | 'bot' | 'design' | 'other';
+  category: "video" | "website" | "bot" | "design" | "other";
   tags?: string[];
   creatorId: string;
   creatorName: string;
+  creatorAvatar?: string;
   isPremium: boolean;
   views: number;
   likes: number;
@@ -36,7 +37,7 @@ export interface SolutionPackage {
   freelancerPrice?: number;
   aiServicePrice: number;
   estimatedTime: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   isPopular: boolean;
   createdBy: string;
 }
@@ -63,13 +64,15 @@ export interface ReelInteraction {
   $updatedAt?: string;
   userId: string;
   reelId: string;
-  type: 'view' | 'like' | 'save';
+  type: "view" | "like" | "save";
   timestamp: string;
 }
 
 export class ReelsService {
   // Создать новый рилс
-  static async createReel(reelData: Omit<Reel, '$id' | '$createdAt' | '$updatedAt'>): Promise<Reel> {
+  static async createReel(
+    reelData: Omit<Reel, "$id" | "$createdAt" | "$updatedAt">,
+  ): Promise<Reel> {
     try {
       const response = await databases.createDocument(
         DATABASE_ID,
@@ -78,18 +81,18 @@ export class ReelsService {
         {
           ...reelData,
           tags: JSON.stringify(reelData.tags || []),
-          features: JSON.stringify(reelData.features || [])
-        }
+          features: JSON.stringify(reelData.features || []),
+        },
       );
 
       return {
         ...response,
         tags: reelData.tags || [],
-        features: reelData.features || []
+        features: reelData.features || [],
       } as Reel;
     } catch (error) {
-      console.error('Error creating reel:', error);
-      throw new Error('Failed to create reel');
+      console.error("Error creating reel:", error);
+      throw new Error("Failed to create reel");
     }
   }
 
@@ -99,16 +102,16 @@ export class ReelsService {
       const response = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.REELS,
-        reelId
+        reelId,
       );
 
       return {
         ...response,
         tags: response.tags ? JSON.parse(response.tags) : [],
-        features: response.features ? JSON.parse(response.features) : []
+        features: response.features ? JSON.parse(response.features) : [],
       } as Reel;
     } catch (error) {
-      console.error('Error fetching reel:', error);
+      console.error("Error fetching reel:", error);
       return null;
     }
   }
@@ -120,106 +123,115 @@ export class ReelsService {
         DATABASE_ID,
         COLLECTIONS.REELS,
         [
-          Query.orderDesc('rating'),
-          Query.orderDesc('views'),
-          Query.limit(limit)
-        ]
+          Query.orderDesc("rating"),
+          Query.orderDesc("views"),
+          Query.limit(limit),
+        ],
       );
-      
-      return response.documents.map(doc => ({
+
+      return response.documents.map((doc) => ({
         ...doc,
-        tags: doc.tags ? JSON.parse(doc.tags) : []
+        tags: doc.tags ? JSON.parse(doc.tags) : [],
+        features: doc.features ? JSON.parse(doc.features) : [],
       })) as Reel[];
     } catch (error) {
-      console.error('Error fetching top reels:', error);
-      throw new Error('Failed to fetch top reels');
+      console.error("Error fetching top reels:", error);
+      throw new Error("Failed to fetch top reels");
     }
   }
 
   // Получить рилсы по категории
-  static async getReelsByCategory(category: string, limit: number = 20): Promise<Reel[]> {
+  static async getReelsByCategory(
+    category: string,
+    limit: number = 20,
+  ): Promise<Reel[]> {
     try {
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.REELS,
         [
-          Query.equal('category', category),
-          Query.orderDesc('$createdAt'),
-          Query.limit(limit)
-        ]
+          Query.equal("category", category),
+          Query.orderDesc("$createdAt"),
+          Query.limit(limit),
+        ],
       );
 
-      return response.documents.map(doc => ({
+      return response.documents.map((doc) => ({
         ...doc,
-        tags: doc.tags ? JSON.parse(doc.tags) : []
+        tags: doc.tags ? JSON.parse(doc.tags) : [],
+        features: doc.features ? JSON.parse(doc.features) : [],
       })) as Reel[];
     } catch (error) {
-      console.error('Error fetching reels by category:', error);
-      throw new Error('Failed to fetch reels by category');
+      console.error("Error fetching reels by category:", error);
+      throw new Error("Failed to fetch reels by category");
     }
   }
 
   // Получить рилсы по создателю
-  static async getReelsByCreator(creatorId: string, limit: number = 50): Promise<Reel[]> {
+  static async getReelsByCreator(
+    creatorId: string,
+    limit: number = 50,
+  ): Promise<Reel[]> {
     try {
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.REELS,
         [
-          Query.equal('creatorId', creatorId),
-          Query.orderDesc('$createdAt'),
-          Query.limit(limit)
-        ]
+          Query.equal("creatorId", creatorId),
+          Query.orderDesc("$createdAt"),
+          Query.limit(limit),
+        ],
       );
 
-      return response.documents.map(doc => ({
+      return response.documents.map((doc) => ({
         ...doc,
-        tags: doc.tags ? JSON.parse(doc.tags) : []
+        tags: doc.tags ? JSON.parse(doc.tags) : [],
       })) as Reel[];
     } catch (error) {
-      console.error('Error fetching reels by creator:', error);
+      console.error("Error fetching reels by creator:", error);
       // Return mock data for demo
       return [
         {
-          $id: '1',
-          title: 'AI Website Builder Pro',
-          description: 'Create professional websites with AI in minutes',
-          videoUrl: '/videos/website-demo.mp4',
-          thumbnailUrl: '/images/website-thumb.svg',
-          category: 'website',
+          $id: "1",
+          title: "AI Website Builder Pro",
+          description: "Create professional websites with AI in minutes",
+          videoUrl: "/videos/website-demo.mp4",
+          thumbnailUrl: "/images/website-thumb.svg",
+          category: "website",
           creatorId: creatorId,
-          creatorName: 'You',
+          creatorName: "You",
           isPremium: true,
           views: 15420,
           likes: 892,
           rating: 4.9,
           duration: 45,
-          tags: ['React', 'AI', 'Next.js']
+          tags: ["React", "AI", "Next.js"],
         },
         {
-          $id: '2',
-          title: 'TikTok Video Creator',
-          description: 'Generate viral TikTok content automatically',
-          videoUrl: '/videos/tiktok-demo.mp4',
-          thumbnailUrl: '/images/tiktok-thumb.svg',
-          category: 'video',
+          $id: "2",
+          title: "TikTok Video Creator",
+          description: "Generate viral TikTok content automatically",
+          videoUrl: "/videos/tiktok-demo.mp4",
+          thumbnailUrl: "/images/tiktok-thumb.svg",
+          category: "video",
           creatorId: creatorId,
-          creatorName: 'You',
+          creatorName: "You",
           isPremium: false,
           views: 23100,
           likes: 1340,
           rating: 4.8,
           duration: 30,
-          tags: ['Python', 'OpenAI', 'FFmpeg']
-        }
+          tags: ["Python", "OpenAI", "FFmpeg"],
+        },
       ];
     }
   }
 
-
-
   // Обновить рилс
-  static async updateReel(reelId: string, updateData: Partial<Reel>): Promise<Reel> {
+  static async updateReel(
+    reelId: string,
+    updateData: Partial<Reel>,
+  ): Promise<Reel> {
     try {
       const response = await databases.updateDocument(
         DATABASE_ID,
@@ -228,18 +240,20 @@ export class ReelsService {
         {
           ...updateData,
           tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined,
-          features: updateData.features ? JSON.stringify(updateData.features) : undefined
-        }
+          features: updateData.features
+            ? JSON.stringify(updateData.features)
+            : undefined,
+        },
       );
 
       return {
         ...response,
         tags: updateData.tags || [],
-        features: updateData.features || []
+        features: updateData.features || [],
       } as Reel;
     } catch (error) {
-      console.error('Error updating reel:', error);
-      throw new Error('Failed to update reel');
+      console.error("Error updating reel:", error);
+      throw new Error("Failed to update reel");
     }
   }
 
@@ -248,25 +262,24 @@ export class ReelsService {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTIONS.REELS, reelId);
     } catch (error) {
-      console.error('Error deleting reel:', error);
-      throw new Error('Failed to delete reel');
+      console.error("Error deleting reel:", error);
+      throw new Error("Failed to delete reel");
     }
   }
 
   // Увеличить просмотры рилса
   static async incrementViews(reelId: string): Promise<void> {
     try {
-      const reel = await databases.getDocument(DATABASE_ID, COLLECTIONS.REELS, reelId);
-      await databases.updateDocument(
+      const reel = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.REELS,
         reelId,
-        {
-          views: (reel.views || 0) + 1
-        }
       );
+      await databases.updateDocument(DATABASE_ID, COLLECTIONS.REELS, reelId, {
+        views: (reel.views || 0) + 1,
+      });
     } catch (error) {
-      console.error('Error incrementing views:', error);
+      console.error("Error incrementing views:", error);
     }
   }
 
@@ -278,10 +291,10 @@ export class ReelsService {
         DATABASE_ID,
         COLLECTIONS.REEL_INTERACTIONS,
         [
-          Query.equal('userId', userId),
-          Query.equal('reelId', reelId),
-          Query.equal('type', 'like')
-        ]
+          Query.equal("userId", userId),
+          Query.equal("reelId", reelId),
+          Query.equal("type", "like"),
+        ],
       );
 
       if (existingLike.documents.length > 0) {
@@ -296,74 +309,75 @@ export class ReelsService {
         {
           userId,
           reelId,
-          type: 'like',
-          timestamp: new Date().toISOString()
-        }
+          type: "like",
+          timestamp: new Date().toISOString(),
+        },
       );
 
       // Увеличиваем счетчик лайков
-      const reel = await databases.getDocument(DATABASE_ID, COLLECTIONS.REELS, reelId);
-      await databases.updateDocument(
+      const reel = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.REELS,
         reelId,
-        {
-          likes: (reel.likes || 0) + 1
-        }
       );
+      await databases.updateDocument(DATABASE_ID, COLLECTIONS.REELS, reelId, {
+        likes: (reel.likes || 0) + 1,
+      });
     } catch (error) {
-      console.error('Error liking reel:', error);
-      throw new Error('Failed to like reel');
+      console.error("Error liking reel:", error);
+      throw new Error("Failed to like reel");
     }
   }
 
   // Получить готовые пакеты
-  static async getSolutionPackages(category?: string): Promise<SolutionPackage[]> {
+  static async getSolutionPackages(
+    category?: string,
+  ): Promise<SolutionPackage[]> {
     try {
-      const queries = [Query.orderDesc('$createdAt')];
+      const queries = [Query.orderDesc("$createdAt")];
       if (category) {
-        queries.push(Query.equal('category', category));
+        queries.push(Query.equal("category", category));
       }
 
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.SOLUTION_PACKAGES,
-        queries
+        queries,
       );
-      
-      return response.documents.map(doc => ({
+
+      return response.documents.map((doc) => ({
         ...doc,
-        features: doc.features ? JSON.parse(doc.features) : []
+        features: doc.features ? JSON.parse(doc.features) : [],
       })) as SolutionPackage[];
     } catch (error) {
-      console.error('Error fetching solution packages:', error);
-      throw new Error('Failed to fetch solution packages');
+      console.error("Error fetching solution packages:", error);
+      throw new Error("Failed to fetch solution packages");
     }
   }
 
   // Получить настройки фрилансеров
-  static async getFreelancerSetups(category?: string): Promise<FreelancerSetup[]> {
+  static async getFreelancerSetups(
+    category?: string,
+  ): Promise<FreelancerSetup[]> {
     try {
-      const queries = [
-        Query.orderDesc('$createdAt')
-      ];
+      const queries = [Query.orderDesc("$createdAt")];
       if (category) {
-        queries.push(Query.equal('category', category));
+        queries.push(Query.equal("category", category));
       }
 
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.FREELANCER_SETUPS,
-        queries
+        queries,
       );
-      
-      return response.documents.map(doc => ({
+
+      return response.documents.map((doc) => ({
         ...doc,
-        deliverables: doc.deliverables ? JSON.parse(doc.deliverables) : []
+        deliverables: doc.deliverables ? JSON.parse(doc.deliverables) : [],
       })) as FreelancerSetup[];
     } catch (error) {
-      console.error('Error fetching freelancer setups:', error);
-      throw new Error('Failed to fetch freelancer setups');
+      console.error("Error fetching freelancer setups:", error);
+      throw new Error("Failed to fetch freelancer setups");
     }
   }
 }

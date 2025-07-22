@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import TopNav from '@/components/TopNav';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import TopNav from "@/components/TopNav";
 import {
   ArrowLeft,
   Star,
@@ -16,8 +16,9 @@ import {
   CheckCircle,
   Briefcase,
   Clock,
-  User
-} from 'lucide-react';
+  Calendar,
+} from "lucide-react";
+import ShareButton from "@/components/shared/ShareButton";
 
 interface Freelancer {
   id: string;
@@ -50,29 +51,37 @@ export default function FreelancerProfilePage() {
   const loadFreelancer = async () => {
     try {
       setLoading(true);
-      
+
       const mockFreelancer: Freelancer = {
         id: params.id as string,
-        name: 'Mike Johnson',
-        title: 'Full-Stack Developer & AI Specialist',
-        avatar: '',
+        name: "Mike Johnson",
+        title: "Full-Stack Developer & AI Specialist",
+        avatar: "",
         rating: 4.9,
         reviewsCount: 127,
         hourlyRate: 85,
-        location: 'San Francisco, CA',
+        location: "San Francisco, CA",
         verified: true,
-        description: 'Experienced full-stack developer with 8+ years of experience in building scalable web applications.',
-        skills: ['React', 'Node.js', 'TypeScript', 'Python', 'AI/ML', 'PostgreSQL'],
-        languages: ['English (Native)', 'Spanish (Fluent)'],
+        description:
+          "Experienced full-stack developer with 8+ years of experience in building scalable web applications.",
+        skills: [
+          "React",
+          "Node.js",
+          "TypeScript",
+          "Python",
+          "AI/ML",
+          "PostgreSQL",
+        ],
+        languages: ["English (Native)", "Spanish (Fluent)"],
         completedJobs: 156,
         totalEarnings: 250000,
-        responseTime: '< 1 hour',
-        availability: 'Available now'
+        responseTime: "< 1 hour",
+        availability: "Available now",
       };
 
       setFreelancer(mockFreelancer);
     } catch (error) {
-      console.error('Error loading freelancer:', error);
+      console.error("Error loading freelancer:", error);
     } finally {
       setLoading(false);
     }
@@ -100,10 +109,14 @@ export default function FreelancerProfilePage() {
         <TopNav />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Freelancer Not Found</h1>
-            <p className="text-gray-400 mb-6">The freelancer you are looking for does not exist.</p>
-            <Link 
-              href="/en/freelancers" 
+            <h1 className="text-2xl font-bold text-white mb-4">
+              Freelancer Not Found
+            </h1>
+            <p className="text-gray-400 mb-6">
+              The freelancer you are looking for does not exist.
+            </p>
+            <Link
+              href="/en/freelancers"
               className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
             >
               Back to Freelancers
@@ -118,22 +131,31 @@ export default function FreelancerProfilePage() {
     <div className="min-h-screen bg-[#0A0A0F]">
       <Navbar />
       <TopNav />
-      
+
       <div className="w-full pb-20 lg:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-6">
-            <Link 
+            <Link
               href="/en/freelancers"
               className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Freelancers</span>
             </Link>
-            
+
             <div className="flex items-center space-x-3">
-              <button className="p-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50">
-                <Share2 className="w-5 h-5" />
-              </button>
+              <ShareButton
+                data={{
+                  url:
+                    typeof window !== "undefined" ? window.location.href : "",
+                  title: `${freelancer.name} - Freelancer Profile`,
+                  description: `Check out ${freelancer.name}'s freelancer profile and portfolio`,
+                }}
+                platforms={["twitter", "linkedin"]}
+                size="small"
+                showLabels={false}
+                className="p-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50"
+              />
               <button className="p-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50">
                 <Flag className="w-5 h-5" />
               </button>
@@ -145,7 +167,7 @@ export default function FreelancerProfilePage() {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10"></div>
               <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
             </div>
-            
+
             <div className="relative px-6 pb-6">
               <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16">
                 <div className="relative mb-4 sm:mb-0">
@@ -160,28 +182,40 @@ export default function FreelancerProfilePage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{freelancer.name}</h1>
-                  <p className="text-lg text-gray-300 mb-4">{freelancer.title}</p>
-                  
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                    {freelancer.name}
+                  </h1>
+                  <p className="text-lg text-gray-300 mb-4">
+                    {freelancer.title}
+                  </p>
+
                   <div className="flex flex-wrap items-center gap-4 text-sm">
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="text-white font-medium">{freelancer.rating}</span>
-                      <span className="text-gray-400">({freelancer.reviewsCount} reviews)</span>
+                      <span className="text-white font-medium">
+                        {freelancer.rating}
+                      </span>
+                      <span className="text-gray-400">
+                        ({freelancer.reviewsCount} reviews)
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-300">{freelancer.location}</span>
+                      <span className="text-gray-300">
+                        {freelancer.location}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <DollarSign className="w-4 h-4 text-green-400" />
-                      <span className="text-gray-300">${freelancer.hourlyRate}/hour</span>
+                      <span className="text-gray-300">
+                        ${freelancer.hourlyRate}/hour
+                      </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex space-x-3 mt-4 sm:mt-0">
                   <button className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl">
                     <MessageCircle className="w-4 h-4 mr-2" />
@@ -203,9 +237,15 @@ export default function FreelancerProfilePage() {
             <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="text-gray-400 text-xs md:text-sm">Completed Jobs</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">{freelancer.completedJobs}</p>
-                  <p className="text-green-400 text-xs md:text-sm">100% success rate</p>
+                  <p className="text-gray-400 text-xs md:text-sm">
+                    Completed Jobs
+                  </p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
+                    {freelancer.completedJobs}
+                  </p>
+                  <p className="text-green-400 text-xs md:text-sm">
+                    100% success rate
+                  </p>
                 </div>
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                   <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
@@ -216,8 +256,12 @@ export default function FreelancerProfilePage() {
             <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="text-gray-400 text-xs md:text-sm">Total Earned</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">${freelancer.totalEarnings.toLocaleString()}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">
+                    Total Earned
+                  </p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
+                    ${freelancer.totalEarnings.toLocaleString()}
+                  </p>
                   <p className="text-blue-400 text-xs md:text-sm">All time</p>
                 </div>
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -229,8 +273,12 @@ export default function FreelancerProfilePage() {
             <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="text-gray-400 text-xs md:text-sm">Response Time</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">{freelancer.responseTime}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">
+                    Response Time
+                  </p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
+                    {freelancer.responseTime}
+                  </p>
                   <p className="text-purple-400 text-xs md:text-sm">Average</p>
                 </div>
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -242,8 +290,12 @@ export default function FreelancerProfilePage() {
             <div className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 md:p-6 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="text-gray-400 text-xs md:text-sm">Availability</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">{freelancer.availability}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">
+                    Availability
+                  </p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
+                    {freelancer.availability}
+                  </p>
                   <p className="text-yellow-400 text-xs md:text-sm">Status</p>
                 </div>
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -257,7 +309,9 @@ export default function FreelancerProfilePage() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-white mb-4">About</h3>
-                <p className="text-gray-300 leading-relaxed">{freelancer.description}</p>
+                <p className="text-gray-300 leading-relaxed">
+                  {freelancer.description}
+                </p>
               </div>
 
               <div>
@@ -278,7 +332,9 @@ export default function FreelancerProfilePage() {
                 <h3 className="text-xl font-bold text-white mb-4">Languages</h3>
                 <div className="space-y-2">
                   {freelancer.languages.map((language, index) => (
-                    <div key={index} className="text-gray-300">{language}</div>
+                    <div key={index} className="text-gray-300">
+                      {language}
+                    </div>
                   ))}
                 </div>
               </div>

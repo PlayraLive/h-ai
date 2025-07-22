@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
+import { useState, useEffect, useRef } from "react";
+import {
+  Heart,
+  MessageCircle,
+  Share2,
   Bookmark,
   Crown,
   Play,
@@ -12,17 +12,20 @@ import {
   Volume2,
   VolumeX,
   User,
-  Plus
-} from 'lucide-react';
-import { ReelsService, Reel } from '@/lib/appwrite/reels';
-import { useAuth } from '@/hooks/useAuth';
+  Plus,
+} from "lucide-react";
+import { ReelsService, Reel } from "@/lib/appwrite/reels";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MobileReelsViewerProps {
   initialReelId?: string;
   category?: string;
 }
 
-export default function MobileReelsViewer({ initialReelId, category }: MobileReelsViewerProps) {
+export default function MobileReelsViewer({
+  initialReelId,
+  category,
+}: MobileReelsViewerProps) {
   const { user } = useAuth();
   const [reels, setReels] = useState<Reel[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -40,7 +43,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
   useEffect(() => {
     // Auto-scroll to initial reel if provided
     if (initialReelId && reels.length > 0) {
-      const index = reels.findIndex(reel => reel.$id === initialReelId);
+      const index = reels.findIndex((reel) => reel.$id === initialReelId);
       if (index !== -1) {
         setCurrentIndex(index);
         scrollToReel(index);
@@ -51,12 +54,12 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
   const loadReels = async () => {
     try {
       setLoading(true);
-      const reelsData = category 
+      const reelsData = category
         ? await ReelsService.getReelsByCategory(category, 50)
         : await ReelsService.getTopReels(50);
       setReels(reelsData);
     } catch (error) {
-      console.error('Error loading reels:', error);
+      console.error("Error loading reels:", error);
       // Fallback to mock data
       setReels(getMockReels());
     } finally {
@@ -66,23 +69,80 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
 
   const getMockReels = (): Reel[] => [
     {
-      $id: '1',
-      title: 'AI Website Builder',
-      description: 'Create stunning websites with AI in minutes! 🚀 #AI #Website #Design',
-      videoUrl: '/videos/website-demo.mp4',
-      thumbnailUrl: '/images/website-thumb.svg',
-      category: 'website',
-      creatorId: 'creator1',
-      creatorName: 'Alex Designer',
+      $id: "1",
+      title: "AI Website Builder",
+      description:
+        "Create stunning websites with AI in minutes! 🚀 #AI #Website #Design",
+      videoUrl: "/videos/website-demo.mp4",
+      thumbnailUrl: "/images/website-thumb.svg",
+      category: "website",
+      creatorId: "creator1",
+      creatorName: "Alex Designer",
+      creatorAvatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
       isPremium: true,
       views: 15420,
       likes: 892,
       rating: 4.9,
       duration: 45,
       isActive: true,
-      tags: ['AI', 'Website', 'Design']
+      tags: ["AI", "Website", "Design"],
     },
-    // Add more mock reels...
+    {
+      $id: "2",
+      title: "TikTok Video Creator",
+      description:
+        "Generate viral TikTok content automatically! 🎥 #TikTok #Video #AI",
+      videoUrl: "/videos/tiktok-demo.mp4",
+      thumbnailUrl: "/images/tiktok-thumb.svg",
+      category: "video",
+      creatorId: "creator2",
+      creatorName: "Video Master",
+      creatorAvatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b169a9e8?w=150&h=150&fit=crop&crop=face",
+      isPremium: false,
+      views: 23100,
+      likes: 1340,
+      rating: 4.8,
+      duration: 30,
+      tags: ["Python", "Video", "AI"],
+    },
+    {
+      $id: "3",
+      title: "Telegram Bot Assistant",
+      description: "Smart bot for customer support 🤖 #Bot #Telegram #AI",
+      videoUrl: "/videos/bot-demo.mp4",
+      thumbnailUrl: "/images/bot-thumb.svg",
+      category: "bot",
+      creatorId: "creator3",
+      creatorName: "Bot Developer",
+      creatorAvatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      isPremium: true,
+      views: 18750,
+      likes: 967,
+      rating: 4.7,
+      duration: 60,
+      tags: ["Node.js", "Telegram", "AI"],
+    },
+    {
+      $id: "4",
+      title: "Logo Design AI",
+      description: "Professional logos in seconds! ✨ #Design #Logo #AI",
+      videoUrl: "/videos/logo-demo.mp4",
+      thumbnailUrl: "/images/logo-thumb.svg",
+      category: "design",
+      creatorId: "creator4",
+      creatorName: "Design Guru",
+      creatorAvatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      isPremium: false,
+      views: 12890,
+      likes: 743,
+      rating: 4.6,
+      duration: 25,
+      tags: ["Figma", "AI", "SVG"],
+    },
   ];
 
   const scrollToReel = (index: number) => {
@@ -91,7 +151,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
       const targetScrollTop = index * container.clientHeight;
       container.scrollTo({
         top: targetScrollTop,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -102,10 +162,14 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
       const scrollTop = container.scrollTop;
       const containerHeight = container.clientHeight;
       const newIndex = Math.round(scrollTop / containerHeight);
-      
-      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < reels.length) {
+
+      if (
+        newIndex !== currentIndex &&
+        newIndex >= 0 &&
+        newIndex < reels.length
+      ) {
         setCurrentIndex(newIndex);
-        
+
         // Pause previous video and play current
         videoRefs.current.forEach((video, index) => {
           if (video) {
@@ -122,7 +186,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
 
   const handleLike = async (reel: Reel) => {
     if (!user) return;
-    
+
     try {
       await ReelsService.likeReel(reel.$id!, user.$id!);
       const newLikedReels = new Set(likedReels);
@@ -132,23 +196,25 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
         newLikedReels.add(reel.$id!);
       }
       setLikedReels(newLikedReels);
-      
+
       // Update reel likes count
-      setReels(prev => prev.map(r => 
-        r.$id === reel.$id 
-          ? { ...r, likes: r.likes + (likedReels.has(reel.$id!) ? -1 : 1) }
-          : r
-      ));
+      setReels((prev) =>
+        prev.map((r) =>
+          r.$id === reel.$id
+            ? { ...r, likes: r.likes + (likedReels.has(reel.$id!) ? -1 : 1) }
+            : r,
+        ),
+      );
     } catch (error) {
-      console.error('Error liking reel:', error);
+      console.error("Error liking reel:", error);
     }
   };
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
+      return (num / 1000000).toFixed(1) + "M";
     } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
+      return (num / 1000).toFixed(1) + "K";
     }
     return num.toString();
   };
@@ -171,7 +237,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
         ref={containerRef}
         className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
         onScroll={handleScroll}
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {reels.map((reel, index) => (
           <div
@@ -180,7 +246,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
           >
             {/* Video Background */}
             <video
-              ref={el => videoRefs.current[index] = el}
+              ref={(el) => (videoRefs.current[index] = el)}
               className="absolute inset-0 w-full h-full object-cover"
               src={reel.videoUrl}
               poster={reel.thumbnailUrl}
@@ -209,17 +275,30 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
               <div className="flex items-end justify-between">
-                
                 {/* Left Content */}
                 <div className="flex-1 mr-4">
                   {/* Creator Info */}
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center border-2 border-white">
-                      <User className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden">
+                      {(reel as any).creatorAvatar ? (
+                        <img
+                          src={(reel as any).creatorAvatar}
+                          alt={reel.creatorName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold text-lg">@{reel.creatorName}</h3>
-                      <p className="text-gray-300 text-sm capitalize">{reel.category} creator</p>
+                      <h3 className="text-white font-semibold text-lg">
+                        @{reel.creatorName}
+                      </h3>
+                      <p className="text-gray-300 text-sm capitalize">
+                        {reel.category} creator
+                      </p>
                     </div>
                     <button className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                       <Plus className="w-5 h-5 text-white" />
@@ -228,7 +307,9 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
 
                   {/* Title and Description */}
                   <div className="mb-4">
-                    <h2 className="text-white font-bold text-xl mb-2">{reel.title}</h2>
+                    <h2 className="text-white font-bold text-xl mb-2">
+                      {reel.title}
+                    </h2>
                     <p className="text-gray-200 text-sm leading-relaxed">
                       {reel.description}
                     </p>
@@ -248,16 +329,24 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
 
                   {/* Reel Statistics */}
                   <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4 space-y-3">
-                    <div className="text-white font-semibold text-sm mb-2">📊 Статистика решения</div>
+                    <div className="text-white font-semibold text-sm mb-2">
+                      📊 Статистика решения
+                    </div>
 
                     {/* Main Stats */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                        <div className="text-white font-bold text-lg">{Math.floor(reel.views * 0.15)}</div>
-                        <div className="text-gray-300 text-xs">Заказов выполнено</div>
+                        <div className="text-white font-bold text-lg">
+                          {Math.floor(reel.views * 0.15)}
+                        </div>
+                        <div className="text-gray-300 text-xs">
+                          Заказов выполнено
+                        </div>
                       </div>
                       <div className="bg-green-600/20 rounded-xl p-3 text-center">
-                        <div className="text-green-400 font-bold text-lg">${Math.floor(reel.views * 0.02)}</div>
+                        <div className="text-green-400 font-bold text-lg">
+                          ${Math.floor(reel.views * 0.02)}
+                        </div>
                         <div className="text-gray-300 text-xs">Общий доход</div>
                       </div>
                     </div>
@@ -265,15 +354,21 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
                     {/* Service Types */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-blue-600/20 rounded-lg p-2 text-center">
-                        <div className="text-blue-400 font-semibold text-sm">{Math.floor(reel.views * 0.08)}</div>
+                        <div className="text-blue-400 font-semibold text-sm">
+                          {Math.floor(reel.views * 0.08)}
+                        </div>
                         <div className="text-gray-400 text-xs">AI-заказы</div>
                       </div>
                       <div className="bg-purple-600/20 rounded-lg p-2 text-center">
-                        <div className="text-purple-400 font-semibold text-sm">{Math.floor(reel.views * 0.05)}</div>
+                        <div className="text-purple-400 font-semibold text-sm">
+                          {Math.floor(reel.views * 0.05)}
+                        </div>
                         <div className="text-gray-400 text-xs">Фрилансеры</div>
                       </div>
                       <div className="bg-pink-600/20 rounded-lg p-2 text-center">
-                        <div className="text-pink-400 font-semibold text-sm">{Math.floor(reel.views * 0.02)}</div>
+                        <div className="text-pink-400 font-semibold text-sm">
+                          {Math.floor(reel.views * 0.02)}
+                        </div>
                         <div className="text-gray-400 text-xs">В проектах</div>
                       </div>
                     </div>
@@ -282,11 +377,15 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-300 text-xs">Успешность: 98%</span>
+                        <span className="text-gray-300 text-xs">
+                          Успешность: 98%
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        <span className="text-gray-300 text-xs">Время: &lt; 5 мин</span>
+                        <span className="text-gray-300 text-xs">
+                          Время: &lt; 5 мин
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -299,14 +398,20 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
                     onClick={() => handleLike(reel)}
                     className="flex flex-col items-center space-y-1"
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      likedReels.has(reel.$id!) 
-                        ? 'bg-red-500 scale-110' 
-                        : 'bg-gray-800/50 backdrop-blur-sm'
-                    }`}>
-                      <Heart className={`w-6 h-6 ${
-                        likedReels.has(reel.$id!) ? 'text-white fill-current' : 'text-white'
-                      }`} />
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        likedReels.has(reel.$id!)
+                          ? "bg-red-500 scale-110"
+                          : "bg-gray-800/50 backdrop-blur-sm"
+                      }`}
+                    >
+                      <Heart
+                        className={`w-6 h-6 ${
+                          likedReels.has(reel.$id!)
+                            ? "text-white fill-current"
+                            : "text-white"
+                        }`}
+                      />
                     </div>
                     <span className="text-white text-xs font-medium">
                       {formatNumber(reel.likes)}
@@ -328,7 +433,9 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
                     <div className="w-12 h-12 bg-gray-800/50 backdrop-blur-sm rounded-full flex items-center justify-center">
                       <Share2 className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-white text-xs font-medium">Share</span>
+                    <span className="text-white text-xs font-medium">
+                      Share
+                    </span>
                   </button>
 
                   {/* Save */}
@@ -379,7 +486,7 @@ export default function MobileReelsViewer({ initialReelId, category }: MobileRee
           <div
             key={index}
             className={`w-1 h-8 rounded-full transition-all duration-300 ${
-              index === currentIndex ? 'bg-white' : 'bg-gray-600'
+              index === currentIndex ? "bg-white" : "bg-gray-600"
             }`}
           />
         ))}
