@@ -12,8 +12,11 @@ import {
   BarChart3,
   Settings,
   Bell,
+  X,
+  Check,
 } from "lucide-react";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import React, { useState, useRef, useEffect } from "react";
 
 interface TopNavProps {
   locale?: string;
@@ -21,6 +24,25 @@ interface TopNavProps {
 
 export default function TopNav({ locale = "en" }: TopNavProps) {
   const pathname = usePathname();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие выпадающего списка при клике вне
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const navItems = [
     {
@@ -111,8 +133,112 @@ export default function TopNav({ locale = "en" }: TopNavProps) {
 
           {/* Right side - Notifications and Settings */}
           <div className="flex items-center space-x-3">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-full opacity-0 group-hover:opacity-70 transition duration-300 blur-md"></div>
+            {/* Notification Bell - Custom Implementation */}
+            <div className="relative" ref={notificationRef}>
+              <div
+                className="p-2 text-purple-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-300 relative z-10 cursor-pointer flex items-center justify-center"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              >
+                <Bell className="w-6 h-6 animate-pulse" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-gray-900">
+                  3
+                </span>
+              </div>
+
+              {/* Notification Dropdown */}
+              {isNotificationOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50">
+                  <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-white">
+                      Уведомления
+                    </h3>
+                    <button
+                      onClick={() => setIsNotificationOpen(false)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {/* Notification Item */}
+                    <div className="p-4 border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          <Bell className="w-4 h-4 text-blue-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-white">
+                            Новое сообщение
+                          </h4>
+                          <p className="text-sm text-gray-400 mt-1">
+                            У вас новое сообщение от пользователя
+                          </p>
+                          <span className="text-xs text-gray-500 mt-2 block">
+                            5 минут назад
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notification Item */}
+                    <div className="p-4 border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          <Bell className="w-4 h-4 text-green-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-white">
+                            Новый заказ
+                          </h4>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Ваш заказ был подтвержден
+                          </p>
+                          <span className="text-xs text-gray-500 mt-2 block">
+                            1 час назад
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notification Item */}
+                    <div className="p-4 border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          <Bell className="w-4 h-4 text-purple-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-white">
+                            Системное уведомление
+                          </h4>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Обновление системы успешно установлено
+                          </p>
+                          <span className="text-xs text-gray-500 mt-2 block">
+                            вчера
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 border-t border-gray-800">
+                    <button
+                      className="w-full py-2 text-center text-sm text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 rounded-md transition-all"
+                      onClick={() => {
+                        window.location.href = `/${locale}/notifications`;
+                        setIsNotificationOpen(false);
+                      }}
+                    >
+                      Показать все
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Original NotificationDropdown - Hidden */}
+            <div className="hidden">
               <NotificationDropdown className="relative" />
             </div>
             <Link
