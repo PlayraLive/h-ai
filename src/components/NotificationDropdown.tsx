@@ -72,6 +72,17 @@ export function NotificationDropdown({
         setNotifications((prev) => [newNotification, ...prev]);
         setUnreadCount((prev) => prev + 1);
 
+        // Воспроизводим звук уведомления
+        try {
+          const notificationSound = new Audio("/sounds/notification.mp3");
+          notificationSound.volume = 0.5;
+          notificationSound
+            .play()
+            .catch((e) => console.log("Sound play failed:", e));
+        } catch (e) {
+          console.log("Sound creation failed:", e);
+        }
+
         // Показать браузерное уведомление
         if (
           window.Notification &&
@@ -100,7 +111,7 @@ export function NotificationDropdown({
     return () => {
       unsubscribe();
     };
-  }, [user]);
+  }, [user, loadNotifications]);
 
   useEffect(() => {
     // Закрываем dropdown при клике вне его
@@ -183,7 +194,7 @@ export function NotificationDropdown({
     setIsOpen(false);
   };
 
-  const getNotificationIcon = (type: AppNotification["type"]) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case "message":
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
@@ -215,12 +226,14 @@ export function NotificationDropdown({
       {/* Кнопка уведомлений */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/30"
+        className="relative p-2 text-gray-300 hover:text-white transition-all rounded-lg hover:bg-purple-500/20 group"
         title="Notifications"
       >
-        <Bell className="w-6 h-6" />
+        <Bell
+          className={`w-6 h-6 ${unreadCount > 0 ? "text-purple-400" : ""} group-hover:animate-pulse`}
+        />
         {unreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+          <div className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 border-2 border-gray-900 shadow-md animate-pulse">
             {unreadCount > 99 ? "99+" : unreadCount}
           </div>
         )}
@@ -363,7 +376,7 @@ export function NotificationDropdown({
                   window.location.href = "/en/notifications";
                   setIsOpen(false);
                 }}
-                className="w-full text-center text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                className="w-full text-center py-1.5 text-sm text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 rounded-md font-medium transition-all"
               >
                 View all notifications
               </button>

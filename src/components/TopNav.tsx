@@ -110,8 +110,11 @@ export default function TopNav({ locale = "en" }: TopNavProps) {
           </nav>
 
           {/* Right side - Notifications and Settings */}
-          <div className="flex items-center space-x-2">
-            <NotificationDropdown />
+          <div className="flex items-center space-x-3">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-full opacity-0 group-hover:opacity-70 transition duration-300 blur-md"></div>
+              <NotificationDropdown className="relative" />
+            </div>
             <Link
               href={`/${locale}/settings`}
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-lg transition-all duration-300"
