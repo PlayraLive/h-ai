@@ -1,13 +1,18 @@
-import Navbar from '@/components/Navbar';
-import ReelsGrid from '@/components/ReelsGrid';
+import Navbar from "@/components/Navbar";
 
-import HeroBottomBar from '@/components/HeroBottomBar';
+import ReelsGrid from "@/components/ReelsGrid";
 
-import { CategoriesSection } from '@/components/home/CategoriesSection';
-import { FeaturedFreelancersSection } from '@/components/home/FeaturedFreelancersSection';
-import { TestimonialsSection } from '@/components/home/TestimonialsSection';
+import HeroBottomBar from "@/components/HeroBottomBar";
 
-export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+import { CategoriesSection } from "@/components/home/CategoriesSection";
+import { FeaturedFreelancersSection } from "@/components/home/FeaturedFreelancersSection";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
 
   return (
@@ -20,7 +25,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <div className="relative min-h-screen flex flex-col">
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-10 space-y-16">
-            <div className="w-full max-w-7xl mt-30" style={{ marginTop: '30px' }}>
+            <div
+              className="w-full max-w-7xl mt-30"
+              style={{ marginTop: "30px" }}
+            >
               <ReelsGrid limit={4} showTitle={true} />
             </div>
           </div>
@@ -47,7 +55,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <Navbar />
 
         {/* Mobile Reels Grid */}
-        <div className="px-4 py-6">
+        <div className="px-4 pt-24 pb-6">
           <ReelsGrid limit={8} showTitle={true} />
         </div>
 
