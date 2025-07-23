@@ -37,46 +37,51 @@ const mockNotifications = [
     id: '1',
     type: 'project',
     title: 'New Project Proposal',
-    message: 'John Doe submitted a proposal for your AI Chatbot project',
+    message: 'John Doe submitted a proposal for your AI Chatbot project with a budget of $2,500',
     time: '2 minutes ago',
     read: false,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
+    actionUrl: '/en/projects/123/proposals'
   },
   {
     id: '2',
     type: 'payment',
     title: 'Payment Received',
-    message: 'You received $500 for AI Image Generator project',
+    message: 'You received $500 for AI Image Generator project. Payment has been processed successfully.',
     time: '1 hour ago',
     read: false,
-    avatar: null
+    avatar: null,
+    actionUrl: '/en/payments/456'
   },
   {
     id: '3',
     type: 'message',
     title: 'New Message',
-    message: 'Sarah Wilson sent you a message about the ML model',
+    message: 'Sarah Wilson sent you a message about the ML model requirements and timeline.',
     time: '3 hours ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
+    read: false,
+    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+    actionUrl: '/en/messages/789'
   },
   {
     id: '4',
     type: 'review',
     title: 'New Review',
-    message: 'You received a 5-star review from Alex Chen',
+    message: 'You received a 5-star review from Alex Chen for the AI Voice Assistant project.',
     time: '1 day ago',
     read: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face'
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
+    actionUrl: '/en/reviews/101'
   },
   {
     id: '5',
     type: 'system',
     title: 'Account Verified',
-    message: 'Your freelancer account has been successfully verified',
+    message: 'Your freelancer account has been successfully verified. You can now bid on premium projects.',
     time: '2 days ago',
     read: true,
-    avatar: null
+    avatar: null,
+    actionUrl: '/en/profile'
   }
 ];
 
@@ -623,7 +628,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Right Section */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="flex md:hidden items-center space-x-2">
             {/* Mobile Notifications */}
             <div className="relative">
               <button
@@ -631,9 +636,9 @@ export default function Navbar() {
                   e.stopPropagation();
                   setShowNotifications(!showNotifications);
                 }}
-                className="p-2 text-gray-400 hover:text-white transition-colors relative"
+                className="p-2 text-purple-400 hover:text-white transition-colors relative"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium animate-pulse">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -786,7 +791,7 @@ export default function Navbar() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-gray-400 hover:text-white transition-colors"
+              className="p-2 text-gray-400 hover:text-white transition-colors ml-2"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

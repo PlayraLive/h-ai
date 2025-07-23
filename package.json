@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:storage": "node scripts/setup-storage-buckets.js setup",
+    "setup:database": "node scripts/setup-full-database.js",
+    "setup:seed": "node scripts/seed-real-data.js",
+    "setup:all": "npm run setup:storage && npm run setup:database && npm run setup:seed",
+    "storage:list": "node scripts/setup-storage-buckets.js list",
+    "storage:clean": "node scripts/setup-storage-buckets.js clean",
+    "db:list": "node scripts/list-databases.js",
+    "seed:clean": "node scripts/clean-database.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

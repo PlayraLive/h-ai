@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { 
-  Bell, 
-  Filter, 
-  Check, 
-  Trash2, 
-  Eye, 
+import { useState, useEffect } from "react";
+import {
+  Bell,
+  Filter,
+  Check,
+  Trash2,
+  Eye,
   MoreVertical,
   Briefcase,
   CreditCard,
@@ -15,161 +15,290 @@ import {
   Settings,
   Search,
   CheckCircle,
-  X
-} from 'lucide-react';
-import Sidebar from '@/components/Sidebar';
-import UserAvatar from '@/components/UserAvatar';
-import { cn } from '@/lib/utils';
+  X,
+  RefreshCw,
+} from "lucide-react";
+import Sidebar from "@/components/Sidebar";
+import UserAvatar from "@/components/UserAvatar";
+import { cn } from "@/lib/utils";
+import { useAuthContext } from "@/contexts/AuthContext";
+import {
+  databases,
+  DATABASE_ID,
+  COLLECTIONS,
+  Query,
+} from "@/lib/appwrite/database";
 
-// Mock notifications data (same as in Navbar)
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'project',
-    title: 'New Project Proposal',
-    message: 'John Doe submitted a proposal for your AI Chatbot project with a budget of $2,500',
-    time: '2 minutes ago',
-    read: false,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-    actionUrl: '/en/projects/123/proposals'
-  },
-  {
-    id: '2',
-    type: 'payment',
-    title: 'Payment Received',
-    message: 'You received $500 for AI Image Generator project. Payment has been processed successfully.',
-    time: '1 hour ago',
-    read: false,
-    avatar: null,
-    actionUrl: '/en/payments/456'
-  },
-  {
-    id: '3',
-    type: 'message',
-    title: 'New Message',
-    message: 'Sarah Wilson sent you a message about the ML model requirements and timeline.',
-    time: '3 hours ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
-    actionUrl: '/en/messages/789'
-  },
-  {
-    id: '4',
-    type: 'review',
-    title: 'New Review',
-    message: 'You received a 5-star review from Alex Chen for the AI Voice Assistant project.',
-    time: '1 day ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
-    actionUrl: '/en/reviews/101'
-  },
-  {
-    id: '5',
-    type: 'system',
-    title: 'Account Verified',
-    message: 'Your freelancer account has been successfully verified. You can now bid on premium projects.',
-    time: '2 days ago',
-    read: true,
-    avatar: null,
-    actionUrl: '/en/profile'
-  },
-  {
-    id: '6',
-    type: 'project',
-    title: 'Project Completed',
-    message: 'Your AI Data Analysis project has been marked as completed by the client.',
-    time: '3 days ago',
-    read: true,
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face',
-    actionUrl: '/en/projects/202'
-  }
-];
+interface Notification {
+  $id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  priority: string;
+  isRead: boolean;
+  readAt?: string;
+  actionUrl?: string;
+  relatedId?: string;
+  relatedType?: string;
+  $createdAt: string;
+  $updatedAt: string;
+}
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const [filter, setFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+  const { user, isAuthenticated } = useAuthContext();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
+    [],
+  );
 
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesFilter = filter === 'all' || notification.type === filter;
-    const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchQuery.toLowerCase());
+  // Load notifications from database
+  const loadNotifications = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.NOTIFICATIONS,
+        [
+          Query.equal("userId", user.$id),
+          Query.orderDesc("$createdAt"),
+          Query.limit(50),
+        ],
+      );
+
+      setNotifications(response.documents as Notification[]);
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load notifications when component mounts
+  useEffect(() => {
+    if (user) {
+      loadNotifications();
+    }
+  }, [user]);
+
+  const filteredNotifications = notifications.filter((notification) => {
+    const matchesFilter = filter === "all" || notification.type === filter;
+    const matchesSearch =
+      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notification.message.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTIONS.NOTIFICATIONS,
+        id,
+        {
+          isRead: true,
+          readAt: new Date().toISOString(),
+        },
+      );
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.$id === id
+            ? { ...n, isRead: true, readAt: new Date().toISOString() }
+            : n,
+        ),
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      const unreadNotifications = notifications.filter((n) => !n.isRead);
+
+      // Update all unread notifications in database
+      const updatePromises = unreadNotifications.map((notification) =>
+        databases.updateDocument(
+          DATABASE_ID,
+          COLLECTIONS.NOTIFICATIONS,
+          notification.$id,
+          {
+            isRead: true,
+            readAt: new Date().toISOString(),
+          },
+        ),
+      );
+
+      await Promise.all(updatePromises);
+
+      setNotifications((prev) =>
+        prev.map((n) => ({
+          ...n,
+          isRead: true,
+          readAt: new Date().toISOString(),
+        })),
+      );
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    setSelectedNotifications(prev => prev.filter(nId => nId !== id));
+  const deleteNotification = async (id: string) => {
+    try {
+      await databases.deleteDocument(
+        DATABASE_ID,
+        COLLECTIONS.NOTIFICATIONS,
+        id,
+      );
+
+      setNotifications((prev) => prev.filter((n) => n.$id !== id));
+      setSelectedNotifications((prev) => prev.filter((nId) => nId !== id));
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const toggleSelectNotification = (id: string) => {
-    setSelectedNotifications(prev => 
-      prev.includes(id) 
-        ? prev.filter(nId => nId !== id)
-        : [...prev, id]
+    setSelectedNotifications((prev) =>
+      prev.includes(id) ? prev.filter((nId) => nId !== id) : [...prev, id],
     );
   };
 
-  const deleteSelected = () => {
-    setNotifications(prev => prev.filter(n => !selectedNotifications.includes(n.id)));
-    setSelectedNotifications([]);
+  const deleteSelected = async () => {
+    try {
+      const deletePromises = selectedNotifications.map((id) =>
+        databases.deleteDocument(DATABASE_ID, COLLECTIONS.NOTIFICATIONS, id),
+      );
+
+      await Promise.all(deletePromises);
+
+      setNotifications((prev) =>
+        prev.filter((n) => !selectedNotifications.includes(n.$id)),
+      );
+      setSelectedNotifications([]);
+    } catch (error) {
+      console.error("Error deleting selected notifications:", error);
+    }
   };
 
-  const markSelectedAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => selectedNotifications.includes(n.id) ? { ...n, read: true } : n)
+  const markSelectedAsRead = async () => {
+    try {
+      const updatePromises = selectedNotifications.map((id) =>
+        databases.updateDocument(DATABASE_ID, COLLECTIONS.NOTIFICATIONS, id, {
+          isRead: true,
+          readAt: new Date().toISOString(),
+        }),
+      );
+
+      await Promise.all(updatePromises);
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          selectedNotifications.includes(n.$id)
+            ? {
+                ...n,
+                isRead: true,
+                readAt: new Date().toISOString(),
+              }
+            : n,
+        ),
+      );
+      setSelectedNotifications([]);
+    } catch (error) {
+      console.error("Error marking selected notifications as read:", error);
+    }
+  };
+
+  // Format relative time
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60),
     );
-    setSelectedNotifications([]);
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'project': return <Briefcase className="w-5 h-5" />;
-      case 'payment': return <CreditCard className="w-5 h-5" />;
-      case 'message': return <MessageCircle className="w-5 h-5" />;
-      case 'review': return <Star className="w-5 h-5" />;
-      case 'system': return <Settings className="w-5 h-5" />;
-      default: return <Bell className="w-5 h-5" />;
+      case "project":
+        return <Briefcase className="w-5 h-5" />;
+      case "payment":
+        return <CreditCard className="w-5 h-5" />;
+      case "message":
+        return <MessageCircle className="w-5 h-5" />;
+      case "review":
+        return <Star className="w-5 h-5" />;
+      case "system":
+        return <Settings className="w-5 h-5" />;
+      default:
+        return <Bell className="w-5 h-5" />;
     }
   };
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'project': return 'bg-blue-500';
-      case 'payment': return 'bg-green-500';
-      case 'message': return 'bg-purple-500';
-      case 'review': return 'bg-yellow-500';
-      case 'system': return 'bg-gray-500';
-      default: return 'bg-blue-500';
+      case "project":
+        return "bg-blue-500";
+      case "payment":
+        return "bg-green-500";
+      case "message":
+        return "bg-purple-500";
+      case "review":
+        return "bg-yellow-500";
+      case "system":
+        return "bg-gray-500";
+      default:
+        return "bg-blue-500";
     }
   };
 
   const filterOptions = [
-    { value: 'all', label: 'All', count: notifications.length },
-    { value: 'project', label: 'Projects', count: notifications.filter(n => n.type === 'project').length },
-    { value: 'payment', label: 'Payments', count: notifications.filter(n => n.type === 'payment').length },
-    { value: 'message', label: 'Messages', count: notifications.filter(n => n.type === 'message').length },
-    { value: 'review', label: 'Reviews', count: notifications.filter(n => n.type === 'review').length },
-    { value: 'system', label: 'System', count: notifications.filter(n => n.type === 'system').length },
+    { value: "all", label: "All", count: notifications.length },
+    {
+      value: "project",
+      label: "Projects",
+      count: notifications.filter((n) => n.type === "project").length,
+    },
+    {
+      value: "payment",
+      label: "Payments",
+      count: notifications.filter((n) => n.type === "payment").length,
+    },
+    {
+      value: "message",
+      label: "Messages",
+      count: notifications.filter((n) => n.type === "message").length,
+    },
+    {
+      value: "review",
+      label: "Reviews",
+      count: notifications.filter((n) => n.type === "review").length,
+    },
+    {
+      value: "system",
+      label: "System",
+      count: notifications.filter((n) => n.type === "system").length,
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
       <Sidebar />
-      
+
       <div className="flex-1 lg:ml-0">
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-4xl mx-auto">
@@ -177,17 +306,18 @@ export default function NotificationsPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-white lg:ml-0 ml-12">Notifications</h1>
+                  <h1 className="text-3xl font-bold text-white lg:ml-0 ml-12">
+                    Notifications
+                  </h1>
                   <p className="text-gray-400 mt-2">
-                    {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+                    {unreadCount > 0
+                      ? `${unreadCount} unread notifications`
+                      : "All caught up!"}
                   </p>
                 </div>
-                
+
                 {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    className="btn-secondary"
-                  >
+                  <button onClick={markAllAsRead} className="btn-secondary">
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Mark all read
                   </button>
@@ -221,19 +351,21 @@ export default function NotificationsPage() {
                         key={option.value}
                         onClick={() => setFilter(option.value)}
                         className={cn(
-                          'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center space-x-1',
+                          "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center space-x-1",
                           filter === option.value
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            ? "bg-purple-500 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600",
                         )}
                       >
                         <span>{option.label}</span>
-                        <span className={cn(
-                          'px-1.5 py-0.5 rounded-full text-xs',
-                          filter === option.value
-                            ? 'bg-white/20 text-white'
-                            : 'bg-gray-600 text-gray-400'
-                        )}>
+                        <span
+                          className={cn(
+                            "px-1.5 py-0.5 rounded-full text-xs",
+                            filter === option.value
+                              ? "bg-white/20 text-white"
+                              : "bg-gray-600 text-gray-400",
+                          )}
+                        >
                           {option.count}
                         </span>
                       </button>
@@ -273,9 +405,13 @@ export default function NotificationsPage() {
               {filteredNotifications.length === 0 ? (
                 <div className="glass-card p-12 rounded-2xl text-center">
                   <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No notifications found</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    No notifications found
+                  </h3>
                   <p className="text-gray-400">
-                    {searchQuery ? 'Try adjusting your search terms' : 'You\'re all caught up!'}
+                    {searchQuery
+                      ? "Try adjusting your search terms"
+                      : "You're all caught up!"}
                   </p>
                 </div>
               ) : (
@@ -283,8 +419,9 @@ export default function NotificationsPage() {
                   <div
                     key={notification.id}
                     className={cn(
-                      'glass-card p-6 rounded-2xl transition-all duration-200 hover:bg-white/5 group',
-                      !notification.read && 'ring-1 ring-purple-500/30 bg-purple-500/5'
+                      "glass-card p-6 rounded-2xl transition-all duration-200 hover:bg-white/5 group",
+                      !notification.read &&
+                        "ring-1 ring-purple-500/30 bg-purple-500/5",
                     )}
                   >
                     <div className="flex items-start space-x-4">
@@ -292,8 +429,12 @@ export default function NotificationsPage() {
                       <div className="flex-shrink-0 pt-1">
                         <input
                           type="checkbox"
-                          checked={selectedNotifications.includes(notification.id)}
-                          onChange={() => toggleSelectNotification(notification.id)}
+                          checked={selectedNotifications.includes(
+                            notification.id,
+                          )}
+                          onChange={() =>
+                            toggleSelectNotification(notification.id)
+                          }
                           className="w-4 h-4 text-purple-500 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
                         />
                       </div>
@@ -307,10 +448,12 @@ export default function NotificationsPage() {
                             size="md"
                           />
                         ) : (
-                          <div className={cn(
-                            'w-12 h-12 rounded-full flex items-center justify-center text-white',
-                            getNotificationColor(notification.type)
-                          )}>
+                          <div
+                            className={cn(
+                              "w-12 h-12 rounded-full flex items-center justify-center text-white",
+                              getNotificationColor(notification.type),
+                            )}
+                          >
                             {getNotificationIcon(notification.type)}
                           </div>
                         )}
@@ -320,10 +463,14 @@ export default function NotificationsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className={cn(
-                              'text-lg font-semibold',
-                              notification.read ? 'text-gray-300' : 'text-white'
-                            )}>
+                            <h3
+                              className={cn(
+                                "text-lg font-semibold",
+                                notification.read
+                                  ? "text-gray-300"
+                                  : "text-white",
+                              )}
+                            >
                               {notification.title}
                             </h3>
                             <p className="text-gray-400 mt-1">
@@ -346,7 +493,9 @@ export default function NotificationsPage() {
                               </button>
                             )}
                             <button
-                              onClick={() => deleteNotification(notification.id)}
+                              onClick={() =>
+                                deleteNotification(notification.id)
+                              }
                               className="p-2 text-gray-400 hover:text-red-400 transition-colors"
                               title="Delete"
                             >

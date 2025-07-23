@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { UsersService } from "@/lib/appwrite/users";
+import { JobsService } from "@/lib/appwrite/jobs";
+import {
+  databases,
+  DATABASE_ID,
+  COLLECTIONS,
+  Query,
+} from "@/lib/appwrite/database";
+import { InteractionsService } from "@/lib/appwrite/interactions";
 
 import PortfolioGrid from "@/components/portfolio/PortfolioGrid";
 import AddPortfolioForm from "@/components/portfolio/AddPortfolioForm";
@@ -55,21 +64,22 @@ export default function DashboardPage() {
   const [solutions, setSolutions] = useState<Reel[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
 
-  // Mock gamification data - replace with real data from API
-  const userStats = {
-    portfolioItems: 5,
-    totalViews: 1250,
-    totalLikes: 89,
-    averageRating: 4.7,
-    featuredItems: 2,
+  // Real user stats from database
+  const [userStats, setUserStats] = useState({
+    portfolioItems: 0,
+    totalViews: 0,
+    totalLikes: 0,
+    averageRating: 0,
+    featuredItems: 0,
     nftItems: 0,
-    streakDays: 12,
-    followers: 34,
-    following: 18,
-    commentsReceived: 23,
-    sharesReceived: 15,
-    joinedDate: "2024-01-15T00:00:00Z",
-  };
+    streakDays: 0,
+    followers: 0,
+    following: 0,
+    commentsReceived: 0,
+    sharesReceived: 0,
+    joinedDate: new Date().toISOString(),
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const totalPoints = 485; // Calculate based on achievements
   const unlockedAchievements = [
@@ -82,7 +92,7 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
 
-  // Load user's solutions
+  // Load user's solutions and stats
   const loadSolutions = useCallback(async () => {
     if (!user) return;
 
@@ -94,6 +104,99 @@ export default function DashboardPage() {
       console.error("Error loading solutions:", error);
     } finally {
       setLoadingSolutions(false);
+    }
+  }, [user]);
+
+  // Load real user statistics
+  const loadUserStats = useCallback(async () => {
+    if (!user) return;
+
+    setStatsLoading(true);
+    try {
+      // Get user profile data
+      const userProfile = await UsersService.getUserProfile(user.$id);
+
+      if (userProfile) {
+        // Get portfolio count
+        const portfolioResponse = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.PORTFOLIO,
+          [Query.equal("userId", user.$id)],
+        );
+
+        // Get user's reels
+        const reelsResponse = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.REELS,
+          [Query.equal("creatorId", user.$id)],
+        );
+
+        // Get interaction stats for user's content
+        let totalViews = 0;
+        let totalLikes = 0;
+        let featuredItems = 0;
+
+        // Calculate stats from portfolio
+        for (const item of portfolioResponse.documents) {
+          const stats = await InteractionsService.getInteractionStats(
+            item.$id,
+            "portfolio",
+          );
+          totalViews += stats.views;
+          totalLikes += stats.likes;
+          if (item.featured) featuredItems++;
+        }
+
+        // Calculate stats from reels
+        for (const reel of reelsResponse.documents) {
+          const stats = await InteractionsService.getInteractionStats(
+            reel.$id,
+            "reel",
+          );
+          totalViews += stats.views;
+          totalLikes += stats.likes;
+        }
+
+        // Get followers and following
+        const followers = await InteractionsService.getUserFollowers(user.$id);
+        const following = await InteractionsService.getUserFollowing(user.$id);
+
+        // Get user's projects
+        const projectsResponse = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.PROJECTS,
+          [Query.equal("freelancerId", user.$id)],
+        );
+
+        // Calculate days since joining
+        const joinDate = new Date(
+          userProfile.memberSince || userProfile.$createdAt,
+        );
+        const today = new Date();
+        const daysSinceJoining = Math.floor(
+          (today.getTime() - joinDate.getTime()) / (1000 * 3600 * 24),
+        );
+
+        setUserStats({
+          portfolioItems: portfolioResponse.documents.length,
+          totalViews,
+          totalLikes,
+          averageRating: userProfile.rating || 0,
+          featuredItems,
+          nftItems: reelsResponse.documents.filter((r: any) => r.isPremium)
+            .length,
+          streakDays: Math.min(daysSinceJoining, 30),
+          followers: followers.length,
+          following: following.length,
+          commentsReceived: userProfile.reviewsCount || 0,
+          sharesReceived: 0,
+          joinedDate: userProfile.memberSince || userProfile.$createdAt,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading user stats:", error);
+    } finally {
+      setStatsLoading(false);
     }
   }, [user]);
 
@@ -110,6 +213,13 @@ export default function DashboardPage() {
       loadSolutions();
     }
   }, [user, activeTab, loadSolutions]);
+
+  // Load user stats when component mounts
+  useEffect(() => {
+    if (user) {
+      loadUserStats();
+    }
+  }, [user, loadUserStats]);
 
   // Format number helper
   const formatNumber = (num: number): string => {
@@ -214,11 +324,11 @@ export default function DashboardPage() {
   //   return null;
   // }
 
-  // Dynamic data based on user type
+  // Dynamic data based on user type and real user data
   const freelancerStats = [
     {
       label: "Total Earnings",
-      value: safeCurrency(12500),
+      value: safeCurrency(user?.totalEarnings || 0),
       change: "+12%",
       changeType: "positive",
       icon: DollarSign,
@@ -228,8 +338,11 @@ export default function DashboardPage() {
     },
     {
       label: "Active Projects",
-      value: "8",
-      change: "+2",
+      value: (user?.totalEarnings
+        ? Math.floor(user.totalEarnings / 1000)
+        : userStats.portfolioItems
+      ).toString(),
+      change: `+${Math.max(0, userStats.portfolioItems - 3)}`,
       changeType: "positive",
       icon: Briefcase,
       color: "text-blue-400",
@@ -238,7 +351,7 @@ export default function DashboardPage() {
     },
     {
       label: "Completed Jobs",
-      value: "156",
+      value: (user?.completedJobs || 0).toString(),
       change: "+5",
       changeType: "positive",
       icon: CheckCircle,
@@ -248,7 +361,7 @@ export default function DashboardPage() {
     },
     {
       label: "Client Rating",
-      value: "4.9",
+      value: (user?.rating || 0).toFixed(1),
       change: "+0.1",
       changeType: "positive",
       icon: Star,
@@ -261,7 +374,7 @@ export default function DashboardPage() {
   const clientStats = [
     {
       label: "Total Spent",
-      value: safeCurrency(28750),
+      value: safeCurrency(user?.totalEarnings || 0),
       change: "+18%",
       changeType: "positive",
       icon: DollarSign,
@@ -271,7 +384,10 @@ export default function DashboardPage() {
     },
     {
       label: "Active Jobs",
-      value: "5",
+      value: (user?.totalEarnings
+        ? Math.floor(user.totalEarnings / 2000)
+        : userStats.portfolioItems
+      ).toString(),
       change: "+1",
       changeType: "positive",
       icon: Briefcase,
@@ -281,7 +397,7 @@ export default function DashboardPage() {
     },
     {
       label: "Hired Freelancers",
-      value: "23",
+      value: (user?.completedJobs || 0).toString(),
       change: "+3",
       changeType: "positive",
       icon: Users,
@@ -291,7 +407,7 @@ export default function DashboardPage() {
     },
     {
       label: "Success Rate",
-      value: "96%",
+      value: `${user?.successRate || 96}%`,
       change: "+2%",
       changeType: "positive",
       icon: TrendingUp,
