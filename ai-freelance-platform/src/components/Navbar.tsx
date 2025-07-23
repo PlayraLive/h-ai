@@ -438,7 +438,7 @@ export default function Navbar() {
                 <Globe className="w-5 h-5" />
                 <span className="text-sm uppercase">{locale}</span>
               </button>
-              
+
               {showLangMenu && (
                 <div className="absolute right-0 mt-2 w-32 glass-card border border-white/10 rounded-lg shadow-lg">
                   <button
@@ -622,18 +622,180 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Right Section */}
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile Notifications */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowNotifications(!showNotifications);
+                }}
+                className="p-2 text-gray-400 hover:text-white transition-colors relative"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 glass-card border border-white/10 rounded-xl shadow-2xl z-50">
+                  {/* Header */}
+                  <div className="p-4 border-b border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white font-semibold text-sm">Notifications</h3>
+                      <div className="flex items-center space-x-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="text-gray-400 hover:text-white transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Filter Tags */}
+                    <div className="flex items-center space-x-2 mt-3">
+                      <Filter className="w-4 h-4 text-gray-400" />
+                      <div className="flex space-x-1 overflow-x-auto">
+                        {['all', 'project', 'payment', 'message'].map((filter) => (
+                          <button
+                            key={filter}
+                            onClick={() => setNotificationFilter(filter)}
+                            className={cn(
+                              'px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap',
+                              notificationFilter === filter
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            )}
+                          >
+                            {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notifications List */}
+                  <div className="max-h-64 overflow-y-auto">
+                    {filteredNotifications.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <Bell className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-400 text-sm">No notifications</p>
+                      </div>
+                    ) : (
+                      filteredNotifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={cn(
+                            'p-3 border-b border-gray-800 hover:bg-white/5 transition-colors cursor-pointer group',
+                            !notification.read && 'bg-purple-500/5'
+                          )}
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            {/* Icon */}
+                            <div className={cn(
+                              'w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-1',
+                              getNotificationColor(notification.type)
+                            )}>
+                              {getNotificationIcon(notification.type)}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className={cn(
+                                    'text-sm font-medium',
+                                    notification.read ? 'text-gray-300' : 'text-white'
+                                  )}>
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                                    {notification.message}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {notification.time}
+                                  </p>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {!notification.read && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        markAsRead(notification.id);
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-green-400 transition-colors"
+                                      title="Mark as read"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteNotification(notification.id);
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Unread indicator */}
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-purple-500 rounded-full absolute right-3 top-4"></div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-3 border-t border-gray-700">
+                    <Link
+                      href="/en/notifications"
+                      className="block text-center text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      View all notifications
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-white/10 animate-in slide-in-from-top duration-300">
+          <div className="md:hidden py-4 border-t border-white/10 animate-in slide-in-from-top duration-300 bg-gray-900/95 backdrop-blur-lg">
             {/* Search Mobile */}
             <div className="px-4 mb-4">
               <form onSubmit={handleSearch} className="relative">
@@ -642,32 +804,107 @@ export default function Navbar() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="input-field pl-10 w-full"
+                  placeholder="Search jobs, freelancers..."
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                 />
               </form>
             </div>
 
-            <div className="space-y-2 px-4">
+            {/* Navigation Links */}
+            <div className="px-4 space-y-2 mb-4">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300",
-                      isActive(link.href)
-                        ? "bg-purple-500/20 text-purple-400"
-                        : "text-gray-300 hover:text-white hover:bg-white/5"
-                    )}
                     onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "flex items-center space-x-3 w-full p-4 rounded-xl transition-all duration-300 group",
+                      isActive(link.href)
+                        ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-400 border border-purple-500/30"
+                        : "text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-600/50"
+                    )}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{link.label}</span>
+                    <Icon className={cn(
+                      "w-5 h-5 transition-transform duration-300",
+                      isActive(link.href) ? "scale-110" : "group-hover:scale-105"
+                    )} />
+                    <span className="font-medium">{link.label}</span>
+                    {isActive(link.href) && (
+                      <div className="w-2 h-2 bg-purple-500 rounded-full ml-auto animate-pulse"></div>
+                    )}
                   </Link>
                 );
               })}
+            </div>
+
+            {/* Mobile User Section */}
+            <div className="px-4 pt-4 border-t border-gray-700">
+              {isAuthenticated ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-xl">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">{user?.name || 'User'}</p>
+                      <p className="text-gray-400 text-sm">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/en/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-center space-x-2 p-3 bg-purple-500/20 text-purple-400 rounded-xl transition-colors hover:bg-purple-500/30"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/en/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-center space-x-2 p-3 bg-gray-700/50 text-gray-300 rounded-xl transition-colors hover:bg-gray-600/50"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="text-sm font-medium">Profile</span>
+                    </Link>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 p-3 bg-red-500/20 text-red-400 rounded-xl transition-colors hover:bg-red-500/30"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      handleLogin();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sign In</span>
+                  </button>
+                  <Link
+                    href="/en/signup"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center space-x-2 p-3 bg-gray-700/50 text-gray-300 rounded-xl transition-colors hover:bg-gray-600/50 border border-gray-600"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sign Up</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {isAuthenticated ? (

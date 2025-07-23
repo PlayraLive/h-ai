@@ -220,38 +220,45 @@ export default function DashboardPage() {
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">
                   Dashboard
                 </h1>
-                <p className="text-gray-400">
+                <p className="text-sm sm:text-base text-gray-400">
                   Welcome back! Here's what's happening with your projects.
                 </p>
               </div>
-              <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                <Link href="/en/jobs/create" className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post New Job
+              <div className="flex items-center justify-end sm:justify-start">
+                <Link
+                  href="/en/jobs/create"
+                  className="btn-primary text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                >
+                  <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Post New Job</span>
+                  <span className="sm:hidden">Post Job</span>
                 </Link>
               </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={index} className="glass-card p-6 rounded-2xl">
-                    <div className="flex items-center justify-between mb-4">
+                  <div
+                    key={index}
+                    className="glass-card p-3 sm:p-6 rounded-xl sm:rounded-2xl"
+                  >
+                    <div className="flex items-center justify-between mb-2 sm:mb-4">
                       <div
-                        className={`w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center ${stat.color}`}
+                        className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gray-800 flex items-center justify-center ${stat.color}`}
                       >
-                        <Icon className="w-6 h-6" />
+                        <Icon className="w-4 h-4 sm:w-6 sm:h-6" />
                       </div>
                       <span
                         className={cn(
-                          "text-sm font-medium",
+                          "text-xs sm:text-sm font-medium",
                           stat.changeType === "positive"
                             ? "text-green-400"
                             : "text-red-400",
@@ -260,24 +267,26 @@ export default function DashboardPage() {
                         {stat.change}
                       </span>
                     </div>
-                    <div className="text-2xl font-bold text-white mb-1">
+                    <div className="text-lg sm:text-2xl font-bold text-white mb-1">
                       {stat.value}
                     </div>
-                    <div className="text-sm text-gray-400">{stat.label}</div>
+                    <div className="text-xs sm:text-sm text-gray-400 leading-tight">
+                      {stat.label}
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-800 mb-8">
-              <div className="flex space-x-8">
+            <div className="border-b border-gray-800 mb-6 sm:mb-8">
+              <div className="flex space-x-4 sm:space-x-8 overflow-x-auto pb-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "py-4 border-b-2 transition-colors",
+                      "py-3 sm:py-4 border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base",
                       activeTab === tab.id
                         ? "border-purple-500 text-purple-400"
                         : "border-transparent text-gray-400 hover:text-white",
@@ -291,62 +300,64 @@ export default function DashboardPage() {
 
             {/* Tab Content */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                 {/* Recent Projects */}
                 <div className="lg:col-span-2">
-                  <div className="glass-card p-6 rounded-2xl">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-semibold text-white">
+                  <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                    <div className="flex items-center justify-between mb-4 sm:mb-6">
+                      <h3 className="text-lg sm:text-xl font-semibold text-white">
                         Recent Projects
                       </h3>
                       <Link
                         href="/en/dashboard?tab=projects"
-                        className="text-purple-400 hover:text-purple-300 transition-colors"
+                        className="text-purple-400 hover:text-purple-300 transition-colors text-sm sm:text-base"
                       >
                         View All
                       </Link>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {recentProjects.slice(0, 4).map((project) => (
                         <div
                           key={project.id}
-                          className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-800/30 rounded-xl gap-3 sm:gap-0"
                         >
-                          <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
                             {getStatusIcon(project.status)}
-                            <div>
-                              <h4 className="text-white font-medium">
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-white font-medium text-sm sm:text-base truncate">
                                 {project.title}
                               </h4>
-                              <p className="text-sm text-gray-400">
+                              <p className="text-xs sm:text-sm text-gray-400">
                                 {project.client}
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                              <div className="text-white font-medium">
+                          <div className="flex items-center justify-between sm:justify-end sm:space-x-4">
+                            <div className="text-left sm:text-right">
+                              <div className="text-white font-medium text-sm sm:text-base">
                                 {formatCurrency(project.budget)}
                               </div>
-                              <div className="text-sm text-gray-400">
+                              <div className="text-xs sm:text-sm text-gray-400">
                                 Due {formatRelativeTime(project.deadline)}
                               </div>
                             </div>
 
-                            {project.messages > 0 && (
-                              <div className="flex items-center space-x-1 text-purple-400">
-                                <MessageCircle className="w-4 h-4" />
-                                <span className="text-sm">
-                                  {project.messages}
-                                </span>
-                              </div>
-                            )}
+                            <div className="flex items-center space-x-2">
+                              {project.messages > 0 && (
+                                <div className="flex items-center space-x-1 text-purple-400">
+                                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  <span className="text-xs sm:text-sm">
+                                    {project.messages}
+                                  </span>
+                                </div>
+                              )}
 
-                            <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
+                              <button className="p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors">
+                                <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -355,10 +366,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Upcoming Deadlines */}
-                  <div className="glass-card p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                  <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                       Upcoming Deadlines
                     </h3>
                     <div className="space-y-3">
@@ -367,8 +378,8 @@ export default function DashboardPage() {
                           key={index}
                           className="flex items-center justify-between"
                         >
-                          <div>
-                            <p className="text-white text-sm font-medium">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white text-sm font-medium truncate">
                               {item.project}
                             </p>
                             <p className="text-xs text-gray-400">
@@ -377,7 +388,7 @@ export default function DashboardPage() {
                           </div>
                           <span
                             className={cn(
-                              "text-sm font-medium",
+                              "text-sm font-medium ml-2 flex-shrink-0",
                               getPriorityColor(item.priority),
                             )}
                           >
@@ -389,26 +400,26 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Quick Actions */}
-                  <div className="glass-card p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                  <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                       Quick Actions
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       <Link
                         href="/en/jobs/create"
-                        className="block w-full btn-secondary text-center"
+                        className="block w-full btn-secondary text-center text-sm sm:text-base py-2 sm:py-3"
                       >
                         Post New Job
                       </Link>
                       <Link
                         href="/en/freelancers"
-                        className="block w-full btn-secondary text-center"
+                        className="block w-full btn-secondary text-center text-sm sm:text-base py-2 sm:py-3"
                       >
                         Find Freelancers
                       </Link>
                       <Link
                         href="/en/profile/edit"
-                        className="block w-full btn-secondary text-center"
+                        className="block w-full btn-secondary text-center text-sm sm:text-base py-2 sm:py-3"
                       >
                         Edit Profile
                       </Link>
@@ -416,27 +427,37 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Recent Activity */}
-                  <div className="glass-card p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                  <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                       Recent Activity
                     </h3>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-3 text-xs sm:text-sm">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-300">Project completed</span>
-                        <span className="text-gray-500">2h ago</span>
+                        <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                        <span className="text-gray-300 flex-1 truncate">
+                          Project completed
+                        </span>
+                        <span className="text-gray-500 flex-shrink-0">
+                          2h ago
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                        <span className="text-gray-300">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                        <span className="text-gray-300 flex-1 truncate">
                           New message received
                         </span>
-                        <span className="text-gray-500">4h ago</span>
+                        <span className="text-gray-500 flex-shrink-0">
+                          4h ago
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                        <span className="text-gray-300">Payment received</span>
-                        <span className="text-gray-500">1d ago</span>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                        <span className="text-gray-300 flex-1 truncate">
+                          Payment received
+                        </span>
+                        <span className="text-gray-500 flex-shrink-0">
+                          1d ago
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -446,15 +467,15 @@ export default function DashboardPage() {
 
             {activeTab === "projects" && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">
                     All Projects
                   </h2>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center justify-end">
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
-                      className="input-field"
+                      className="input-field text-sm sm:text-base"
                     >
                       <option value="all">All Status</option>
                       <option value="pending">Pending</option>
@@ -465,7 +486,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="glass-card rounded-2xl overflow-hidden">
+                <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-800/50">
@@ -570,13 +591,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === "earnings" && (
-              <div className="glass-card p-6 rounded-2xl">
-                <h2 className="text-2xl font-bold text-white mb-6">
+              <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
                   Earnings Overview
                 </h2>
-                <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">
+                <div className="text-center py-8 sm:py-12">
+                  <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400 text-sm sm:text-base">
                     Earnings analytics coming soon...
                   </p>
                 </div>
@@ -584,13 +605,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === "analytics" && (
-              <div className="glass-card p-6 rounded-2xl">
-                <h2 className="text-2xl font-bold text-white mb-6">
+              <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
                   Analytics
                 </h2>
-                <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">
+                <div className="text-center py-8 sm:py-12">
+                  <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400 text-sm sm:text-base">
                     Advanced analytics coming soon...
                   </p>
                 </div>

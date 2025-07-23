@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Filter,
@@ -16,12 +16,12 @@ import {
   Users,
   Calendar,
   ArrowRight,
-  SlidersHorizontal
-} from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import { JobCardSkeleton } from '@/components/Loading';
-import { useToast } from '@/components/Toast';
-import { cn } from '@/lib/utils';
+  SlidersHorizontal,
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
+import { JobCardSkeleton } from "@/components/Loading";
+import { useToast } from "@/components/Toast";
+import { cn } from "@/lib/utils";
 interface Job {
   id: string;
   title: string;
@@ -29,7 +29,7 @@ interface Job {
   company: string;
   companyLogo: string;
   location: string;
-  type: 'full-time' | 'part-time' | 'contract' | 'freelance';
+  type: "full-time" | "part-time" | "contract" | "freelance";
   budget: {
     min: number;
     max: number;
@@ -45,75 +45,87 @@ interface Job {
   urgent: boolean;
 }
 
-export default function JobsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function JobsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
   const [budgetRange, setBudgetRange] = useState([0, 20000]);
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState("newest");
 
   const searchParams = useSearchParams();
   const { success, info } = useToast();
 
   const mockJobs: Job[] = [
     {
-      id: '1',
-      title: 'AI-Powered Logo Design for Tech Startup',
-      description: 'We need a creative AI designer to create a modern, minimalist logo for our AI startup. The logo should convey innovation, trust, and cutting-edge technology.',
-      company: 'TechFlow AI',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'Remote',
-      type: 'freelance',
-      budget: { min: 500, max: 1500, currency: 'USD' },
-      skills: ['AI Design', 'Logo Design', 'Branding', 'Figma'],
-      postedAt: '2024-01-15',
-      deadline: '2024-01-30',
+      id: "1",
+      title: "AI-Powered Logo Design for Tech Startup",
+      description:
+        "We need a creative AI designer to create a modern, minimalist logo for our AI startup. The logo should convey innovation, trust, and cutting-edge technology.",
+      company: "TechFlow AI",
+      companyLogo: "/api/placeholder/40/40",
+      location: "Remote",
+      type: "freelance",
+      budget: { min: 500, max: 1500, currency: "USD" },
+      skills: ["AI Design", "Logo Design", "Branding", "Figma"],
+      postedAt: "2024-01-15",
+      deadline: "2024-01-30",
       proposals: 12,
       rating: 4.8,
-      category: 'ai_design',
+      category: "ai_design",
       featured: true,
-      urgent: false
+      urgent: false,
     },
     {
-      id: '2',
-      title: 'Machine Learning Model Development',
-      description: 'Looking for an experienced ML engineer to develop a recommendation system for our e-commerce platform. Must have experience with Python, TensorFlow, and large datasets.',
-      company: 'ShopSmart Inc',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'New York, NY',
-      type: 'contract',
-      budget: { min: 5000, max: 15000, currency: 'USD' },
-      skills: ['Machine Learning', 'Python', 'TensorFlow', 'Data Science'],
-      postedAt: '2024-01-14',
-      deadline: '2024-02-15',
+      id: "2",
+      title: "Machine Learning Model Development",
+      description:
+        "Looking for an experienced ML engineer to develop a recommendation system for our e-commerce platform. Must have experience with Python, TensorFlow, and large datasets.",
+      company: "ShopSmart Inc",
+      companyLogo: "/api/placeholder/40/40",
+      location: "New York, NY",
+      type: "contract",
+      budget: { min: 5000, max: 15000, currency: "USD" },
+      skills: ["Machine Learning", "Python", "TensorFlow", "Data Science"],
+      postedAt: "2024-01-14",
+      deadline: "2024-02-15",
       proposals: 8,
       rating: 4.9,
-      category: 'ai_development',
+      category: "ai_development",
       featured: false,
-      urgent: true
+      urgent: true,
     },
     {
-      id: '3',
-      title: 'AI Video Editing for YouTube Channel',
-      description: 'Need an AI video editor to create engaging content for our tech YouTube channel. Experience with AI-powered editing tools required.',
-      company: 'TechTalks Media',
-      companyLogo: '/api/placeholder/40/40',
-      location: 'Remote',
-      type: 'part-time',
-      budget: { min: 1000, max: 3000, currency: 'USD' },
-      skills: ['AI Video Editing', 'After Effects', 'Premiere Pro', 'Motion Graphics'],
-      postedAt: '2024-01-13',
-      deadline: '2024-01-25',
+      id: "3",
+      title: "AI Video Editing for YouTube Channel",
+      description:
+        "Need an AI video editor to create engaging content for our tech YouTube channel. Experience with AI-powered editing tools required.",
+      company: "TechTalks Media",
+      companyLogo: "/api/placeholder/40/40",
+      location: "Remote",
+      type: "part-time",
+      budget: { min: 1000, max: 3000, currency: "USD" },
+      skills: [
+        "AI Video Editing",
+        "After Effects",
+        "Premiere Pro",
+        "Motion Graphics",
+      ],
+      postedAt: "2024-01-13",
+      deadline: "2024-01-25",
       proposals: 15,
       rating: 4.7,
-      category: 'ai_video',
+      category: "ai_video",
       featured: false,
-      urgent: false
-    }
+      urgent: false,
+    },
   ];
 
   useEffect(() => {
@@ -125,8 +137,8 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     }, 1500);
 
     // Получение параметров из URL
-    const category = searchParams.get('category');
-    const search = searchParams.get('search');
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
 
     if (category) {
       setSelectedCategory(category);
@@ -140,35 +152,43 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     const newSavedJobs = new Set(savedJobs);
     if (savedJobs.has(jobId)) {
       newSavedJobs.delete(jobId);
-      info('Job removed from saved', 'Job has been removed from your saved list.');
+      info(
+        "Job removed from saved",
+        "Job has been removed from your saved list.",
+      );
     } else {
       newSavedJobs.add(jobId);
-      success('Job saved!', 'Job has been added to your saved list.');
+      success("Job saved!", "Job has been added to your saved list.");
     }
     setSavedJobs(newSavedJobs);
   };
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.skills.some((skill) =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
 
-    const matchesCategory = selectedCategory === 'all' || job.category === selectedCategory;
-    const matchesType = selectedType === 'all' || job.type === selectedType;
-    const matchesBudget = job.budget.min >= budgetRange[0] && job.budget.max <= budgetRange[1];
+    const matchesCategory =
+      selectedCategory === "all" || job.category === selectedCategory;
+    const matchesType = selectedType === "all" || job.type === selectedType;
+    const matchesBudget =
+      job.budget.min >= budgetRange[0] && job.budget.max <= budgetRange[1];
 
     return matchesSearch && matchesCategory && matchesType && matchesBudget;
   });
 
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     switch (sortBy) {
-      case 'newest':
+      case "newest":
         return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-      case 'budget_high':
+      case "budget_high":
         return b.budget.max - a.budget.max;
-      case 'budget_low':
+      case "budget_low":
         return a.budget.min - b.budget.min;
-      case 'proposals':
+      case "proposals":
         return a.proposals - b.proposals;
       default:
         return 0;
@@ -179,12 +199,16 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
     <div className="min-h-screen bg-gray-950">
       <Navbar />
 
-      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="pt-20 pb-16 px-3 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Find AI Jobs</h1>
-            <p className="text-xl text-gray-400">Discover amazing opportunities in AI and machine learning</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 sm:mb-4">
+              Find AI Jobs
+            </h1>
+            <p className="text-base sm:text-xl text-gray-400">
+              Discover amazing opportunities in AI and machine learning
+            </p>
           </div>
 
           {/* Search and Filters */}
@@ -231,7 +255,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
                     "btn-secondary flex items-center space-x-2",
-                    showFilters && "bg-purple-500/20 text-purple-400"
+                    showFilters && "bg-purple-500/20 text-purple-400",
                   )}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
@@ -244,7 +268,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
             {showFilters && (
               <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Job Type</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Job Type
+                  </label>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
@@ -268,7 +294,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                     max="20000"
                     step="500"
                     value={budgetRange[1]}
-                    onChange={(e) => setBudgetRange([budgetRange[0], parseInt(e.target.value)])}
+                    onChange={(e) =>
+                      setBudgetRange([budgetRange[0], parseInt(e.target.value)])
+                    }
                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
@@ -276,9 +304,9 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
                 <div className="flex items-end">
                   <button
                     onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory('all');
-                      setSelectedType('all');
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setSelectedType("all");
                       setBudgetRange([0, 20000]);
                     }}
                     className="btn-secondary w-full"
@@ -293,7 +321,7 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
           {/* Results */}
           <div className="flex justify-between items-center mb-6">
             <p className="text-gray-400">
-              {loading ? 'Loading...' : `${sortedJobs.length} jobs found`}
+              {loading ? "Loading..." : `${sortedJobs.length} jobs found`}
             </p>
           </div>
 
@@ -314,12 +342,14 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-lg mb-4">No jobs found matching your criteria</div>
+                <div className="text-gray-400 text-lg mb-4">
+                  No jobs found matching your criteria
+                </div>
                 <button
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
-                    setSelectedType('all');
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                    setSelectedType("all");
                     setBudgetRange([0, 20000]);
                   }}
                   className="btn-primary"
@@ -335,30 +365,45 @@ export default function JobsPage({ params }: { params: Promise<{ locale: string 
   );
 }
 
-function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave: () => void }) {
+function JobCard({
+  job,
+  isSaved,
+  onSave,
+}: {
+  job: Job;
+  isSaved: boolean;
+  onSave: () => void;
+}) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'full-time': return 'bg-green-500/20 text-green-400';
-      case 'part-time': return 'bg-blue-500/20 text-blue-400';
-      case 'contract': return 'bg-purple-500/20 text-purple-400';
-      case 'freelance': return 'bg-orange-500/20 text-orange-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      case "full-time":
+        return "bg-green-500/20 text-green-400";
+      case "part-time":
+        return "bg-blue-500/20 text-blue-400";
+      case "contract":
+        return "bg-purple-500/20 text-purple-400";
+      case "freelance":
+        return "bg-orange-500/20 text-orange-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
     }
   };
 
   return (
-    <div className={cn(
-      "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
-      job.featured && "ring-2 ring-purple-500/30",
-      job.urgent && "ring-2 ring-red-500/30"
-    )}>
+    <div
+      className={cn(
+        "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
+        job.featured && "ring-2 ring-purple-500/30",
+        job.urgent && "ring-2 ring-red-500/30",
+      )}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -390,7 +435,11 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
             onClick={onSave}
             className="p-2 text-gray-400 hover:text-purple-400 transition-colors"
           >
-            {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+            {isSaved ? (
+              <BookmarkCheck className="w-5 h-5" />
+            ) : (
+              <Bookmark className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -423,13 +472,21 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <Clock className="w-4 h-4" />
-          <span className={cn("px-2 py-1 rounded-full text-xs", getTypeColor(job.type))}>
+          <span
+            className={cn(
+              "px-2 py-1 rounded-full text-xs",
+              getTypeColor(job.type),
+            )}
+          >
             {job.type}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <DollarSign className="w-4 h-4" />
-          <span>${job.budget.min.toLocaleString()} - ${job.budget.max.toLocaleString()}</span>
+          <span>
+            ${job.budget.min.toLocaleString()} - $
+            {job.budget.max.toLocaleString()}
+          </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <Users className="w-4 h-4" />

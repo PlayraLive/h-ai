@@ -287,24 +287,24 @@ export default function NotificationsPage() {
       <div className="pt-20 pb-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
                 <Link
                   href="/en/dashboard"
-                  className="p-2 rounded-xl bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
+                  className="p-2 rounded-xl bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 flex-shrink-0"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-100 to-blue-100 bg-clip-text text-transparent">
-                    Notifications Center
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-white via-purple-100 to-blue-100 bg-clip-text text-transparent">
+                    Notifications
                   </h1>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <p className="text-gray-400">
+                  <div className="mt-1 sm:mt-2">
+                    <p className="text-sm sm:text-base text-gray-400">
                       {unreadCount > 0 ? (
                         <span className="flex items-center space-x-2">
-                          <AlertCircle className="w-4 h-4 text-red-400" />
+                          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-400 flex-shrink-0" />
                           <span>
                             {unreadCount} unread notification
                             {unreadCount === 1 ? "" : "s"}
@@ -312,10 +312,11 @@ export default function NotificationsPage() {
                         </span>
                       ) : (
                         <span className="flex items-center space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          <span>
+                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
+                          <span className="hidden sm:inline">
                             All caught up! Great job staying organized.
                           </span>
+                          <span className="sm:hidden">All caught up!</span>
                         </span>
                       )}
                     </p>
@@ -323,14 +324,15 @@ export default function NotificationsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-end sm:justify-start">
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg"
+                    className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg text-sm sm:text-base"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    <span>Mark All Read</span>
+                    <span className="hidden sm:inline">Mark All Read</span>
+                    <span className="sm:hidden">Mark Read</span>
                   </button>
                 )}
               </div>
@@ -338,26 +340,31 @@ export default function NotificationsPage() {
           </div>
 
           {/* Controls Section */}
-          <div className="bg-gradient-to-r from-gray-800/50 via-gray-800/30 to-gray-800/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-gray-700/30 shadow-2xl">
-            <div className="flex flex-col lg:flex-row gap-6">
+          <div className="bg-gradient-to-r from-gray-800/50 via-gray-800/30 to-gray-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-700/30 shadow-2xl">
+            <div className="flex flex-col gap-4 sm:gap-6">
               {/* Search Bar */}
-              <div className="flex-1">
+              <div className="w-full">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search notifications by title or content..."
-                    className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                    placeholder="Search notifications..."
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 text-sm sm:text-base"
                   />
                 </div>
               </div>
 
               {/* Filter Options */}
-              <div className="flex items-center space-x-3">
-                <Filter className="w-5 h-5 text-gray-400" />
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <span className="text-sm text-gray-400 hidden sm:block">
+                    Filters:
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 overflow-x-auto pb-1">
                   {filterOptions.map((option) => {
                     const Icon = option.icon;
                     return (
@@ -365,17 +372,22 @@ export default function NotificationsPage() {
                         key={option.value}
                         onClick={() => setFilter(option.value)}
                         className={cn(
-                          "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 border",
+                          "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 sm:space-x-2 border whitespace-nowrap",
                           filter === option.value
                             ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white border-purple-500 shadow-lg"
                             : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border-gray-600/50",
                         )}
                       >
-                        <Icon className="w-4 h-4" />
-                        <span>{option.label}</span>
+                        <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="hidden sm:inline">{option.label}</span>
+                        <span className="sm:hidden">
+                          {option.label === "All Notifications"
+                            ? "All"
+                            : option.label}
+                        </span>
                         <span
                           className={cn(
-                            "px-2 py-0.5 rounded-full text-xs font-bold",
+                            "px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold",
                             filter === option.value
                               ? "bg-white/20 text-white"
                               : "bg-gray-600 text-gray-400",
@@ -392,11 +404,11 @@ export default function NotificationsPage() {
 
             {/* Bulk Actions */}
             {selectedCount > 0 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-700/50">
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-700/50">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <button
                     onClick={selectAll}
-                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors self-start"
                   >
                     {selectedCount === filteredNotifications.length
                       ? "Deselect All"
@@ -407,17 +419,17 @@ export default function NotificationsPage() {
                     selected
                   </span>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <button
                     onClick={markSelectedAsRead}
-                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 border border-green-600/30"
+                    className="px-3 sm:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 border border-green-600/30"
                   >
                     <Check className="w-4 h-4" />
                     <span>Mark Read</span>
                   </button>
                   <button
                     onClick={deleteSelected}
-                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 border border-red-600/30"
+                    className="px-3 sm:px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 border border-red-600/30"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Delete</span>
@@ -428,16 +440,16 @@ export default function NotificationsPage() {
           </div>
 
           {/* Notifications List */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {filteredNotifications.length === 0 ? (
-              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-gray-700/30">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Bell className="w-10 h-10 text-gray-400" />
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-8 sm:p-12 text-center border border-gray-700/30">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <Bell className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                   No Notifications Found
                 </h3>
-                <p className="text-gray-400 text-lg">
+                <p className="text-gray-400 text-base sm:text-lg">
                   {searchQuery
                     ? "Try adjusting your search terms or filters"
                     : "You're all caught up! Check back later for new updates."}
@@ -445,7 +457,7 @@ export default function NotificationsPage() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
+                    className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors text-sm sm:text-base"
                   >
                     Clear Search
                   </button>
@@ -456,13 +468,13 @@ export default function NotificationsPage() {
                 <div
                   key={notification.id}
                   className={cn(
-                    "bg-gradient-to-r from-gray-800/40 via-gray-800/30 to-gray-800/40 backdrop-blur-sm rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl group border",
+                    "bg-gradient-to-r from-gray-800/40 via-gray-800/30 to-gray-800/40 backdrop-blur-sm rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-2xl group border",
                     !notification.read
                       ? "border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-blue-500/5 to-purple-500/5 shadow-lg shadow-purple-500/10"
                       : "border-gray-700/30 hover:border-gray-600/50",
                   )}
                 >
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start space-x-3 sm:space-x-4">
                     {/* Selection Checkbox */}
                     <div className="flex-shrink-0 pt-1">
                       <input
@@ -484,12 +496,12 @@ export default function NotificationsPage() {
                           <UserAvatar
                             src={notification.avatar}
                             alt=""
-                            size="lg"
-                            className="ring-2 ring-gray-600"
+                            size="md"
+                            className="ring-2 ring-gray-600 w-10 h-10 sm:w-12 sm:h-12"
                           />
                           <div
                             className={cn(
-                              "absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-gradient-to-r",
+                              "absolute -bottom-0.5 -right-0.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white text-xs bg-gradient-to-r",
                               getNotificationColor(notification.type),
                             )}
                           >
@@ -499,7 +511,7 @@ export default function NotificationsPage() {
                       ) : (
                         <div
                           className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center text-white bg-gradient-to-r shadow-lg",
+                            "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white bg-gradient-to-r shadow-lg",
                             getNotificationColor(notification.type),
                           )}
                         >
@@ -510,12 +522,12 @@ export default function NotificationsPage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
                             <h3
                               className={cn(
-                                "text-lg font-bold",
+                                "text-base sm:text-lg font-bold leading-tight",
                                 notification.read
                                   ? "text-gray-300"
                                   : "text-white",
@@ -525,27 +537,27 @@ export default function NotificationsPage() {
                             </h3>
                             <div
                               className={cn(
-                                "px-2 py-1 rounded-full text-xs font-medium border",
+                                "px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border self-start",
                                 getPriorityColor(notification.priority),
                               )}
                             >
                               {notification.priority.toUpperCase()}
                             </div>
                           </div>
-                          <p className="text-gray-400 leading-relaxed mb-3">
+                          <p className="text-gray-400 leading-relaxed mb-2 sm:mb-3 text-sm sm:text-base line-clamp-2 sm:line-clamp-none">
                             {notification.message}
                           </p>
-                          <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              <Clock className="w-4 h-4" />
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                               <span>{notification.time}</span>
                             </div>
                             {notification.actionUrl && (
                               <a
                                 href={notification.actionUrl}
-                                className="inline-flex items-center space-x-2 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                                className="inline-flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                                 <span>View Details</span>
                               </a>
                             )}
@@ -553,22 +565,22 @@ export default function NotificationsPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           {!notification.read && (
                             <button
                               onClick={() => markAsRead(notification.id)}
-                              className="p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-all duration-200"
+                              className="p-1.5 sm:p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-all duration-200"
                               title="Mark as read"
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                           )}
                           <button
                             onClick={() => deleteNotification(notification.id)}
-                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                            className="p-1.5 sm:p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
                             title="Delete notification"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       </div>
@@ -586,8 +598,8 @@ export default function NotificationsPage() {
 
           {/* Load More Button (if needed) */}
           {filteredNotifications.length > 0 && (
-            <div className="text-center mt-8">
-              <button className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg">
+            <div className="text-center mt-6 sm:mt-8">
+              <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg text-sm sm:text-base">
                 Load More Notifications
               </button>
             </div>
