@@ -7,13 +7,6 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
-    // Removed CSP to allow all SVG images
-    domains: [
-      'api.dicebear.com',
-      'ui-avatars.com', 
-      'images.unsplash.com',
-      'avatars.githubusercontent.com'
-    ],
     remotePatterns: [
       {
         protocol: 'https',

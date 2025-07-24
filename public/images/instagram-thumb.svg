@@ -1,0 +1,28 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="16" fill="url(#paint0_linear_instagram)"/>
+  <rect x="12" y="12" width="40" height="40" rx="12" fill="white"/>
+  <circle cx="32" cy="32" r="10" fill="none" stroke="url(#paint1_linear_instagram)" stroke-width="3"/>
+  <circle cx="44" cy="20" r="3" fill="url(#paint2_linear_instagram)"/>
+  <rect x="16" y="16" width="32" height="32" rx="8" fill="none" stroke="url(#paint3_linear_instagram)" stroke-width="2"/>
+  <defs>
+    <linearGradient id="paint0_linear_instagram" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="0.5" stop-color="#EF4444"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="paint1_linear_instagram" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="0.5" stop-color="#EF4444"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="paint2_linear_instagram" x1="41" y1="17" x2="47" y2="23" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="paint3_linear_instagram" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="0.5" stop-color="#EF4444"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+</svg>
