@@ -1,11 +1,30 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="64" height="64" rx="16" fill="url(#paint0_linear_voice)"/>
   <path d="M32 12C28.6863 12 26 14.6863 26 18V32C26 35.3137 28.6863 38 32 38C35.3137 38 38 35.3137 38 32V18C38 14.6863 35.3137 12 32 12Z" fill="white"/>
-  <path d="M20 28V32C20 39.732 26.268 46 34 46V50H28V52H40V50H34V46C41.732 46 48 39.732 48 32V28H46V32C46 38.627 40.627 44 34 44C27.373 44 22 38.627 22 32V28H20Z" fill="white"/>
+  <path d="M20 28C20.5523 28 21 28.4477 21 29V32C21 38.6274 26.3726 44 33 44H33C39.6274 44 45 38.6274 45 32V29C45 28.4477 45.4477 28 46 28C46.5523 28 47 28.4477 47 29V32C47 39.732 40.732 46 33 46V50H38C38.5523 50 39 50.4477 39 51C39 51.5523 38.5523 52 38 52H26C25.4477 52 25 51.5523 25 51C25 50.4477 25.4477 50 26 50H31V46C23.268 46 17 39.732 17 32V29C17 28.4477 17.4477 28 18 28C18.5523 28 19 28.4477 19 29V32C19 38.6274 24.3726 44 31 44H33C39.6274 44 45 38.6274 45 32V29C45 28.4477 44.5523 28 44 28C43.4477 28 43 28.4477 43 29V32C43 37.5228 38.5228 42 33 42H31C25.4772 42 21 37.5228 21 32V29C21 28.4477 20.5523 28 20 28Z" fill="url(#paint1_linear_voice)"/>
+  <circle cx="28" cy="22" r="2" fill="url(#paint2_linear_voice)"/>
+  <circle cx="36" cy="22" r="2" fill="url(#paint3_linear_voice)"/>
+  <circle cx="32" cy="28" r="2" fill="url(#paint4_linear_voice)"/>
   <defs>
     <linearGradient id="paint0_linear_voice" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
       <stop stop-color="#EC4899"/>
       <stop offset="1" stop-color="#8B5CF6"/>
     </linearGradient>
+    <linearGradient id="paint1_linear_voice" x1="17" y1="28" x2="47" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="paint2_linear_voice" x1="26" y1="20" x2="30" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="paint3_linear_voice" x1="34" y1="20" x2="38" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="paint4_linear_voice" x1="30" y1="26" x2="34" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
   </defs>
-</svg>
+</svg> 
