@@ -26,6 +26,7 @@ import { AISpecialist } from '@/types';
 import { useAuthContext } from '@/contexts/AuthContext';
 import AISpecialistChat from '@/components/messaging/AISpecialistChat';
 import { AIBriefData } from '@/services/messaging';
+import { AIOrderService } from '@/lib/services/ai-order-service';
 
 interface OrderPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -39,9 +40,11 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   
   const [specialist, setSpecialist] = useState<AISpecialist | null>(null);
   const [orderType, setOrderType] = useState<'monthly' | 'task'>('task');
-  const [currentStep, setCurrentStep] = useState<'select' | 'brief' | 'ai_chat' | 'payment' | 'confirmation'>('select');
+  const [currentStep, setCurrentStep] = useState<'select' | 'ai_chat' | 'payment' | 'confirmation'>('select');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'task'>('task'); // Set default to 'task'
+  const [orderData, setOrderData] = useState<any>(null);
   const [showAIChat, setShowAIChat] = useState(false);
-  const [generatedBrief, setGeneratedBrief] = useState<AIBriefData | null>(null);
+  const [aiGeneratedBrief, setAiGeneratedBrief] = useState<AIBriefData | null>(null);
   
   // Form state
   const [briefData, setBriefData] = useState({
@@ -98,7 +101,7 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
       router.back();
     } else {
       // Go back to previous step
-      const steps = ['select', 'brief', 'ai_chat', 'payment', 'confirmation'] as const;
+      const steps = ['select', 'ai_chat', 'payment', 'confirmation'] as const;
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex > 0) {
         setCurrentStep(steps[currentIndex - 1]);
@@ -107,37 +110,77 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   };
 
   const handleNext = () => {
+    console.log('🔄 handleNext called - currentStep:', currentStep, 'selectedPlan:', selectedPlan, 'orderType:', orderType);
+    
     if (currentStep === 'select') {
-      setShowAIChat(true);
+      console.log('✅ Moving to AI chat step');
       setCurrentStep('ai_chat');
-    } else {
-      const steps = ['select', 'brief', 'ai_chat', 'payment', 'confirmation'] as const;
-      const currentIndex = steps.indexOf(currentStep);
-      if (currentIndex < steps.length - 1) {
-        setCurrentStep(steps[currentIndex + 1]);
-      }
+      setShowAIChat(true);
+    } else if (currentStep === 'ai_chat') {
+      console.log('✅ Moving to payment step');
+      setCurrentStep('payment');
+      setShowAIChat(false);
     }
   };
 
   const handleBriefGenerated = (brief: AIBriefData) => {
-    setGeneratedBrief(brief);
+    setAiGeneratedBrief(brief);
+    console.log('AI Generated Brief:', brief);
   };
 
   const handleContinueOrder = () => {
-    setCurrentStep('brief');
+    setCurrentStep('payment');
+    setShowAIChat(false);
   };
 
   const handleOrder = async () => {
-    // TODO: Implement order creation
-    console.log('Creating order:', {
-      specialistId: specialist.id,
-      orderType,
-      briefData,
-      clientId: user?.$id
-    });
-    
-    // For now, just show confirmation
-    setCurrentStep('confirmation');
+    if (!user || !specialist) {
+      console.error('Missing user or specialist data');
+      return;
+    }
+
+    try {
+      console.log('Creating AI order:', {
+        specialistId: specialist.id,
+        orderType,
+        clientId: user.$id
+      });
+
+      // Create the order using AIOrderService
+      const order = await AIOrderService.createOrder({
+        clientId: user.$id,
+        specialistId: specialist.id,
+        specialistName: specialist.name,
+        specialistTitle: specialist.title,
+        specialistAvatar: specialist.avatar,
+        orderType: orderType,
+        price: orderType === 'monthly' ? specialist.monthlyPrice : specialist.taskPrice,
+        aiGeneratedBrief: aiGeneratedBrief?.generatedBrief?.description || '',
+        title: `${specialist.title} - ${orderType === 'monthly' ? 'Monthly Subscription' : 'Single Task'}`,
+        description: aiGeneratedBrief?.originalRequest || briefData.description || `${orderType === 'monthly' ? 'Monthly subscription' : 'Single task'} with ${specialist.name}`
+      });
+
+      console.log('✅ Order created successfully:', order);
+      
+      // Show confirmation first
+      setCurrentStep('confirmation');
+      
+      // Store order data for confirmation screen
+      setOrderData(order);
+      
+      // After a short delay, redirect to messages with the conversation
+      setTimeout(() => {
+        if (order.conversationId) {
+          router.push(`/${locale}/messages?conversation=${order.conversationId}`);
+        } else {
+          router.push(`/${locale}/messages`);
+        }
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Error creating order:', error);
+      alert('Произошла ошибка при создании заказа. Попробуйте позже.');
+    }
   };
 
   const renderStepContent = () => {
@@ -200,7 +243,11 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
                       ? 'border-purple-500 bg-purple-500/10' 
                       : 'border-gray-700/30 hover:border-gray-600/50'
                   }`}
-                  onClick={() => setOrderType('task')}
+                  onClick={() => {
+                    console.log('📋 Task plan selected');
+                    setOrderType('task');
+                    setSelectedPlan('task');
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -244,7 +291,11 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
                       ? 'border-purple-500 bg-purple-500/10' 
                       : 'border-gray-700/30 hover:border-gray-600/50'
                   }`}
-                  onClick={() => setOrderType('monthly')}
+                  onClick={() => {
+                    console.log('📅 Monthly plan selected');
+                    setOrderType('monthly');
+                    setSelectedPlan('monthly');
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -289,7 +340,10 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
 
             {/* Continue Button */}
             <button
-              onClick={handleNext}
+              onClick={() => {
+                console.log('🚀 Main continue button clicked');
+                handleNext();
+              }}
               className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
             >
               <span>Поговорить с AI специалистом</span>
@@ -313,7 +367,7 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
               className="mx-auto"
             />
 
-            {generatedBrief && (
+            {aiGeneratedBrief && (
               <div className="text-center">
                 <p className="text-green-400 mb-4">✅ Техническое задание готово!</p>
                 <button
@@ -324,84 +378,6 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
                 </button>
               </div>
             )}
-          </div>
-        );
-
-      case 'brief':
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">Project Brief</h3>
-              <p className="text-gray-400">Tell {specialist.name} about your project</p>
-            </div>
-
-            <div className="space-y-4">
-              {/* Project Title */}
-              <div>
-                <label className="block text-white font-medium mb-2">Project Title</label>
-                <input
-                  type="text"
-                  value={briefData.title}
-                  onChange={(e) => setBriefData({...briefData, title: e.target.value})}
-                  placeholder="e.g., Create a logo for my startup"
-                  className="w-full bg-gray-800/50 border border-gray-700/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Project Description */}
-              <div>
-                <label className="block text-white font-medium mb-2">Project Description</label>
-                <textarea
-                  value={briefData.description}
-                  onChange={(e) => setBriefData({...briefData, description: e.target.value})}
-                  placeholder="Describe your project in detail..."
-                  rows={6}
-                  className="w-full bg-gray-800/50 border border-gray-700/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none resize-none"
-                />
-              </div>
-
-              {/* Requirements */}
-              <div>
-                <label className="block text-white font-medium mb-2">Specific Requirements</label>
-                <textarea
-                  value={briefData.requirements}
-                  onChange={(e) => setBriefData({...briefData, requirements: e.target.value})}
-                  placeholder="Any specific requirements, style preferences, etc..."
-                  rows={4}
-                  className="w-full bg-gray-800/50 border border-gray-700/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none resize-none"
-                />
-              </div>
-
-              {/* Deadline */}
-              <div>
-                <label className="block text-white font-medium mb-2">Deadline (Optional)</label>
-                <input
-                  type="date"
-                  value={briefData.deadline}
-                  onChange={(e) => setBriefData({...briefData, deadline: e.target.value})}
-                  className="w-full bg-gray-800/50 border border-gray-700/30 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
-                />
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label className="block text-white font-medium mb-2">Attachments (Optional)</label>
-                <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-purple-500 transition-colors cursor-pointer">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-400">Click to upload files or drag and drop</p>
-                  <p className="text-gray-500 text-sm mt-1">PNG, JPG, PDF up to 10MB</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleNext}
-              disabled={!briefData.title || !briefData.description}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
-            >
-              <span>Continue to Payment</span>
-              <ChevronRight className="w-5 h-5" />
-            </button>
           </div>
         );
 
@@ -557,6 +533,16 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
     }
   };
 
+  const steps = [
+    { id: 'select', title: 'Выбор тарифа', completed: currentStep !== 'select' },
+    { id: 'ai_chat', title: 'Чат с AI', completed: currentStep === 'payment' || currentStep === 'confirmation' },
+    { id: 'payment', title: 'Оплата', completed: currentStep === 'confirmation' },
+    { id: 'confirmation', title: 'Подтверждение', completed: false }
+  ];
+
+  const stepIndex = steps.findIndex(step => step.id === currentStep);
+  const progress = ((stepIndex + 1) / steps.length) * 100;
+
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
       <Navbar />
@@ -576,44 +562,80 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
               <h1 className="text-2xl font-bold text-white">
                 {currentStep === 'select' && 'Choose Your Plan'}
                 {currentStep === 'ai_chat' && 'AI Consultation'}
-                {currentStep === 'brief' && 'Project Brief'}
                 {currentStep === 'payment' && 'Payment'}
                 {currentStep === 'confirmation' && 'Confirmation'}
               </h1>
               <p className="text-gray-400">
-                Step {['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1} of 5
+                Step {['select', 'ai_chat', 'payment', 'confirmation'].indexOf(currentStep) + 1} of 4
               </p>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              {['select', 'ai_chat', 'brief', 'payment', 'confirmation'].map((step, index) => (
-                <div
-                  key={step}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    ['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) >= index
+            <div className="flex items-center justify-between mb-4">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                    step.completed || currentStep === step.id
                       ? 'bg-purple-500 text-white'
-                      : 'bg-gray-700 text-gray-400'
-                  }`}
-                >
-                  {index + 1}
+                      : 'bg-gray-800 text-gray-400'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <span className={`ml-2 text-sm font-medium ${
+                    step.completed || currentStep === step.id
+                      ? 'text-purple-400'
+                      : 'text-gray-500'
+                  }`}>
+                    {step.title}
+                  </span>
+                  {index < steps.length - 1 && (
+                    <div className={`mx-4 h-1 w-12 ${
+                      step.completed ? 'bg-purple-500' : 'bg-gray-800'
+                    }`} />
+                  )}
                 </div>
               ))}
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                style={{
-                  width: `${(((['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1) / 5) * 100)}%`
-                }}
+            <div className="w-full bg-gray-800 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
           {/* Step Content */}
-          {renderStepContent()}
+          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-6">
+            {renderStepContent()}
+          </div>
+
+          {/* Action Buttons */}
+          {!showAIChat && (
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={() => router.back()}
+                className="px-6 py-2 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-800 hover:border-gray-500 transition-colors"
+              >
+                Назад
+              </button>
+              
+              {currentStep !== 'confirmation' && (
+                <button
+                  onClick={() => {
+                    console.log('⬇️ Bottom continue button clicked');
+                    handleNext();
+                  }}
+                  disabled={false}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:from-purple-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed transition-all"
+                >
+                  {currentStep === 'select' ? 'Продолжить' : 
+                   currentStep === 'ai_chat' ? 'К оплате' : 'Далее'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

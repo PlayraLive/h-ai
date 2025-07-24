@@ -13,6 +13,8 @@ import {
   Query,
 } from "@/lib/appwrite/database";
 import { InteractionsService } from "@/lib/appwrite/interactions";
+import { AIOrderService, OrderCard } from '@/lib/services/ai-order-service';
+import OrderCardComponent from '@/components/messaging/OrderCard';
 
 import PortfolioGrid from "@/components/portfolio/PortfolioGrid";
 import AddPortfolioForm from "@/components/portfolio/AddPortfolioForm";
@@ -40,6 +42,7 @@ import {
   Play,
   Heart,
   Trash2,
+  Bot,
 } from "lucide-react";
 // Navbar removed - using Sidebar instead
 import { cn, formatCurrency, formatRelativeTime } from "@/lib/utils";
@@ -63,6 +66,10 @@ export default function DashboardPage() {
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
   const [solutions, setSolutions] = useState<Reel[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
+
+  // Add AI orders state
+  const [aiOrders, setAiOrders] = useState<OrderCard[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Real user stats from database
   const [userStats, setUserStats] = useState({
@@ -199,6 +206,24 @@ export default function DashboardPage() {
       setStatsLoading(false);
     }
   }, [user]);
+
+  // Load AI orders
+  useEffect(() => {
+    if (!user) return;
+    
+    setLoadingOrders(true);
+    try {
+      const userOrders = AIOrderService.getUserOrders(user.$id);
+      const orderCards = userOrders.map(order => 
+        AIOrderService.generateOrderCard(order, userType === 'freelancer' ? 'specialist' : 'client')
+      );
+      setAiOrders(orderCards);
+    } catch (error) {
+      console.error('Error loading AI orders:', error);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, [user, userType]);
 
   // Set user type based on user data
   useEffect(() => {
@@ -592,6 +617,7 @@ export default function DashboardPage() {
           { id: "overview", label: "Overview" },
           { id: "portfolio", label: "Portfolio" },
           { id: "solutions", label: "Solutions" },
+          { id: "ai_orders", label: "AI Orders" },
           { id: "achievements", label: "Achievements" },
           { id: "earnings", label: "Earnings" },
         ]
@@ -599,6 +625,7 @@ export default function DashboardPage() {
           { id: "overview", label: "Overview" },
           { id: "projects", label: "Projects" },
           { id: "solutions", label: "Solutions" },
+          { id: "ai_orders", label: "AI Orders" },
           { id: "jobs", label: "Jobs" },
           { id: "earnings", label: "Earnings" },
         ];
@@ -908,6 +935,19 @@ export default function DashboardPage() {
                           Messages
                         </span>
                       </Link>
+
+                      {/* AI Orders Quick Access */}
+                      <button
+                        onClick={() => setActiveTab("ai_orders")}
+                        className="flex flex-col items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all duration-200 group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/25">
+                          <Bot className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xs text-purple-400 text-center font-medium">
+                          AI Orders
+                        </span>
+                      </button>
 
                       <Link
                         href="/en/payments"
@@ -1419,6 +1459,80 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {activeTab === "ai_orders" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">
+                    AI Specialist Orders
+                  </h2>
+                  <Link
+                    href="/en/ai-specialists"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <Bot className="w-4 h-4" />
+                    <span>Browse AI Specialists</span>
+                  </Link>
+                </div>
+
+                {loadingOrders ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading AI orders...</p>
+                    </div>
+                  </div>
+                ) : aiOrders.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {aiOrders.map((order) => (
+                      <OrderCardComponent
+                        key={order.orderId}
+                        order={order}
+                        onActionClick={(action, orderId) => {
+                          if (action === 'open_chat') {
+                            router.push(`/en/messages?ai_order=${orderId}`);
+                          } else if (action === 'view_progress') {
+                            router.push(`/en/projects/${orderId}`);
+                          }
+                        }}
+                        className="hover:scale-105 transition-transform duration-200"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-8 text-center">
+                    <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Bot className="w-8 h-8 text-purple-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">No AI Orders Yet</h3>
+                    <p className="text-gray-400 mb-6">
+                      {userType === 'client' 
+                        ? 'Start by ordering from one of our AI specialists to get expert help on your projects.'
+                        : 'No orders received yet. Your AI specialist profile is ready to receive orders from clients.'
+                      }
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link
+                        href="/en/ai-specialists"
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                      >
+                        <Bot className="w-5 h-5" />
+                        <span>Browse AI Specialists</span>
+                      </Link>
+                      {userType === 'freelancer' && (
+                        <Link
+                          href="/en/profile/edit"
+                          className="border border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                        >
+                          <Edit className="w-5 h-5" />
+                          <span>Setup AI Profile</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "analytics" && (
               <div className="glass-card p-6 rounded-2xl">
                 <h2 className="text-2xl font-bold text-white mb-6">
@@ -1432,6 +1546,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>

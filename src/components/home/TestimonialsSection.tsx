@@ -250,18 +250,65 @@ export function TestimonialsSection({ locale }: TestimonialsSectionProps) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="text-center">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center ${stat.color}`}>
-                  <Icon className="w-8 h-8" />
+              <div 
+                key={index} 
+                className="group text-center transform hover:scale-105 transition-all duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Icon Container with enhanced gradients */}
+                <div className={`w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${
+                  stat.color === 'text-blue-500' 
+                    ? 'from-blue-500 via-blue-600 to-cyan-500' 
+                    : stat.color === 'text-green-500'
+                    ? 'from-green-500 via-emerald-500 to-teal-500'
+                    : stat.color === 'text-yellow-500' 
+                    ? 'from-yellow-400 via-orange-500 to-red-500'
+                    : 'from-purple-500 via-pink-500 to-purple-600'
+                } flex items-center justify-center shadow-2xl group-hover:shadow-3xl transition-all duration-500 relative overflow-hidden`}>
+                  
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Rotating border effect */}
+                  <div className="absolute inset-0 rounded-2xl border-2 border-white/20 opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-500"></div>
+                  
+                  <Icon className="w-10 h-10 md:w-12 md:h-12 text-white relative z-10 drop-shadow-lg" />
                 </div>
-                <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                  {stat.value}
+
+                {/* Value with enhanced typography */}
+                <div className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 tracking-tight">
+                  <span className={`bg-gradient-to-r ${
+                    stat.color === 'text-blue-500' 
+                      ? 'from-blue-400 to-cyan-400' 
+                      : stat.color === 'text-green-500'
+                      ? 'from-green-400 to-emerald-400'
+                      : stat.color === 'text-yellow-500' 
+                      ? 'from-yellow-400 to-orange-400'
+                      : 'from-purple-400 to-pink-400'
+                  } bg-clip-text text-transparent drop-shadow-sm`}>
+                    {stat.value}
+                  </span>
                 </div>
-                <div className="text-gray-600">{stat.label}</div>
+
+                {/* Label with better styling */}
+                <div className="text-gray-300 font-medium text-sm md:text-base leading-tight px-2">
+                  {stat.label}
+                </div>
+
+                {/* Subtle hover glow effect */}
+                <div className={`absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-20 transition-all duration-700 ${
+                  stat.color === 'text-blue-500' 
+                    ? 'bg-blue-500' 
+                    : stat.color === 'text-green-500'
+                    ? 'bg-green-500'
+                    : stat.color === 'text-yellow-500' 
+                    ? 'bg-yellow-500'
+                    : 'bg-purple-500'
+                } -z-10`}></div>
               </div>
             );
           })}

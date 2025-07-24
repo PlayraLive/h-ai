@@ -4,6 +4,7 @@ import ReelsGrid from "@/components/ReelsGrid";
 import AISpecialistsGrid from "@/components/AISpecialistsGrid";
 
 import HeroBottomBar from "@/components/HeroBottomBar";
+import Footer from "@/components/Footer";
 
 import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { FeaturedFreelancersSection } from "@/components/home/FeaturedFreelancersSection";
@@ -48,15 +49,30 @@ export default async function Home({
         {/* Other Sections */}
         <CategoriesSection locale={locale} />
         
-        {/* Reels Section - moved below */}
-        <div className="py-20 bg-gray-950">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ReelsGrid limit={8} showTitle={true} />
+        {/* Enhanced Reels Section */}
+        <div className="relative py-24 bg-gradient-to-b from-gray-950 via-[#0A0A0F] to-gray-950">
+          {/* Background Effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 right-10 w-72 h-72 bg-blue-600/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-600/3 rounded-full blur-3xl" />
           </div>
+          
+          {/* Content */}
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ReelsGrid limit={8} showTitle={true} showViewAllButton={true} />
+          </div>
+          
+          {/* Decorative Elements */}
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
         </div>
         
         <FeaturedFreelancersSection locale={locale} />
         <TestimonialsSection locale={locale} />
+        
+        {/* Footer */}
+        <Footer locale={locale} />
       </div>
 
       {/* Mobile Version */}
@@ -71,15 +87,29 @@ export default async function Home({
         {/* Other Mobile Sections */}
         <CategoriesSection locale={locale} />
         
-        {/* Mobile Reels Section - moved below */}
-        <div className="py-20 bg-gray-950">
-          <div className="px-4">
-            <ReelsGrid limit={6} showTitle={true} />
+        {/* Enhanced Mobile Reels Section */}
+        <div className="relative py-20 bg-gradient-to-b from-gray-950 via-[#0A0A0F] to-gray-950">
+          {/* Background Effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-5 w-48 h-48 bg-purple-600/5 rounded-full blur-2xl" />
+            <div className="absolute bottom-10 right-5 w-48 h-48 bg-blue-600/5 rounded-full blur-2xl" />
           </div>
+          
+          {/* Content */}
+          <div className="relative px-4">
+            <ReelsGrid limit={6} showTitle={true} showViewAllButton={true} />
+          </div>
+          
+          {/* Decorative Elements */}
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
         </div>
         
         <FeaturedFreelancersSection locale={locale} />
         <TestimonialsSection locale={locale} />
+        
+        {/* Mobile Footer */}
+        <Footer locale={locale} />
       </div>
     </>
   );

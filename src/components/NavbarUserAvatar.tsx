@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, LogOut, Settings, Briefcase, Globe } from "lucide-react";
+import { User, LogOut, Settings, Briefcase, Globe, MessageCircle, FileText } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -129,6 +129,15 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
               </Link>
 
               <Link
+                href={`/${locale}/messages`}
+                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Messages</span>
+              </Link>
+
+              <Link
                 href={`/${locale}/profile`}
                 className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                 onClick={() => setIsOpen(false)}
@@ -140,9 +149,8 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
               {/* Divider */}
               <div className="border-t border-gray-700 my-1" />
 
-              {/* Logout */}
               {/* Language Switcher */}
-              <div className="px-4 py-2 border-t border-gray-700">
+              <div className="px-4 py-2">
                 <div className="flex items-center space-x-2 text-sm text-gray-300 mb-2">
                   <Globe className="w-4 h-4" />
                   <span>Language</span>
@@ -170,6 +178,16 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
                   </button>
                 </div>
               </div>
+
+              {/* Terms of Use */}
+              <Link
+                href={`/${locale}/terms`}
+                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Terms of Use</span>
+              </Link>
 
               {/* Divider */}
               <div className="border-t border-gray-700 my-1" />

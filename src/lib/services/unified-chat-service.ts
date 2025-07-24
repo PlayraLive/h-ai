@@ -10,7 +10,7 @@ import {
 } from '@/services/messaging';
 import { NotificationService } from './notification-service';
 
-export interface UnifiedConversation extends Conversation {
+export interface UnifiedConversation extends Omit<Conversation, 'conversationType'> {
   participants: string[];
   participantDetails: Array<{
     userId: string;
@@ -53,7 +53,7 @@ export interface ConversationFilter {
   offset?: number;
 }
 
-export class UnifiedChatService extends messagingService {
+export class UnifiedChatService {
   
   // Создать или получить конверсацию для AI заказа
   static async getOrCreateAIOrderConversation(
@@ -277,7 +277,7 @@ export class UnifiedChatService extends messagingService {
         tags: conversation.tags ? JSON.parse(conversation.tags as string) : []
       } as UnifiedConversation;
     } catch {
-      return conversation as UnifiedConversation;
+      return conversation as unknown as UnifiedConversation;
     }
   }
 
