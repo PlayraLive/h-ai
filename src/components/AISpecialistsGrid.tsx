@@ -29,6 +29,7 @@ function AISpecialistCard({ specialist, onOrder }: AISpecialistCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showVoiceIntro, setShowVoiceIntro] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleVideoClick = () => {
@@ -54,6 +55,24 @@ function AISpecialistCard({ specialist, onOrder }: AISpecialistCardProps) {
     setShowVoiceIntro(false);
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  // Generate consistent colors based on specialist name
+  const getGradientFromName = (name: string) => {
+    const colors = [
+      'from-purple-500 to-blue-500',
+      'from-pink-500 to-purple-500', 
+      'from-blue-500 to-cyan-500',
+      'from-green-500 to-teal-500',
+      'from-orange-500 to-red-500',
+      'from-indigo-500 to-purple-500'
+    ];
+    const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[index % colors.length];
+  };
+
   return (
     <div 
       className="relative group bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/30 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20"
@@ -77,21 +96,26 @@ function AISpecialistCard({ specialist, onOrder }: AISpecialistCardProps) {
         </div>
       )}
 
-      {/* Video Background */}
+      {/* Avatar/Image Background */}
       <div className="relative h-80 overflow-hidden">
-        {/* Placeholder for video - would be actual video in production */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 to-blue-600/30">
-          <Image
-            src={specialist.avatar}
-            alt={specialist.name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            onError={(e) => {
-              // Fallback for missing images
-              e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${specialist.name}`;
-            }}
-          />
-        </div>
+        {imageError ? (
+          // Gradient fallback with initials
+          <div className={`absolute inset-0 bg-gradient-to-br ${getGradientFromName(specialist.name)} flex items-center justify-center`}>
+            <div className="text-white text-6xl font-bold">
+              {specialist.name.split(' ').map(word => word[0]).join('')}
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 to-blue-600/30">
+            <Image
+              src={specialist.avatar}
+              alt={specialist.name}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              onError={handleImageError}
+            />
+          </div>
+        )}
         
         {/* Video Play Button */}
         <div 
