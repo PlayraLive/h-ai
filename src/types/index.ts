@@ -277,3 +277,123 @@ export interface FreelancerFilters {
   sortBy?: 'rating' | 'rate-low' | 'rate-high' | 'completed';
   search?: string;
 }
+
+// AI Specialists Types
+export interface AISpecialist {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  shortDescription: string;
+  category: string;
+  avatar: string;
+  videoUrl: string;
+  voiceIntro: string; // Text that AI specialist "says" on hover
+  skills: string[];
+  aiProviders: ('openai' | 'anthropic' | 'grok')[];
+  
+  // Pricing
+  monthlyPrice: number;
+  taskPrice: number;
+  currency: string;
+  
+  // Capabilities
+  capabilities: string[];
+  deliveryTime: string;
+  examples: string[];
+  
+  // Stats
+  rating: number;
+  completedTasks: number;
+  responseTime: string;
+  
+  // Availability
+  isActive: boolean;
+  isPopular: boolean;
+  isFeatured: boolean;
+}
+
+export interface AISpecialistOrder {
+  $id: string;
+  $createdAt: string;
+  $updatedAt: string;
+  
+  // Order details
+  specialistId: string;
+  clientId: string;
+  orderType: 'monthly' | 'task';
+  status: 'pending' | 'briefing' | 'in_progress' | 'review' | 'completed' | 'cancelled';
+  
+  // Brief
+  taskBrief: string;
+  requirements: string[];
+  attachments: string[];
+  deadline: string;
+  
+  // Communication
+  messages: AISpecialistMessage[];
+  
+  // Deliverables
+  deliverables: string[];
+  deliveryNotes: string;
+  
+  // Payment
+  amount: number;
+  platformFee: number;
+  status_payment: 'pending' | 'paid' | 'refunded';
+  
+  // Workflow
+  approvedAt?: string;
+  completedAt?: string;
+  
+  // Rating
+  clientRating?: number;
+  clientReview?: string;
+  
+  // Timeline
+  timeline: AITaskTimeline[];
+}
+
+export interface AISpecialistMessage {
+  id: string;
+  senderId: string; // 'ai' for AI specialist, or user ID
+  senderType: 'ai' | 'client';
+  message: string;
+  messageType: 'text' | 'file' | 'briefing' | 'progress' | 'approval';
+  attachments?: string[];
+  timestamp: string;
+  read: boolean;
+}
+
+export interface AITaskTimeline {
+  id: string;
+  stage: 'brief_received' | 'brief_approved' | 'work_started' | 'progress_update' | 'work_completed' | 'client_approval' | 'delivered';
+  title: string;
+  description: string;
+  timestamp: string;
+  data?: any;
+}
+
+export interface AISpecialistSubscription {
+  $id: string;
+  $createdAt: string;
+  $updatedAt: string;
+  
+  clientId: string;
+  specialistId: string;
+  subscriptionType: 'monthly';
+  status: 'active' | 'cancelled' | 'paused';
+  
+  // Usage
+  tasksUsed: number;
+  tasksLimit: number;
+  
+  // Billing
+  amount: number;
+  nextBillingDate: string;
+  
+  // Settings
+  autoRenew: boolean;
+  pausedAt?: string;
+  cancelledAt?: string;
+}

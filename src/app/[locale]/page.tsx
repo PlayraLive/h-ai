@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 
 import ReelsGrid from "@/components/ReelsGrid";
+import AISpecialistsGrid from "@/components/AISpecialistsGrid";
 
 import HeroBottomBar from "@/components/HeroBottomBar";
 
@@ -21,7 +22,7 @@ export default async function Home({
       <div className="hidden md:block min-h-screen bg-[#0A0A0F]">
         <Navbar />
 
-        {/* Hero Section with Reels */}
+        {/* Hero Section with AI Specialists */}
         <div className="relative min-h-screen flex flex-col">
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-10 space-y-16">
@@ -29,7 +30,7 @@ export default async function Home({
               className="w-full max-w-7xl mt-30"
               style={{ marginTop: "30px" }}
             >
-              <ReelsGrid limit={4} showTitle={true} />
+              <AISpecialistsGrid limit={4} showTitle={true} />
             </div>
           </div>
 
@@ -46,6 +47,14 @@ export default async function Home({
 
         {/* Other Sections */}
         <CategoriesSection locale={locale} />
+        
+        {/* Reels Section - moved below */}
+        <div className="py-20 bg-gray-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ReelsGrid limit={8} showTitle={true} />
+          </div>
+        </div>
+        
         <FeaturedFreelancersSection locale={locale} />
         <TestimonialsSection locale={locale} />
       </div>
@@ -54,13 +63,21 @@ export default async function Home({
       <div className="md:hidden min-h-screen bg-[#0A0A0F]">
         <Navbar />
 
-        {/* Mobile Reels Grid */}
+        {/* Mobile AI Specialists Grid */}
         <div className="px-4 pt-24 pb-6">
-          <ReelsGrid limit={8} showTitle={true} />
+          <AISpecialistsGrid limit={4} showTitle={true} />
         </div>
 
         {/* Other Mobile Sections */}
         <CategoriesSection locale={locale} />
+        
+        {/* Mobile Reels Section - moved below */}
+        <div className="py-20 bg-gray-950">
+          <div className="px-4">
+            <ReelsGrid limit={6} showTitle={true} />
+          </div>
+        </div>
+        
         <FeaturedFreelancersSection locale={locale} />
         <TestimonialsSection locale={locale} />
       </div>

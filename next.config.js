@@ -13,7 +13,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['localhost', 'cloud.appwrite.io', 'images.unsplash.com'],
+    domains: ['localhost', 'cloud.appwrite.io', 'images.unsplash.com', 'api.dicebear.com'],
   },
 }
 

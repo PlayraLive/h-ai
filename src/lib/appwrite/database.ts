@@ -26,7 +26,12 @@ export const COLLECTIONS = {
   ORDERS: 'orders',
   PROJECT_CUSTOMIZATIONS: 'project_customizations',
   REEL_INTERACTIONS: 'reel_interactions',
-  AI_SERVICE_ORDERS: 'ai_service_orders'
+  AI_SERVICE_ORDERS: 'ai_service_orders',
+  // AI Specialists Collections
+  AI_SPECIALISTS: 'ai_specialists',
+  AI_ORDERS: 'ai_orders',
+  AI_SUBSCRIPTIONS: 'ai_subscriptions',
+  AI_MESSAGES: 'ai_messages'
 };
 
 // Job Status Types
