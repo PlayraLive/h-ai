@@ -33,7 +33,7 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   const { locale, id } = React.use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated, isLoading, initializing } = useAuthContext();
   
   const [specialist, setSpecialist] = useState<AISpecialist | null>(null);
   const [orderType, setOrderType] = useState<'monthly' | 'task'>('task');
@@ -68,18 +68,22 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   }, [id, router, locale, searchParams]);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
+    // Redirect to login if not authenticated (but only after initialization is complete)
+    if (!isLoading && !initializing && !isAuthenticated) {
       router.push(`/${locale}/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
-  }, [isAuthenticated, router, locale]);
+  }, [isAuthenticated, isLoading, initializing, router, locale]);
 
-  if (!specialist || !isAuthenticated) {
+  if (!specialist || isLoading || initializing || (initializing === false && !isAuthenticated)) {
     return (
       <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-400">
+            {!specialist ? 'Loading specialist...' : 
+             isLoading || initializing ? 'Checking authentication...' : 
+             'Loading...'}
+          </p>
         </div>
       </div>
     );
