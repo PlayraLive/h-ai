@@ -321,10 +321,10 @@ class MessagingService {
     } catch (error) {
       console.error('❌ Error sending message:', error);
       console.error('Error details:', {
-        name: (error as any)?.name,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        type: (error as any)?.type
+        name: (error as Error)?.name,
+        message: (error as Error)?.message,
+        code: (error as { code?: string })?.code,
+        type: (error as { type?: string })?.type
       });
       throw error;
     }
@@ -565,15 +565,13 @@ class MessagingService {
   // 🔄 Подписка на real-time обновления
   subscribeToConversation(
     conversationId: string,
-    callbacks: {
+    _callbacks: {
       onMessage?: (message: Message) => void;
       onMessageUpdate?: (message: Message) => void;
       onMessageDelete?: (messageId: string) => void;
       onTyping?: (typing: TypingIndicator) => void;
     }
   ): () => void {
-    const channelName = `databases.${DATABASE_ID}.collections.messages.documents`;
-    
     // TODO: Fix Realtime import and re-enable
     console.log('Real-time subscriptions temporarily disabled for:', conversationId);
 
@@ -714,34 +712,34 @@ class MessagingService {
   }
 
   // 🔧 Вспомогательные методы
-  private parseMessage(doc: any): Message {
+  private parseMessage(doc: { [key: string]: unknown }): Message {
     return {
       ...doc,
-      orderData: doc.orderData ? JSON.parse(doc.orderData) : undefined,
-      timelineData: doc.timelineData ? JSON.parse(doc.timelineData) : undefined,
-      milestoneData: doc.milestoneData ? JSON.parse(doc.milestoneData) : undefined,
-      reactions: doc.reactions ? JSON.parse(doc.reactions) : [],
-      metadata: doc.metadata ? JSON.parse(doc.metadata) : undefined
-    };
+      orderData: doc.orderData ? JSON.parse(doc.orderData as string) : undefined,
+      timelineData: doc.timelineData ? JSON.parse(doc.timelineData as string) : undefined,
+      milestoneData: doc.milestoneData ? JSON.parse(doc.milestoneData as string) : undefined,
+      reactions: doc.reactions ? JSON.parse(doc.reactions as string) : [],
+      metadata: doc.metadata ? JSON.parse(doc.metadata as string) : undefined
+    } as Message;
   }
 
-  private parseConversation(doc: any): Conversation {
+  private parseConversation(doc: { [key: string]: unknown }): Conversation {
     return {
       ...doc,
-      unreadCount: doc.unreadCount ? JSON.parse(doc.unreadCount) : {},
-      metadata: doc.metadata ? JSON.parse(doc.metadata) : undefined
-    };
+      unreadCount: doc.unreadCount ? JSON.parse(doc.unreadCount as string) : {},
+      metadata: doc.metadata ? JSON.parse(doc.metadata as string) : undefined
+    } as Conversation;
   }
 
-  private async updateConversationLastMessage(conversationId: string, message: any): Promise<void> {
+  private async updateConversationLastMessage(conversationId: string, message: { [key: string]: unknown }): Promise<void> {
     await databases.updateDocument(
       DATABASE_ID,
       'conversations',
       conversationId,
       {
-        lastMessage: message.content.substring(0, 100),
-        lastMessageAt: message.createdAt,
-        lastMessageBy: message.senderId,
+        lastMessage: (message.content as string)?.substring(0, 100) || '',
+        lastMessageAt: message.createdAt as string,
+        lastMessageBy: message.senderId as string,
         updatedAt: new Date().toISOString()
       }
     );

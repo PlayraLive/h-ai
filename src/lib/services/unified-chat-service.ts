@@ -1,6 +1,6 @@
 import { databases, DATABASE_ID, COLLECTIONS, ID, Query } from '@/lib/appwrite';
 import { 
-  MessagingService, 
+  messagingService, 
   AIOrderAttachment, 
   JobCardAttachment, 
   SolutionCardAttachment,
@@ -31,11 +31,15 @@ export interface UnifiedConversation extends Conversation {
     deadline?: string;
     skills?: string[];
     category?: string;
+    jobTitle?: string;
+    solutionTitle?: string;
+    specialistName?: string;
+    specialistTitle?: string;
   };
   lastActivity: string;
   unreadCounts: Record<string, number>;
   isPinned?: boolean;
-  isArchived?: boolean;
+  isArchived: boolean;
   tags?: string[];
 }
 
@@ -49,7 +53,7 @@ export interface ConversationFilter {
   offset?: number;
 }
 
-export class UnifiedChatService extends MessagingService {
+export class UnifiedChatService extends messagingService {
   
   // Создать или получить конверсацию для AI заказа
   static async getOrCreateAIOrderConversation(
@@ -237,11 +241,11 @@ export class UnifiedChatService extends MessagingService {
   }
 
   // Обогатить конверсацию дополнительными данными
-  static async enrichConversation(conversation: any): Promise<UnifiedConversation> {
+  static async enrichConversation(conversation: { [key: string]: unknown }): Promise<UnifiedConversation> {
     try {
       // Получаем данные участников
       const participantDetails = await Promise.all(
-        conversation.participants.map(async (userId: string) => {
+        (conversation.participants as string[]).map(async (userId: string) => {
           try {
             const user = await databases.getDocument(DATABASE_ID, COLLECTIONS.USERS, userId);
             return {
@@ -251,7 +255,7 @@ export class UnifiedChatService extends MessagingService {
               role: this.determineUserRole(userId, conversation),
               isOnline: false // В реальной реализации проверяем онлайн статус
             };
-          } catch (error) {
+          } catch {
             return {
               userId,
               name: 'Неизвестный пользователь',
@@ -265,21 +269,20 @@ export class UnifiedChatService extends MessagingService {
       return {
         ...conversation,
         participantDetails,
-        contextData: conversation.context_data ? JSON.parse(conversation.context_data) : undefined,
-        unreadCounts: conversation.unread_counts ? JSON.parse(conversation.unread_counts) : {},
-        lastActivity: conversation.last_activity || conversation.updated_at,
-        isPinned: conversation.is_pinned || false,
-        isArchived: conversation.is_archived || false,
-        tags: conversation.tags ? JSON.parse(conversation.tags) : []
-      };
-    } catch (error) {
-      console.error('Error enriching conversation:', error);
+        contextData: conversation.context_data ? JSON.parse(conversation.context_data as string) : undefined,
+        unreadCounts: conversation.unread_counts ? JSON.parse(conversation.unread_counts as string) : {},
+        lastActivity: (conversation.last_activity as string) || (conversation.updated_at as string),
+        isPinned: (conversation.is_pinned as boolean) || false,
+        isArchived: (conversation.is_archived as boolean) || false,
+        tags: conversation.tags ? JSON.parse(conversation.tags as string) : []
+      } as UnifiedConversation;
+    } catch {
       return conversation as UnifiedConversation;
     }
   }
 
   // Определить роль пользователя в конверсации
-  static determineUserRole(userId: string, conversation: any): 'client' | 'freelancer' | 'ai_specialist' {
+  static determineUserRole(userId: string, conversation: { [key: string]: unknown }): 'client' | 'freelancer' | 'ai_specialist' {
     if (conversation.conversation_type === 'ai_order') {
       return conversation.client_id === userId ? 'client' : 'ai_specialist';
     }
@@ -366,7 +369,7 @@ export class UnifiedChatService extends MessagingService {
     aiOrderData: AIOrderAttachment,
     message?: string
   ): Promise<Message> {
-    const messageResult = await MessagingService.sendAIOrderMessage({
+    const messageResult = await messagingService.sendAIOrderMessage({
       conversationId,
       senderId,
       receiverId,
@@ -392,7 +395,7 @@ export class UnifiedChatService extends MessagingService {
     jobCardData: JobCardAttachment,
     message?: string
   ): Promise<Message> {
-    const messageResult = await MessagingService.sendJobCardMessage({
+    const messageResult = await messagingService.sendJobCardMessage({
       conversationId,
       senderId,
       receiverId,
@@ -419,7 +422,7 @@ export class UnifiedChatService extends MessagingService {
     solutionCardData: SolutionCardAttachment,
     message?: string
   ): Promise<Message> {
-    const messageResult = await MessagingService.sendSolutionCardMessage({
+    const messageResult = await messagingService.sendSolutionCardMessage({
       conversationId,
       senderId,
       receiverId,
@@ -438,7 +441,7 @@ export class UnifiedChatService extends MessagingService {
     aiBriefData: AIBriefData,
     message?: string
   ): Promise<Message> {
-    const messageResult = await MessagingService.sendAIBriefMessage({
+    const messageResult = await messagingService.sendAIBriefMessage({
       conversationId,
       senderId,
       receiverId,
@@ -457,7 +460,7 @@ export class UnifiedChatService extends MessagingService {
   }
 
   // Архивировать конверсацию
-  static async archiveConversation(conversationId: string, userId: string): Promise<void> {
+  static async archiveConversation(conversationId: string): Promise<void> {
     try {
       await databases.updateDocument(
         DATABASE_ID,
@@ -475,7 +478,7 @@ export class UnifiedChatService extends MessagingService {
   }
 
   // Закрепить конверсацию
-  static async pinConversation(conversationId: string, userId: string): Promise<void> {
+  static async pinConversation(conversationId: string): Promise<void> {
     try {
       await databases.updateDocument(
         DATABASE_ID,

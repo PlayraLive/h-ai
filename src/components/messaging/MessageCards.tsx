@@ -1,447 +1,370 @@
 'use client';
 
 import React from 'react';
-import { 
-  Calendar, 
-  DollarSign, 
-  Clock, 
-  User, 
-  Star, 
-  CheckCircle, 
-  AlertCircle, 
-  ExternalLink,
-  Bot,
-  Briefcase,
-  Lightbulb,
-  MessageCircle,
-  ArrowRight
-} from 'lucide-react';
-import { 
-  AIOrderAttachment, 
-  JobCardAttachment, 
-  SolutionCardAttachment,
-  AIBriefData 
-} from '@/services/messaging';
+import { Clock, DollarSign, Star, Users, Download, ExternalLink } from 'lucide-react';
 
-// AI Order Card Component
-interface AIOrderCardProps {
-  data: AIOrderAttachment;
-  onAction?: (action: string, data: any) => void;
+// Типы для данных карточек
+interface AIOrderData {
+  specialistId: string;
+  specialistName: string;
+  specialistTitle: string;
+  specialistAvatar: string;
+  orderType: 'monthly' | 'task';
+  orderTitle: string;
+  orderDescription: string;
+  brief: string;
+  requirements?: string;
+  deadline?: string;
+  price: number;
+  currency: string;
+  status: string;
+  deliveryTime: string;
+  attachments?: string[];
 }
 
-export function AIOrderCard({ data, onAction }: AIOrderCardProps) {
+interface JobData {
+  jobId: string;
+  jobTitle: string;
+  jobDescription: string;
+  budget: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  deadline: string;
+  skills: string[];
+  clientId: string;
+  clientName: string;
+  clientAvatar?: string;
+  applicationsCount: number;
+  status: string;
+}
+
+interface SolutionData {
+  solutionId: string;
+  solutionTitle: string;
+  solutionDescription: string;
+  price: number;
+  currency: string;
+  category: string;
+  tags: string[];
+  sellerId: string;
+  sellerName: string;
+  sellerAvatar?: string;
+  rating: number;
+  salesCount: number;
+  previewImages: string[];
+  deliveryTime: string;
+  features: string[];
+}
+
+interface AIBriefCardData {
+  originalRequest: string;
+  generatedBrief: {
+    title: string;
+    description: string;
+    requirements: string[];
+    deliverables: string[];
+    timeline: string;
+    budget?: number;
+    technicalSpecs?: string[];
+    examples?: string[];
+  };
+  specialistId: string;
+  specialistName: string;
+  aiProvider: 'openai' | 'anthropic' | 'grok';
+  confidence: number;
+  estimatedTime: string;
+  suggestedRevisions?: string[];
+}
+
+interface CardProps {
+  data: Record<string, unknown>;
+  onAction?: (action: string, data: Record<string, unknown>) => void;
+}
+
+// AI Order Card
+export function AIOrderCard({ data, onAction }: CardProps) {
+  const orderData = data as AIOrderData;
+  
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'text-green-400 bg-green-400/10';
-      case 'in_progress': return 'text-blue-400 bg-blue-400/10';
-      case 'approved': return 'text-purple-400 bg-purple-400/10';
-      case 'brief_provided': return 'text-yellow-400 bg-yellow-400/10';
-      default: return 'text-gray-400 bg-gray-400/10';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'draft': return 'Черновик';
-      case 'brief_requested': return 'Запрос брифа';
-      case 'brief_provided': return 'Бриф предоставлен';
-      case 'approved': return 'Одобрено';
-      case 'in_progress': return 'В работе';
-      case 'review': return 'На проверке';
-      case 'completed': return 'Завершено';
-      case 'cancelled': return 'Отменено';
-      default: return status;
+      case 'draft': return 'bg-gray-100 text-gray-700';
+      case 'brief_requested': return 'bg-yellow-100 text-yellow-700';
+      case 'approved': return 'bg-green-100 text-green-700';
+      case 'in_progress': return 'bg-blue-100 text-blue-700';
+      case 'completed': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 max-w-sm">
-      {/* Header */}
-      <div className="flex items-start space-x-3 mb-3">
-        <div className="relative">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
           <img
-            src={data.specialistAvatar}
-            alt={data.specialistName}
-            className="w-10 h-10 rounded-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.specialistName}`;
-            }}
+            src={orderData.specialistAvatar}
+            alt={orderData.specialistName}
+            className="w-10 h-10 rounded-full"
           />
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-            <Bot className="w-2 h-2 text-white" />
+          <div>
+            <h4 className="font-semibold text-gray-900">{orderData.specialistName}</h4>
+            <p className="text-sm text-gray-600">{orderData.specialistTitle}</p>
           </div>
         </div>
-        <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">{data.orderTitle}</h4>
-          <p className="text-gray-400 text-xs">{data.specialistName}</p>
-        </div>
-        <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(data.status)}`}>
-          {getStatusText(data.status)}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="space-y-2 mb-4">
-        <p className="text-gray-300 text-sm">{data.orderDescription}</p>
         
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <div className="flex items-center space-x-1">
-            <DollarSign className="w-3 h-3" />
-            <span>${data.price} {data.orderType === 'monthly' ? '/месяц' : '/задача'}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Clock className="w-3 h-3" />
-            <span>{data.deliveryTime}</span>
-          </div>
-        </div>
-
-        {data.brief && (
-          <div className="bg-gray-700 rounded p-2">
-            <p className="text-gray-300 text-xs">{data.brief}</p>
-          </div>
-        )}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(orderData.status)}`}>
+          {orderData.status}
+        </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex space-x-2">
-        {data.status === 'brief_provided' && (
+      <h3 className="font-medium text-gray-900 mb-2">{orderData.orderTitle}</h3>
+      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{orderData.orderDescription}</p>
+
+      <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+        <div className="flex items-center gap-1">
+          <DollarSign className="w-4 h-4" />
+          <span>{orderData.price} {orderData.currency}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4" />
+          <span>{orderData.deliveryTime}</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        {orderData.status === 'draft' && (
           <button
             onClick={() => onAction?.('approve', data)}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+            className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
           >
-            <CheckCircle className="w-3 h-3" />
-            <span>Одобрить</span>
+            Одобрить заказ
           </button>
         )}
-        
-        <button
-          onClick={() => onAction?.('view', data)}
-          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
-        >
-          <ExternalLink className="w-3 h-3" />
-          <span>Открыть</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Job Card Component
-interface JobCardProps {
-  data: JobCardAttachment;
-  onAction?: (action: string, data: any) => void;
-}
-
-export function JobCard({ data, onAction }: JobCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-400 bg-green-400/10';
-      case 'in_progress': return 'text-blue-400 bg-blue-400/10';
-      case 'open': return 'text-yellow-400 bg-yellow-400/10';
-      case 'cancelled': return 'text-red-400 bg-red-400/10';
-      default: return 'text-gray-400 bg-gray-400/10';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'open': return 'Открыт';
-      case 'in_progress': return 'В работе';
-      case 'completed': return 'Завершен';
-      case 'cancelled': return 'Отменен';
-      default: return status;
-    }
-  };
-
-  return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 max-w-sm">
-      {/* Header */}
-      <div className="flex items-start space-x-3 mb-3">
-        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-          <Briefcase className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">{data.jobTitle}</h4>
-          <p className="text-gray-400 text-xs">от {data.clientName}</p>
-        </div>
-        <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(data.status)}`}>
-          {getStatusText(data.status)}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="space-y-2 mb-4">
-        <p className="text-gray-300 text-sm">{data.jobDescription}</p>
-        
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <div className="flex items-center space-x-1">
-            <DollarSign className="w-3 h-3" />
-            <span>${data.budget.min} - ${data.budget.max}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Calendar className="w-3 h-3" />
-            <span>{new Date(data.deadline).toLocaleDateString('ru')}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          {data.skills.slice(0, 3).map((skill, idx) => (
-            <span key={idx} className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
-              {skill}
-            </span>
-          ))}
-          {data.skills.length > 3 && (
-            <span className="text-gray-400 text-xs">+{data.skills.length - 3}</span>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2 text-xs text-gray-400">
-          <User className="w-3 h-3" />
-          <span>{data.applicationsCount} заявок</span>
-        </div>
-
-        {data.proposalAmount && (
-          <div className="bg-purple-600/20 border border-purple-600/30 rounded p-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-purple-300">Ваше предложение:</span>
-              <span className="text-white font-medium">${data.proposalAmount}</span>
-            </div>
-            {data.proposalMessage && (
-              <p className="text-gray-300 text-xs mt-1">{data.proposalMessage}</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex space-x-2">
-        {data.status === 'open' && !data.proposalId && (
+        {orderData.status === 'brief_requested' && (
           <button
-            onClick={() => onAction?.('apply', data)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+            onClick={() => onAction?.('revise', data)}
+            className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors text-sm font-medium"
           >
-            <ArrowRight className="w-3 h-3" />
-            <span>Откликнуться</span>
+            Запросить доработку
           </button>
         )}
-        
         <button
           onClick={() => onAction?.('view', data)}
-          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+          className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
         >
-          <ExternalLink className="w-3 h-3" />
-          <span>Открыть</span>
+          Подробнее
         </button>
       </div>
     </div>
   );
 }
 
-// Solution Card Component
-interface SolutionCardProps {
-  data: SolutionCardAttachment;
-  onAction?: (action: string, data: any) => void;
-}
+// Job Card
+export function JobCard({ data, onAction }: CardProps) {
+  const jobData = data as JobData;
 
-export function SolutionCard({ data, onAction }: SolutionCardProps) {
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 max-w-sm">
-      {/* Header */}
-      <div className="flex items-start space-x-3 mb-3">
-        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-          <Lightbulb className="w-5 h-5 text-white" />
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="font-semibold text-gray-900 mb-1">{jobData.jobTitle}</h3>
+          <p className="text-sm text-gray-600">от {jobData.clientName}</p>
         </div>
-        <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">{data.solutionTitle}</h4>
-          <p className="text-gray-400 text-xs">от {data.sellerName}</p>
-        </div>
+        
         <div className="text-right">
-          <div className="text-white font-bold text-sm">${data.price}</div>
-          <div className="text-gray-400 text-xs">{data.deliveryTime}</div>
+          <div className="font-semibold text-green-600">
+            ${jobData.budget.min} - ${jobData.budget.max}
+          </div>
+          <div className="text-xs text-gray-500">{jobData.budget.currency}</div>
         </div>
       </div>
 
-      {/* Preview Image */}
-      {data.previewImages[0] && (
-        <div className="mb-3">
+      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{jobData.jobDescription}</p>
+
+      <div className="flex flex-wrap gap-1 mb-3">
+        {jobData.skills.slice(0, 3).map((skill) => (
+          <span key={skill} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+            {skill}
+          </span>
+        ))}
+        {jobData.skills.length > 3 && (
+          <span className="text-xs text-gray-500">+{jobData.skills.length - 3}</span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4" />
+          <span>{jobData.deadline}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Users className="w-4 h-4" />
+          <span>{jobData.applicationsCount} откликов</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => onAction?.('apply', data)}
+          className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+        >
+          Откликнуться
+        </button>
+        <button
+          onClick={() => onAction?.('view', data)}
+          className="bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Solution Card
+export function SolutionCard({ data, onAction }: CardProps) {
+  const solutionData = data as SolutionData;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
           <img
-            src={data.previewImages[0]}
-            alt={data.solutionTitle}
-            className="w-full h-24 object-cover rounded-lg"
+            src={solutionData.sellerAvatar || '/default-avatar.png'}
+            alt={solutionData.sellerName}
+            className="w-10 h-10 rounded-full"
           />
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="space-y-2 mb-4">
-        <p className="text-gray-300 text-sm">{data.solutionDescription}</p>
-        
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <div className="flex items-center space-x-1">
-            <Star className="w-3 h-3 text-yellow-400" />
-            <span>{data.rating}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <span>{data.salesCount} продаж</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          {data.tags.slice(0, 3).map((tag, idx) => (
-            <span key={idx} className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
-              {tag}
-            </span>
-          ))}
-          {data.tags.length > 3 && (
-            <span className="text-gray-400 text-xs">+{data.tags.length - 3}</span>
-          )}
-        </div>
-
-        {data.features.length > 0 && (
-          <div className="text-xs text-gray-300">
-            <p className="font-medium">Включено:</p>
-            <ul className="list-disc list-inside ml-2 space-y-1">
-              {data.features.slice(0, 3).map((feature, idx) => (
-                <li key={idx}>{feature}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {data.customization && (
-          <div className="bg-yellow-600/20 border border-yellow-600/30 rounded p-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-yellow-300">Кастомизация:</span>
-              <span className="text-white font-medium">+${data.customization.additionalPrice}</span>
+          <div>
+            <h4 className="font-semibold text-gray-900">{solutionData.sellerName}</h4>
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-yellow-400 fill-current" />
+              <span className="text-sm text-gray-600">{solutionData.rating}</span>
+              <span className="text-xs text-gray-500">({solutionData.salesCount} продаж)</span>
             </div>
-            <p className="text-gray-300 text-xs mt-1">{data.customization.requirements}</p>
           </div>
+        </div>
+        
+        <div className="text-right">
+          <div className="font-semibold text-green-600">
+            ${solutionData.price}
+          </div>
+          <div className="text-xs text-gray-500">{solutionData.currency}</div>
+        </div>
+      </div>
+
+      <h3 className="font-medium text-gray-900 mb-2">{solutionData.solutionTitle}</h3>
+      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{solutionData.solutionDescription}</p>
+
+      <div className="flex flex-wrap gap-1 mb-3">
+        {solutionData.tags.slice(0, 3).map((tag) => (
+          <span key={tag} className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+            {tag}
+          </span>
+        ))}
+        {solutionData.tags.length > 3 && (
+          <span className="text-xs text-gray-500">+{solutionData.tags.length - 3}</span>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex space-x-2">
-        {!data.purchaseId ? (
-          <>
-            <button
-              onClick={() => onAction?.('buy', data)}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
-            >
-              <DollarSign className="w-3 h-3" />
-              <span>Купить</span>
-            </button>
-            <button
-              onClick={() => onAction?.('contact', data)}
-              className="bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors"
-            >
-              <MessageCircle className="w-3 h-3" />
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => onAction?.('download', data)}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
-          >
-            <CheckCircle className="w-3 h-3" />
-            <span>Скачать</span>
-          </button>
-        )}
-        
+      <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4" />
+          <span>{solutionData.deliveryTime}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Users className="w-4 h-4" />
+          <span>{solutionData.category}</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => onAction?.('buy', data)}
+          className="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
+        >
+          Купить
+        </button>
+        <button
+          onClick={() => onAction?.('contact', data)}
+          className="bg-blue-100 text-blue-700 py-2 px-4 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+        >
+          Связаться
+        </button>
         <button
           onClick={() => onAction?.('view', data)}
-          className="bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors"
+          className="bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
 }
 
-// AI Brief Card Component
-interface AIBriefCardProps {
-  data: AIBriefData;
-  onAction?: (action: string, data: any) => void;
-}
+// AI Brief Card
+export function AIBriefCard({ data, onAction }: CardProps) {
+  const briefData = data as AIBriefCardData;
 
-export function AIBriefCard({ data, onAction }: AIBriefCardProps) {
   return (
-    <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-500/30 p-4 max-w-md">
-      {/* Header */}
-      <div className="flex items-start space-x-3 mb-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-          <Bot className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">{data.generatedBrief.title}</h4>
-          <p className="text-blue-300 text-xs">AI-сгенерированное ТЗ от {data.specialistName}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-green-400 text-xs font-medium">{data.confidence}% точность</div>
-          <div className="text-gray-400 text-xs">{data.aiProvider.toUpperCase()}</div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="space-y-3 mb-4">
-        <p className="text-gray-300 text-sm">{data.generatedBrief.description}</p>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-gray-800/50 rounded p-2">
-            <div className="text-blue-400 font-medium">Сроки</div>
-            <div className="text-white">{data.estimatedTime}</div>
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4 shadow-sm">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-lg">🤖</span>
           </div>
-          {data.generatedBrief.budget && (
-            <div className="bg-gray-800/50 rounded p-2">
-              <div className="text-green-400 font-medium">Бюджет</div>
-              <div className="text-white">${data.generatedBrief.budget}</div>
+          <div>
+            <h4 className="font-semibold text-gray-900">{briefData.specialistName}</h4>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">AI Специалист</span>
+              <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                {briefData.aiProvider.toUpperCase()}
+              </span>
             </div>
-          )}
+          </div>
         </div>
-
-        <div className="space-y-2">
-          <div>
-            <h5 className="text-blue-300 text-xs font-medium mb-1">Основные требования:</h5>
-            <ul className="text-gray-300 text-xs space-y-1">
-              {data.generatedBrief.requirements.slice(0, 3).map((req, idx) => (
-                <li key={idx} className="flex items-start space-x-1">
-                  <CheckCircle className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>{req}</span>
-                </li>
-              ))}
-            </ul>
+        
+        <div className="text-right">
+          <div className="text-sm font-medium text-purple-600">
+            {briefData.confidence}% уверенность
           </div>
-
-          <div>
-            <h5 className="text-purple-300 text-xs font-medium mb-1">Результат:</h5>
-            <ul className="text-gray-300 text-xs space-y-1">
-              {data.generatedBrief.deliverables.slice(0, 2).map((del, idx) => (
-                <li key={idx} className="flex items-start space-x-1">
-                  <Star className="w-3 h-3 text-yellow-400 mt-0.5 flex-shrink-0" />
-                  <span>{del}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="text-xs text-gray-500">{briefData.estimatedTime}</div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex space-x-2">
+      <h3 className="font-medium text-gray-900 mb-2">{briefData.generatedBrief.title}</h3>
+      <p className="text-sm text-gray-600 mb-3 line-clamp-3">{briefData.generatedBrief.description}</p>
+
+      <div className="space-y-2 mb-3">
+        <div className="text-xs text-gray-500">Основные требования:</div>
+        <ul className="text-sm text-gray-700 space-y-1">
+          {briefData.generatedBrief.requirements.slice(0, 3).map((req, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <span className="text-purple-500 mt-1">•</span>
+              <span>{req}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex gap-2">
         <button
           onClick={() => onAction?.('approve', data)}
-          className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+          className="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
         >
-          <CheckCircle className="w-3 h-3" />
-          <span>Одобрить ТЗ</span>
+          Одобрить ТЗ
         </button>
-        
         <button
           onClick={() => onAction?.('revise', data)}
-          className="bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+          className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors text-sm font-medium"
         >
-          <AlertCircle className="w-3 h-3" />
-          <span>Доработать</span>
+          Доработать
+        </button>
+        <button
+          onClick={() => onAction?.('download', data)}
+          className="bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+        >
+          <Download className="w-4 h-4" />
         </button>
       </div>
     </div>

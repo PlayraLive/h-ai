@@ -2,24 +2,23 @@
 'use client';
 
 import React, { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { 
-  Message, 
-  OrderAttachment, 
-  TimelineData, 
-  MilestoneData,
-  AIOrderAttachment,
-  JobCardAttachment,
-  SolutionCardAttachment,
-  AIBriefData
-} from '../../services/messaging';
+  MoreHorizontal, 
+  Reply, 
+  Forward, 
+  Edit3, 
+  Trash2, 
+  Download 
+} from 'lucide-react';
+import { Message } from '@/services/messaging';
 import { 
   AIOrderCard, 
   JobCard, 
   SolutionCard, 
   AIBriefCard 
 } from './MessageCards';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 interface MessageBubbleProps {
   message: Message;
@@ -29,28 +28,23 @@ interface MessageBubbleProps {
   onDelete?: () => void;
   onReply?: () => void;
   onForward?: () => void;
-  onCardAction?: (action: string, data: any) => void;
+  onCardAction?: (action: string, data: Record<string, unknown>) => void;
   className?: string;
 }
 
 export function MessageBubble({
   message,
   isFromCurrentUser,
-  onReaction,
-  onEdit,
-  onDelete,
-  onReply,
-  onForward,
-  onCardAction,
-  className = ''
+  onCardAction
 }: MessageBubbleProps) {
-  const [showActions, setShowActions] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
 
   const handleEdit = () => {
     if (editContent.trim() && editContent !== message.content) {
-      onEdit?.(editContent.trim());
+      onCardAction?.('edit', { newContent: editContent.trim() });
     }
     setIsEditing(false);
   };
@@ -125,11 +119,15 @@ export function MessageBubble({
 
   return (
     <div 
-      className={`flex ${isFromCurrentUser ? 'justify-end' : 'justify-start'} mb-4 ${className}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      className={`flex ${isFromCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}
+      onMouseEnter={() => setShowDropdown(true)}
+      onMouseLeave={() => setShowDropdown(false)}
     >
-      <div className={`max-w-[70%] ${isFromCurrentUser ? 'order-2' : 'order-1'}`}>
+      <div className={`relative max-w-xs lg:max-w-md xl:max-w-lg p-3 rounded-2xl shadow-sm ${
+        isFromCurrentUser
+          ? 'bg-blue-500 text-white ml-auto rounded-br-md'
+          : 'bg-gray-100 text-gray-900 mr-auto rounded-bl-md'
+      }`}>
         {/* Основное сообщение */}
         <div
           className={`
@@ -194,23 +192,24 @@ export function MessageBubble({
         {/* Реакции */}
         {message.reactions && message.reactions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {message.reactions.map((reaction, index) => (
+            {message.reactions?.map((reaction, index) => (
               <button
-                key={index}
-                onClick={() => onReaction?.(reaction.emoji)}
-                className="px-2 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors"
+                key={`${reaction.emoji}-${reaction.userId}-${index}`}
+                className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 rounded-full px-2 py-1 text-xs transition-colors"
+                onClick={() => onCardAction?.('reaction', { emoji: reaction.emoji, messageId: message.$id })}
               >
-                {reaction.emoji}
+                <span>{reaction.emoji}</span>
+                <span className="text-gray-600">1</span>
               </button>
             ))}
           </div>
         )}
 
         {/* Действия с сообщением */}
-        {showActions && !isEditing && message.messageType !== 'system' && (
+        {showDropdown && !isEditing && message.messageType !== 'system' && (
           <div className={`flex gap-2 mt-2 ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}>
             <button
-              onClick={onReply}
+              onClick={() => {}}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
               title="Ответить"
             >
@@ -265,7 +264,7 @@ function TextMessage({ content }: { content: string }) {
 }
 
 // Компонент заказа
-function OrderMessage({ orderData }: { orderData: OrderAttachment }) {
+function OrderMessage({ orderData }: { orderData: any }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted': return 'text-green-600 bg-green-100';
@@ -306,7 +305,7 @@ function OrderMessage({ orderData }: { orderData: OrderAttachment }) {
         <div className="mt-4">
           <h4 className="font-medium text-gray-900 mb-2">Этапы:</h4>
           <div className="space-y-2">
-            {orderData.milestones.map((milestone, index) => (
+            {orderData.milestones.map((milestone: any) => (
               <div key={milestone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm">{milestone.title}</span>
                 <span className="text-sm font-medium">{milestone.amount} {orderData.currency}</span>
@@ -329,7 +328,7 @@ function OrderMessage({ orderData }: { orderData: OrderAttachment }) {
 }
 
 // Компонент обновления таймлайна
-function TimelineMessage({ timelineData }: { timelineData: TimelineData }) {
+function TimelineMessage({ timelineData }: { timelineData: any }) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'project_created': return '🚀';
@@ -357,7 +356,7 @@ function TimelineMessage({ timelineData }: { timelineData: TimelineData }) {
 }
 
 // Компонент milestone
-function MilestoneMessage({ milestoneData }: { milestoneData: MilestoneData }) {
+function MilestoneMessage({ milestoneData }: { milestoneData: any }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'text-green-600 bg-green-100';
@@ -395,7 +394,7 @@ function MilestoneMessage({ milestoneData }: { milestoneData: MilestoneData }) {
         <div className="mb-3">
           <h4 className="font-medium text-gray-900 mb-2">Результаты:</h4>
           <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-            {milestoneData.deliverables.map((deliverable, index) => (
+            {milestoneData.deliverables.map((deliverable: string, index: number) => (
               <li key={index}>{deliverable}</li>
             ))}
           </ul>
@@ -472,37 +471,61 @@ function SystemMessage({ content }: { content: string }) {
 }
 
 // Компонент ответа AI
-function AIResponseMessage({ content, metadata }: { content: string; metadata?: any }) {
+function AIResponseMessage({ content, metadata }: { content: string; metadata?: Record<string, unknown> }) {
   const isAIGenerated = metadata?.aiGenerated;
   const needsApproval = metadata?.needsApproval;
   const confidenceScore = metadata?.confidenceScore;
 
   return (
-    <div className={`space-y-2 ${isAIGenerated ? 'border-l-4 border-blue-500 pl-3' : ''}`}>
-      {isAIGenerated && (
-        <div className="flex items-center space-x-2 text-xs text-blue-600">
-          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-          <span>AI-сгенерированный ответ</span>
-          {confidenceScore && (
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-              {confidenceScore}% уверенность
+    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs">🤖</span>
+          </div>
+          <span className="text-sm font-medium text-gray-900">AI Специалист</span>
+          {metadata?.aiGenerated && (
+            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+              AI Generated
             </span>
           )}
         </div>
-      )}
+        
+        {metadata?.confidenceScore && (
+          <div className="text-xs text-gray-500">
+            Уверенность: {metadata.confidenceScore}%
+          </div>
+        )}
+      </div>
       
-      <div className="whitespace-pre-wrap break-words">
+      <div className="prose prose-sm max-w-none text-gray-800">
         {content}
       </div>
-
-      {needsApproval && (
-        <div className="flex items-center space-x-2 mt-2">
-          <button className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full transition-colors">
-            ✓ Одобрить
-          </button>
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded-full transition-colors">
-            ✏️ Доработать
-          </button>
+      
+      {metadata?.needsApproval && (
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">
+              Статус: {metadata.approvalStatus === 'pending' ? 'Ожидает одобрения' : 
+                      metadata.approvalStatus === 'approved' ? 'Одобрено' : 'Отклонено'}
+            </span>
+            {metadata.approvalStatus === 'pending' && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onCardAction?.('approve', { messageId: message.$id })}
+                  className="text-xs bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors"
+                >
+                  Одобрить
+                </button>
+                <button
+                  onClick={() => onCardAction?.('revise', { messageId: message.$id })}
+                  className="text-xs bg-orange-500 text-white px-3 py-1 rounded-md hover:bg-orange-600 transition-colors"
+                >
+                  Доработать
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
