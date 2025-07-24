@@ -2,7 +2,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Message, OrderAttachment, TimelineData, MilestoneData } from '../../services/messaging';
+import { 
+  Message, 
+  OrderAttachment, 
+  TimelineData, 
+  MilestoneData,
+  AIOrderAttachment,
+  JobCardAttachment,
+  SolutionCardAttachment,
+  AIBriefData
+} from '../../services/messaging';
+import { 
+  AIOrderCard, 
+  JobCard, 
+  SolutionCard, 
+  AIBriefCard 
+} from './MessageCards';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -14,6 +29,7 @@ interface MessageBubbleProps {
   onDelete?: () => void;
   onReply?: () => void;
   onForward?: () => void;
+  onCardAction?: (action: string, data: any) => void;
   className?: string;
 }
 
@@ -25,6 +41,7 @@ export function MessageBubble({
   onDelete,
   onReply,
   onForward,
+  onCardAction,
   className = ''
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
@@ -42,6 +59,48 @@ export function MessageBubble({
     switch (message.messageType) {
       case 'order':
         return <OrderMessage orderData={message.orderData!} />;
+      case 'ai_order':
+        return (
+          <div>
+            {message.content && <div className="mb-2">{message.content}</div>}
+            <AIOrderCard 
+              data={message.aiOrderData!} 
+              onAction={onCardAction}
+            />
+          </div>
+        );
+      case 'job_card':
+        return (
+          <div>
+            {message.content && <div className="mb-2">{message.content}</div>}
+            <JobCard 
+              data={message.jobCardData!} 
+              onAction={onCardAction}
+            />
+          </div>
+        );
+      case 'solution_card':
+        return (
+          <div>
+            {message.content && <div className="mb-2">{message.content}</div>}
+            <SolutionCard 
+              data={message.solutionCardData!} 
+              onAction={onCardAction}
+            />
+          </div>
+        );
+      case 'ai_brief':
+        return (
+          <div>
+            {message.content && <div className="mb-2">{message.content}</div>}
+            <AIBriefCard 
+              data={message.aiBriefData!} 
+              onAction={onCardAction}
+            />
+          </div>
+        );
+      case 'ai_response':
+        return <AIResponseMessage content={message.content} metadata={message.metadata} />;
       case 'timeline':
         return <TimelineMessage timelineData={message.timelineData!} />;
       case 'milestone':
@@ -408,6 +467,44 @@ function SystemMessage({ content }: { content: string }) {
   return (
     <div className="text-center text-gray-500 italic">
       {content}
+    </div>
+  );
+}
+
+// Компонент ответа AI
+function AIResponseMessage({ content, metadata }: { content: string; metadata?: any }) {
+  const isAIGenerated = metadata?.aiGenerated;
+  const needsApproval = metadata?.needsApproval;
+  const confidenceScore = metadata?.confidenceScore;
+
+  return (
+    <div className={`space-y-2 ${isAIGenerated ? 'border-l-4 border-blue-500 pl-3' : ''}`}>
+      {isAIGenerated && (
+        <div className="flex items-center space-x-2 text-xs text-blue-600">
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          <span>AI-сгенерированный ответ</span>
+          {confidenceScore && (
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+              {confidenceScore}% уверенность
+            </span>
+          )}
+        </div>
+      )}
+      
+      <div className="whitespace-pre-wrap break-words">
+        {content}
+      </div>
+
+      {needsApproval && (
+        <div className="flex items-center space-x-2 mt-2">
+          <button className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full transition-colors">
+            ✓ Одобрить
+          </button>
+          <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded-full transition-colors">
+            ✏️ Доработать
+          </button>
+        </div>
+      )}
     </div>
   );
 }

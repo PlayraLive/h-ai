@@ -5,7 +5,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMessaging } from '../../hooks/useMessaging';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { OrderAttachment, TimelineData, MilestoneData } from '../../services/messaging';
+import { 
+  OrderAttachment, 
+  TimelineData, 
+  MilestoneData,
+  AIOrderAttachment,
+  JobCardAttachment,
+  SolutionCardAttachment,
+  AIBriefData
+} from '../../services/messaging';
 
 interface ChatWindowProps {
   conversationId: string;
@@ -99,6 +107,67 @@ export function ChatWindow({ conversationId, userId, className = '' }: ChatWindo
     console.log('Forward message:', messageId);
   };
 
+  const handleCardAction = async (action: string, data: any) => {
+    console.log('Card action:', action, data);
+    
+    switch (action) {
+      case 'approve':
+        // Обработка одобрения (для AI заказов и брифов)
+        if (data.specialistId) {
+          console.log('Approving AI order/brief:', data);
+          // В реальной реализации: вызов API для одобрения
+        }
+        break;
+        
+      case 'apply':
+        // Обработка отклика на джоб
+        if (data.jobId) {
+          console.log('Applying to job:', data.jobId);
+          // В реальной реализации: открыть модальное окно с формой отклика
+        }
+        break;
+        
+      case 'buy':
+        // Обработка покупки решения
+        if (data.solutionId) {
+          console.log('Buying solution:', data.solutionId);
+          // В реальной реализации: перенаправить на страницу оплаты
+        }
+        break;
+        
+      case 'contact':
+        // Обработка связи с продавцом
+        if (data.sellerId) {
+          console.log('Contacting seller:', data.sellerId);
+          // В реальной реализации: создать новую конверсацию или перейти к существующей
+        }
+        break;
+        
+      case 'view':
+        // Обработка просмотра полной информации
+        console.log('Viewing details:', data);
+        // В реальной реализации: открыть страницу с подробностями
+        break;
+        
+      case 'download':
+        // Обработка скачивания
+        if (data.purchaseId) {
+          console.log('Downloading purchased solution:', data.purchaseId);
+          // В реальной реализации: скачать файлы
+        }
+        break;
+        
+      case 'revise':
+        // Обработка запроса на доработку
+        console.log('Requesting revisions:', data);
+        // В реальной реализации: открыть форму для описания правок
+        break;
+        
+      default:
+        console.log('Unknown card action:', action);
+    }
+  };
+
   if (!currentConversation) {
     return (
       <div className={`flex items-center justify-center h-full bg-gray-50 ${className}`}>
@@ -185,6 +254,7 @@ export function ChatWindow({ conversationId, userId, className = '' }: ChatWindo
             onDelete={() => handleDelete(message.$id)}
             onReply={() => handleReply(message.$id)}
             onForward={() => handleForward(message.$id)}
+            onCardAction={handleCardAction}
           />
         ))}
 

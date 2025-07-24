@@ -17,9 +17,13 @@ export interface Message {
   receiverId: string;
   conversationId: string;
   content: string;
-  messageType: 'text' | 'file' | 'image' | 'video' | 'audio' | 'order' | 'system' | 'timeline' | 'milestone';
+  messageType: 'text' | 'file' | 'image' | 'video' | 'audio' | 'order' | 'system' | 'timeline' | 'milestone' | 'ai_order' | 'job_card' | 'solution_card' | 'ai_brief' | 'ai_response';
   attachments?: string[];
   orderData?: OrderAttachment;
+  aiOrderData?: AIOrderAttachment;
+  jobCardData?: JobCardAttachment;
+  solutionCardData?: SolutionCardAttachment;
+  aiBriefData?: AIBriefData;
   timelineData?: TimelineData;
   milestoneData?: MilestoneData;
   isRead: boolean;
@@ -33,6 +37,98 @@ export interface Message {
   forwardedFrom?: string;
   isEdited?: boolean;
   metadata?: MessageMetadata;
+}
+
+// Расширенные типы для AI специалистов
+export interface AIOrderAttachment {
+  specialistId: string;
+  specialistName: string;
+  specialistTitle: string;
+  specialistAvatar: string;
+  orderType: 'monthly' | 'task';
+  orderTitle: string;
+  orderDescription: string;
+  brief: string;
+  requirements?: string;
+  deadline?: string;
+  price: number;
+  currency: string;
+  status: 'draft' | 'brief_requested' | 'brief_provided' | 'approved' | 'in_progress' | 'review' | 'completed' | 'cancelled';
+  deliveryTime: string;
+  attachments?: string[];
+  aiProvider?: 'openai' | 'anthropic' | 'grok';
+  generatedBrief?: string;
+  revisionCount?: number;
+  maxRevisions?: number;
+}
+
+// Карточка джоба в сообщениях
+export interface JobCardAttachment {
+  jobId: string;
+  jobTitle: string;
+  jobDescription: string;
+  budget: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  deadline: string;
+  skills: string[];
+  clientId: string;
+  clientName: string;
+  clientAvatar?: string;
+  applicationsCount: number;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  proposalId?: string; // Если это предложение на джоб
+  proposalAmount?: number;
+  proposalDeadline?: string;
+  proposalMessage?: string;
+}
+
+// Карточка решения в сообщениях
+export interface SolutionCardAttachment {
+  solutionId: string;
+  solutionTitle: string;
+  solutionDescription: string;
+  price: number;
+  currency: string;
+  category: string;
+  tags: string[];
+  sellerId: string;
+  sellerName: string;
+  sellerAvatar?: string;
+  rating: number;
+  salesCount: number;
+  previewImages: string[];
+  deliveryTime: string;
+  features: string[];
+  purchaseId?: string; // Если это покупка решения
+  customization?: {
+    requirements: string;
+    additionalPrice: number;
+    estimatedTime: string;
+  };
+}
+
+// Данные для AI брифа
+export interface AIBriefData {
+  originalRequest: string;
+  generatedBrief: {
+    title: string;
+    description: string;
+    requirements: string[];
+    deliverables: string[];
+    timeline: string;
+    budget?: number;
+    technicalSpecs?: string[];
+    examples?: string[];
+  };
+  specialistId: string;
+  specialistName: string;
+  aiProvider: 'openai' | 'anthropic' | 'grok';
+  confidence: number; // 0-100
+  estimatedTime: string;
+  suggestedRevisions?: string[];
 }
 
 export interface OrderAttachment {
@@ -60,7 +156,7 @@ export interface OrderMilestone {
 }
 
 export interface TimelineData {
-  type: 'project_created' | 'proposal_sent' | 'contract_signed' | 'milestone_completed' | 'payment_sent' | 'review_left';
+  type: 'project_created' | 'proposal_sent' | 'contract_signed' | 'milestone_completed' | 'payment_sent' | 'review_left' | 'ai_order_created' | 'ai_brief_generated' | 'ai_work_started' | 'ai_work_completed';
   title: string;
   description: string;
   timestamp: string;
@@ -98,7 +194,10 @@ export interface MessageMetadata {
     address: string;
   };
   mentions?: string[]; // User IDs
-  hashtags?: string[];
+  aiGenerated?: boolean;
+  needsApproval?: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  confidenceScore?: number;
 }
 
 export interface Conversation {
@@ -155,6 +254,10 @@ class MessagingService {
     messageType?: Message['messageType'];
     attachments?: string[];
     orderData?: OrderAttachment;
+    aiOrderData?: AIOrderAttachment;
+    jobCardData?: JobCardAttachment;
+    solutionCardData?: SolutionCardAttachment;
+    aiBriefData?: AIBriefData;
     timelineData?: TimelineData;
     milestoneData?: MilestoneData;
     replyTo?: string;
@@ -177,6 +280,10 @@ class MessagingService {
         messageType: data.messageType || 'text',
         attachments: data.attachments || [],
         orderData: data.orderData ? JSON.stringify(data.orderData) : undefined,
+        aiOrderData: data.aiOrderData ? JSON.stringify(data.aiOrderData) : undefined,
+        jobCardData: data.jobCardData ? JSON.stringify(data.jobCardData) : undefined,
+        solutionCardData: data.solutionCardData ? JSON.stringify(data.solutionCardData) : undefined,
+        aiBriefData: data.aiBriefData ? JSON.stringify(data.aiBriefData) : undefined,
         timelineData: data.timelineData ? JSON.stringify(data.timelineData) : undefined,
         milestoneData: data.milestoneData ? JSON.stringify(data.milestoneData) : undefined,
         isRead: false,
@@ -214,10 +321,10 @@ class MessagingService {
     } catch (error) {
       console.error('❌ Error sending message:', error);
       console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        type: error.type
+        name: (error as any)?.name,
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        type: (error as any)?.type
       });
       throw error;
     }
@@ -272,6 +379,83 @@ class MessagingService {
       content,
       messageType: 'milestone',
       milestoneData: data.milestoneData
+    });
+  }
+
+  // 🤖 Отправка AI заказа
+  async sendAIOrderMessage(data: {
+    conversationId: string;
+    senderId: string;
+    receiverId: string;
+    aiOrderData: AIOrderAttachment;
+    message?: string;
+  }): Promise<Message> {
+    const content = data.message || `🤖 AI заказ: ${data.aiOrderData.orderTitle}`;
+    
+    return this.sendMessage({
+      ...data,
+      content,
+      messageType: 'ai_order',
+      aiOrderData: data.aiOrderData
+    });
+  }
+
+  // 💼 Отправка карточки джоба
+  async sendJobCardMessage(data: {
+    conversationId: string;
+    senderId: string;
+    receiverId: string;
+    jobCardData: JobCardAttachment;
+    message?: string;
+  }): Promise<Message> {
+    const content = data.message || `💼 Джоб: ${data.jobCardData.jobTitle}`;
+    
+    return this.sendMessage({
+      ...data,
+      content,
+      messageType: 'job_card',
+      jobCardData: data.jobCardData
+    });
+  }
+
+  // 💡 Отправка карточки решения
+  async sendSolutionCardMessage(data: {
+    conversationId: string;
+    senderId: string;
+    receiverId: string;
+    solutionCardData: SolutionCardAttachment;
+    message?: string;
+  }): Promise<Message> {
+    const content = data.message || `💡 Решение: ${data.solutionCardData.solutionTitle}`;
+    
+    return this.sendMessage({
+      ...data,
+      content,
+      messageType: 'solution_card',
+      solutionCardData: data.solutionCardData
+    });
+  }
+
+  // 📝 Отправка AI брифа
+  async sendAIBriefMessage(data: {
+    conversationId: string;
+    senderId: string;
+    receiverId: string;
+    aiBriefData: AIBriefData;
+    message?: string;
+  }): Promise<Message> {
+    const content = data.message || `📝 Техническое задание от ${data.aiBriefData.specialistName}`;
+    
+    return this.sendMessage({
+      ...data,
+      content,
+      messageType: 'ai_brief',
+      aiBriefData: data.aiBriefData,
+      metadata: {
+        aiGenerated: true,
+        needsApproval: true,
+        confidenceScore: data.aiBriefData.confidence
+      }
     });
   }
 

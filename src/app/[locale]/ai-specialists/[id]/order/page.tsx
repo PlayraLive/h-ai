@@ -24,6 +24,8 @@ import {
 import { getSpecialistById } from '@/lib/data/ai-specialists';
 import { AISpecialist } from '@/types';
 import { useAuthContext } from '@/contexts/AuthContext';
+import AISpecialistChat from '@/components/messaging/AISpecialistChat';
+import { AIBriefData } from '@/services/messaging';
 
 interface OrderPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -37,7 +39,9 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   
   const [specialist, setSpecialist] = useState<AISpecialist | null>(null);
   const [orderType, setOrderType] = useState<'monthly' | 'task'>('task');
-  const [currentStep, setCurrentStep] = useState<'select' | 'brief' | 'payment' | 'confirmation'>('select');
+  const [currentStep, setCurrentStep] = useState<'select' | 'brief' | 'ai_chat' | 'payment' | 'confirmation'>('select');
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [generatedBrief, setGeneratedBrief] = useState<AIBriefData | null>(null);
   
   // Form state
   const [briefData, setBriefData] = useState({
@@ -94,7 +98,7 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
       router.back();
     } else {
       // Go back to previous step
-      const steps = ['select', 'brief', 'payment', 'confirmation'] as const;
+      const steps = ['select', 'brief', 'ai_chat', 'payment', 'confirmation'] as const;
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex > 0) {
         setCurrentStep(steps[currentIndex - 1]);
@@ -103,11 +107,24 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
   };
 
   const handleNext = () => {
-    const steps = ['select', 'brief', 'payment', 'confirmation'] as const;
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
+    if (currentStep === 'select') {
+      setShowAIChat(true);
+      setCurrentStep('ai_chat');
+    } else {
+      const steps = ['select', 'brief', 'ai_chat', 'payment', 'confirmation'] as const;
+      const currentIndex = steps.indexOf(currentStep);
+      if (currentIndex < steps.length - 1) {
+        setCurrentStep(steps[currentIndex + 1]);
+      }
     }
+  };
+
+  const handleBriefGenerated = (brief: AIBriefData) => {
+    setGeneratedBrief(brief);
+  };
+
+  const handleContinueOrder = () => {
+    setCurrentStep('brief');
   };
 
   const handleOrder = async () => {
@@ -275,9 +292,38 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
               onClick={handleNext}
               className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
             >
-              <span>Continue to Brief</span>
+              <span>Поговорить с AI специалистом</span>
               <ChevronRight className="w-5 h-5" />
             </button>
+          </div>
+        );
+
+      case 'ai_chat':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-white mb-2">Обсуждение проекта</h3>
+              <p className="text-gray-400">Поговорите с {specialist.name} о ваших требованиях</p>
+            </div>
+
+            <AISpecialistChat
+              specialist={specialist}
+              onBriefGenerated={handleBriefGenerated}
+              onContinueOrder={handleContinueOrder}
+              className="mx-auto"
+            />
+
+            {generatedBrief && (
+              <div className="text-center">
+                <p className="text-green-400 mb-4">✅ Техническое задание готово!</p>
+                <button
+                  onClick={handleContinueOrder}
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105"
+                >
+                  Продолжить к оформлению заказа
+                </button>
+              </div>
+            )}
           </div>
         );
 
@@ -529,12 +575,13 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
             <div>
               <h1 className="text-2xl font-bold text-white">
                 {currentStep === 'select' && 'Choose Your Plan'}
+                {currentStep === 'ai_chat' && 'AI Consultation'}
                 {currentStep === 'brief' && 'Project Brief'}
                 {currentStep === 'payment' && 'Payment'}
                 {currentStep === 'confirmation' && 'Confirmation'}
               </h1>
               <p className="text-gray-400">
-                Step {['select', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1} of 4
+                Step {['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1} of 5
               </p>
             </div>
           </div>
@@ -542,11 +589,11 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
-              {['select', 'brief', 'payment', 'confirmation'].map((step, index) => (
+              {['select', 'ai_chat', 'brief', 'payment', 'confirmation'].map((step, index) => (
                 <div
                   key={step}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    ['select', 'brief', 'payment', 'confirmation'].indexOf(currentStep) >= index
+                    ['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) >= index
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-700 text-gray-400'
                   }`}
@@ -559,7 +606,7 @@ export default function AISpecialistOrderPage({ params }: OrderPageProps) {
               <div
                 className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
                 style={{
-                  width: `${(((['select', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1) / 4) * 100)}%`
+                  width: `${(((['select', 'ai_chat', 'brief', 'payment', 'confirmation'].indexOf(currentStep) + 1) / 5) * 100)}%`
                 }}
               />
             </div>

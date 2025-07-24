@@ -16,6 +16,8 @@ export const COLLECTIONS = {
   PROJECTS: 'projects',
   REVIEWS: 'reviews',
   MESSAGES: 'messages',
+  CONVERSATIONS: 'conversations',
+  NOTIFICATIONS: 'notifications',
   INVITATIONS: 'invitations',
   // AI Solutions & Reels Collections
   REELS: 'reels',
@@ -178,14 +180,8 @@ export interface MessageDocument {
 
 // Database initialization function
 export async function initializeDatabase() {
-  try {
-    // Check if database exists
-    await databases.get(DATABASE_ID);
-    console.log('Database already exists');
-  } catch (error) {
-    console.log('Database does not exist, creating...');
-    // Database creation would be done through Appwrite console
-  }
+  // Database creation and management is done through Appwrite console
+  console.log('Database configured with ID:', DATABASE_ID);
 }
 
 // Helper function to create permissions
