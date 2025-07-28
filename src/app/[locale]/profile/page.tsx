@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { databases, DATABASE_ID, Query } from "@/lib/appwrite/database";
 import Link from "next/link";
 import {
   Edit,
@@ -22,109 +25,135 @@ import {
 import Navbar from "@/components/Navbar";
 import { cn, formatCurrency } from "@/lib/utils";
 
-export default function ProfilePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = React.use(params);
-  const t = useTranslations("profile");
-  const [activeTab, setActiveTab] = useState("overview");
+interface UserProfile {
+  $id: string;
+  user_id: string;
+  avatar_url?: string;
+  bio?: string;
+  company_name?: string;
+  company_size?: string;
+  industry?: string;
+  interests?: string[];
+  specializations?: string[];
+  experience_years?: number;
+  hourly_rate_min?: number;
+  hourly_rate_max?: number;
+  onboarding_completed?: boolean;
+  profile_completion?: number;
+  $createdAt: string;
+}
 
-  const userProfile = {
-    id: "1",
-    name: "Alex Chen",
-    title: "AI Design Specialist & Creative Director",
-    avatar: "/avatars/user.jpg",
+export default function ProfilePage() {
+  const params = useParams();
+  const locale = params.locale as string;
+  const t = useTranslations("profile");
+  const { user } = useAuthContext();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Загружаем профиль пользователя
+      const profileResponse = await databases.listDocuments(
+        DATABASE_ID,
+        'user_profiles',
+        [Query.equal('user_id', user.$id)]
+      );
+
+      if (profileResponse.documents.length > 0) {
+        setUserProfile(profileResponse.documents[0] as any);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки профиля:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Загрузка профиля...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-950">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-2">
+              Необходима авторизация
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Войдите в систему чтобы просмотреть профиль.
+            </p>
+            <Link href="/login" className="btn-primary">
+              Войти
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Данные профиля с fallback на данные пользователя
+  const displayProfile = {
+    id: user.$id,
+    name: user.name || "Пользователь",
+    title: userProfile?.specializations?.[0] || "Специалист",
+    avatar: userProfile?.avatar_url || "/avatars/default.jpg",
     coverImage: "/covers/profile-cover.jpg",
-    rating: 4.9,
-    reviewCount: 127,
-    hourlyRate: 85,
-    completedJobs: 156,
-    responseTime: "1 hour",
-    location: "San Francisco, CA",
-    verified: true,
+    rating: 4.5,
+    reviewCount: 0,
+    hourlyRate: userProfile?.hourly_rate_min || 50,
+    completedJobs: 0,
+    responseTime: "1 час",
+    location: "Удаленная работа",
+    verified: user.emailVerification || false,
     online: true,
-    memberSince: "2022-03-15",
-    totalEarnings: 125000,
-    successRate: 98,
-    languages: ["English", "Mandarin", "Spanish"],
-    description:
-      "Passionate AI design specialist with 5+ years of experience creating stunning visuals using cutting-edge AI tools. I help businesses transform their ideas into compelling visual narratives through the power of artificial intelligence.",
-    skills: [
-      { name: "Midjourney", level: 95, category: "AI Tools" },
-      { name: "DALL-E", level: 90, category: "AI Tools" },
-      { name: "Stable Diffusion", level: 88, category: "AI Tools" },
-      { name: "Brand Design", level: 92, category: "Design" },
-      { name: "UI/UX Design", level: 85, category: "Design" },
-      { name: "Adobe Creative Suite", level: 90, category: "Software" },
-      { name: "Figma", level: 88, category: "Software" },
-      { name: "Prompt Engineering", level: 95, category: "AI Skills" },
-    ],
-    portfolio: [
-      {
-        id: "1",
-        title: "AI-Generated Brand Identity",
-        description:
-          "Complete brand identity created using AI tools for a tech startup",
-        image: "/portfolio/project1.jpg",
-        category: "Branding",
-        tools: ["Midjourney", "Figma"],
-        client: "TechCorp Inc.",
-        year: "2024",
-        featured: true,
-      },
-      {
-        id: "2",
-        title: "E-commerce Product Visualization",
-        description: "AI-powered product images for online store",
-        image: "/portfolio/project2.jpg",
-        category: "Product Design",
-        tools: ["DALL-E", "Photoshop"],
-        client: "ShopEasy",
-        year: "2024",
-        featured: true,
-      },
-      {
-        id: "3",
-        title: "Social Media Campaign",
-        description: "AI-generated social media assets for marketing campaign",
-        image: "/portfolio/project3.jpg",
-        category: "Marketing",
-        tools: ["Stable Diffusion", "Canva"],
-        client: "Marketing Pro",
-        year: "2023",
-        featured: false,
-      },
-    ],
-    reviews: [
-      {
-        id: "1",
-        client: "Sarah Johnson",
-        rating: 5,
-        comment:
-          "Exceptional work! Alex delivered beyond expectations with creative AI-generated designs.",
-        project: "Brand Identity Design",
-        date: "2024-01-10",
-      },
-      {
-        id: "2",
-        client: "Mike Davis",
-        rating: 5,
-        comment:
-          "Professional, fast, and incredibly talented. Will definitely work with Alex again.",
-        project: "Product Visualization",
-        date: "2024-01-05",
-      },
-    ],
-    badges: ["Top Rated", "Expert Verified", "Fast Delivery", "Rising Talent"],
+    memberSince: user.$createdAt,
+    totalEarnings: 0,
+    successRate: 100,
+    languages: ["Русский", "English"],
+    description: userProfile?.bio || "Добро пожаловать в мой профиль!",
+    skills: userProfile?.specializations?.map(skill => ({
+      name: skill,
+      level: 85,
+      category: "Специализация"
+    })) || [],
+    portfolio: [],
+    reviews: [],
+    badges: [],
+    stats: {
+      totalViews: 0,
+      profileViews: 0,
+      jobsCompleted: 0,
+      clientsSatisfied: 0
+    }
   };
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Eye },
-    { id: "portfolio", label: "Portfolio", icon: Briefcase },
-    { id: "reviews", label: "Reviews", icon: Star },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "achievements", label: "Achievements", icon: Award },
   ];
 
   return (
@@ -148,12 +177,12 @@ export default function ProfilePage({
                 {/* Avatar */}
                 <div className="relative">
                   <div className="w-32 h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-4xl font-bold text-white border-4 border-gray-950">
-                    {userProfile.name
+                    {displayProfile.name
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")}
                   </div>
-                  {userProfile.online && (
+                  {displayProfile.online && (
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-gray-950"></div>
                   )}
                   <button className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-lg transition-colors">
@@ -167,23 +196,23 @@ export default function ProfilePage({
                     <div>
                       <div className="flex items-center space-x-3 mb-2">
                         <h1 className="text-3xl font-bold text-white">
-                          {userProfile.name}
+                          {displayProfile.name}
                         </h1>
-                        {userProfile.verified && (
+                        {displayProfile.verified && (
                           <Verified className="w-6 h-6 text-blue-400" />
                         )}
                       </div>
                       <p className="text-xl text-gray-300 mb-2">
-                        {userProfile.title}
+                        {displayProfile.title}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
                         <div className="flex items-center space-x-1">
                           <MapPin className="w-4 h-4" />
-                          <span>{userProfile.location}</span>
+                          <span>{displayProfile.location}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
-                          <span>Responds in {userProfile.responseTime}</span>
+                          <span>Responds in {displayProfile.responseTime}</span>
                         </div>
                       </div>
                     </div>
@@ -212,28 +241,28 @@ export default function ProfilePage({
                   <div className="flex items-center justify-center space-x-1 mb-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     <span className="text-xl font-bold text-white">
-                      {userProfile.rating}
+                      {displayProfile.rating}
                     </span>
                   </div>
                   <div className="text-sm text-gray-400">
-                    ({userProfile.reviewCount} reviews)
+                    ({displayProfile.reviewCount} reviews)
                   </div>
                 </div>
                 <div className="glass-card p-4 rounded-xl text-center">
                   <div className="text-xl font-bold text-white mb-1">
-                    {formatCurrency(userProfile.hourlyRate)}/hr
+                    {formatCurrency(displayProfile.hourlyRate)}/hr
                   </div>
                   <div className="text-sm text-gray-400">Hourly Rate</div>
                 </div>
                 <div className="glass-card p-4 rounded-xl text-center">
                   <div className="text-xl font-bold text-white mb-1">
-                    {userProfile.completedJobs}
+                    {displayProfile.completedJobs}
                   </div>
                   <div className="text-sm text-gray-400">Jobs Completed</div>
                 </div>
                 <div className="glass-card p-4 rounded-xl text-center">
                   <div className="text-xl font-bold text-white mb-1">
-                    {userProfile.successRate}%
+                    {displayProfile.successRate}%
                   </div>
                   <div className="text-sm text-gray-400">Success Rate</div>
                 </div>
@@ -241,7 +270,7 @@ export default function ProfilePage({
 
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mt-6">
-                {userProfile.badges.map((badge, index) => (
+                {displayProfile.badges.map((badge, index) => (
                   <span
                     key={index}
                     className={cn(
@@ -301,7 +330,7 @@ export default function ProfilePage({
                     About
                   </h3>
                   <p className="text-gray-300 leading-relaxed">
-                    {userProfile.description}
+                    {displayProfile.description}
                   </p>
                 </div>
 
@@ -316,7 +345,7 @@ export default function ProfilePage({
                     </button>
                   </div>
                   <div className="space-y-4">
-                    {userProfile.skills.map((skill, index) => (
+                    {displayProfile.skills.map((skill, index) => (
                       <div key={index}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-white font-medium">
@@ -346,7 +375,7 @@ export default function ProfilePage({
                     Languages
                   </h3>
                   <div className="space-y-2">
-                    {userProfile.languages.map((language, index) => (
+                    {displayProfile.languages.map((language, index) => (
                       <div key={index} className="text-gray-300">
                         {language}
                       </div>
@@ -360,7 +389,7 @@ export default function ProfilePage({
                     Member Since
                   </h3>
                   <p className="text-gray-300">
-                    {new Date(userProfile.memberSince).toLocaleDateString(
+                    {new Date(displayProfile.memberSince).toLocaleDateString(
                       "en-US",
                       {
                         year: "numeric",
@@ -376,104 +405,48 @@ export default function ProfilePage({
                     Total Earnings
                   </h3>
                   <p className="text-2xl font-bold text-green-400">
-                    {formatCurrency(userProfile.totalEarnings)}
+                    {formatCurrency(displayProfile.totalEarnings)}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === "portfolio" && (
+          {activeTab === "achievements" && (
             <div>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">Portfolio</h2>
-                <button className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Project
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userProfile.portfolio.map((project) => (
-                  <div
-                    key={project.id}
-                    className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-all duration-300"
-                  >
-                    <div className="aspect-video bg-gradient-to-br from-purple-500 to-pink-500 relative">
-                      {project.featured && (
-                        <div className="absolute top-3 left-3">
-                          <span className="bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-medium">
-                            Featured
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {project.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.tools.map((tool, index) => (
-                          <span
-                            key={index}
-                            className="bg-gray-800/50 text-gray-300 text-xs px-2 py-1 rounded-full"
-                          >
-                            {tool}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-gray-400">
-                        <span>{project.client}</span>
-                        <span>{project.year}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "reviews" && (
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-8">
-                Client Reviews
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center space-x-2">
+                <Award className="w-6 h-6" />
+                <span>Achievements</span>
               </h2>
-              <div className="space-y-6">
-                {userProfile.reviews.map((review) => (
-                  <div key={review.id} className="glass-card p-6 rounded-2xl">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="text-lg font-semibold text-white">
-                          {review.client}
-                        </h4>
-                        <p className="text-sm text-gray-400">
-                          {review.project}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              "w-4 h-4",
-                              i < review.rating
-                                ? "text-yellow-400 fill-current"
-                                : "text-gray-600",
-                            )}
-                          />
-                        ))}
-                      </div>
+
+              {displayProfile.badges.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayProfile.badges.map((badge: string, index: number) => (
+                    <div
+                      key={index}
+                      className="glass-card rounded-2xl p-6 text-center"
+                    >
+                      <Award className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {badge}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        Earned on {new Date().toLocaleDateString()}
+                      </p>
                     </div>
-                    <p className="text-gray-300 mb-4">{review.comment}</p>
-                    <p className="text-sm text-gray-400">
-                      {new Date(review.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Award className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                    No achievements yet
+                  </h3>
+                  <p className="text-gray-500">
+                    Complete tasks and earn badges to showcase your progress.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
