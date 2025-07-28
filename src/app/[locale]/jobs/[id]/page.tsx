@@ -25,15 +25,19 @@ import {
   Award,
   Briefcase,
   Target,
+  MessageCircle,
 } from "lucide-react";
 import { JobsService, ApplicationsService } from "@/lib/appwrite/jobs";
+import { JobService } from "@/services/jobs";
 import { useAuth } from "@/hooks/useAuth";
 import ApplyJobModal from "@/components/ApplyJobModal";
 import JobApplicationsModal from "@/components/JobApplicationsModal";
 import FreelancerInviteModal from "@/components/FreelancerInviteModal";
+import JobWorkflowTimeline from "@/components/JobWorkflowTimeline";
 import { InvitationsService } from "@/lib/appwrite/invitations";
 import { FreelancerMatchingService } from "@/services/freelancerMatchingService";
 import { projectService } from "@/services/project";
+import { cn } from "@/lib/utils";
 
 interface Job {
   id: string;
@@ -211,13 +215,22 @@ export default function JobDetailsPage() {
   };
 
   const loadJobInvitations = async () => {
-    if (!job) return;
+    if (!user || user.userType !== "client") return;
 
     try {
-      const invitations = await InvitationsService.getJobInvitations(job.id);
-      setJobInvitations(invitations);
+      const jobService = new JobService();
+      const result = await jobService.getJobInvitations(params.id as string);
+      
+      if (result.success) {
+        setJobInvitations(result.invitations || []);
+        console.log('✅ Loaded job invitations:', result.invitations?.length);
+      } else {
+        console.error('Failed to load job invitations:', result.error);
+        setJobInvitations([]);
+      }
     } catch (error) {
-      console.error("Error loading job invitations:", error);
+      console.error('Error loading job invitations:', error);
+      setJobInvitations([]);
     }
   };
 
@@ -272,50 +285,40 @@ export default function JobDetailsPage() {
   };
 
   const handleInviteFreelancers = async (freelancerIds: string[]) => {
-    if (!user || !job) return;
+    if (!user || user.userType !== "client") {
+      alert("Only clients can invite freelancers");
+      return;
+    }
 
     try {
-      // Получаем данные фрилансеров
-      const { freelancers } =
-        await FreelancerMatchingService.findMatchingFreelancers(
-          {
-            skills: job.skills,
-          },
-          100,
-        );
-
-      const selectedFreelancers = freelancers.filter((f) =>
-        freelancerIds.includes(f.$id),
+      console.log('Sending invitations to freelancers:', freelancerIds);
+      
+      // Use JobService to send invitations
+      const jobService = new JobService();
+      const result = await jobService.sendInvitations(
+        params.id as string,
+        freelancerIds,
+        `Hello! I would like to invite you to work on my project "${job?.title}". Please take a look at the project details and let me know if you're interested.`,
+        user.$id
       );
 
-      // Создаем приглашения
-      const invitations = selectedFreelancers.map((freelancer) => ({
-        jobId: job.id,
-        jobTitle: job.title,
-        clientId: user.$id,
-        clientName: user.name,
-        freelancerId: freelancer.$id,
-        freelancerName: freelancer.name,
-        freelancerEmail: freelancer.email,
-        status: "pending" as const,
-        invitedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        metadata: {
-          aiRecommended: true,
-          skillsMatch: 0.8,
-          ratingScore: freelancer.rating || 0,
-        },
-      }));
-
-      await InvitationsService.createBulkInvitations(invitations, user.$id);
-
-      await loadJobInvitations(); // Reload invitations
-      alert(
-        `Invitations sent to ${freelancerIds.length} freelancer${freelancerIds.length !== 1 ? "s" : ""}!`,
-      );
+      if (result.success) {
+        alert(`Successfully sent ${result.summary?.successful} invitation(s) to freelancers!`);
+        
+        // Reload invitations to show updated list
+        loadJobInvitations();
+        
+        // Send notifications
+        if (result.notifications) {
+          const successfulNotifications = result.notifications.filter(n => n.status === 'sent').length;
+          console.log(`✅ Sent ${successfulNotifications} notifications successfully`);
+        }
+      } else {
+        alert(`Failed to send invitations: ${result.error}`);
+      }
     } catch (error) {
-      console.error("Error inviting freelancers:", error);
-      alert("Error sending invitations. Please try again.");
+      console.error('Error inviting freelancers:', error);
+      alert('Failed to send invitations. Please try again.');
     }
   };
 
@@ -844,10 +847,165 @@ export default function JobDetailsPage() {
                       View Applications
                     </button>
                   </div>
+
+                  {/* Invited Freelancers Section */}
+                  {jobInvitations.length > 0 && (
+                    <div className="mt-6 border-t border-gray-700/50 pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-md font-semibold text-white flex items-center">
+                          <Users className="w-4 h-4 mr-2 text-purple-400" />
+                          Invited Freelancers ({jobInvitations.length})
+                        </h4>
+                        <button
+                          onClick={() => setShowInviteModal(true)}
+                          className="text-purple-400 hover:text-purple-300 text-sm"
+                        >
+                          Invite More
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {jobInvitations.map((invitation: any) => (
+                          <div
+                            key={invitation.$id}
+                            className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 hover:bg-gray-800/70 transition-all duration-200"
+                          >
+                            {/* Freelancer Info */}
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                {invitation.freelancer_avatar ? (
+                                  <img
+                                    src={invitation.freelancer_avatar}
+                                    alt={invitation.freelancer_name}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-white text-sm font-semibold">
+                                    {invitation.freelancer_name?.charAt(0) || 'F'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">
+                                  {invitation.freelancer_name}
+                                </p>
+                                <div className="flex items-center space-x-2 text-xs text-gray-400">
+                                  {invitation.freelancer_rating > 0 && (
+                                    <div className="flex items-center space-x-1">
+                                      <Star className="w-3 h-3 fill-current text-yellow-400" />
+                                      <span>{invitation.freelancer_rating}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Status Badge */}
+                            <div className="flex items-center justify-between mb-3">
+                              <span
+                                className={cn(
+                                  "px-2 py-1 rounded-full text-xs font-medium",
+                                  invitation.status === 'pending'
+                                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                    : invitation.status === 'accepted'
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : invitation.status === 'declined'
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                )}
+                              >
+                                {invitation.status === 'pending' && '⏳ Pending'}
+                                {invitation.status === 'accepted' && '✅ Accepted'}
+                                {invitation.status === 'declined' && '❌ Declined'}
+                                {invitation.status === 'viewed' && '👀 Viewed'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(invitation.invited_at).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Skills */}
+                            {invitation.freelancer_skills && invitation.freelancer_skills.length > 0 && (
+                              <div className="mb-3">
+                                <div className="flex flex-wrap gap-1">
+                                  {invitation.freelancer_skills.slice(0, 3).map((skill: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                  {invitation.freelancer_skills.length > 3 && (
+                                    <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">
+                                      +{invitation.freelancer_skills.length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Response Message */}
+                            {invitation.response_message && (
+                              <div className="mb-3 p-2 bg-gray-700/50 rounded-lg">
+                                <p className="text-xs text-gray-300 italic">
+                                  "{invitation.response_message}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex space-x-2">
+                              <Link
+                                href={`/en/freelancers/${invitation.freelancer_id}`}
+                                className="flex-1 px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-center text-xs font-medium transition-colors"
+                              >
+                                View Profile
+                              </Link>
+                              <Link
+                                href={`/en/messages?freelancer=${invitation.freelancer_id}&job=${params.id}`}
+                                className="flex-1 px-3 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 rounded-lg text-center text-xs font-medium transition-colors"
+                              >
+                                Message
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
+
+          {/* Job Workflow - show for active jobs */}
+          {job && (job.category === 'active' || job.type === 'contract') && (
+            <div className="mt-8">
+              <JobWorkflowTimeline />
+            </div>
+          )}
+
+          {/* Chat Integration Button */}
+          {user && job && (
+            <div className="mt-8 p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Общение по проекту</h3>
+                  <p className="text-gray-400 text-sm">
+                    Обсудите детали проекта напрямую с {user.userType === 'client' ? 'фрилансером' : 'клиентом'}
+                  </p>
+                </div>
+                <Link
+                  href={`/en/messages?job=${job.id}&with=${user.userType === 'client' ? 'freelancer' : 'client'}`}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Открыть чат</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

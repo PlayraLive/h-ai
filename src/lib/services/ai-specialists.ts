@@ -1,5 +1,6 @@
 import { databases, DATABASE_ID, ID, Query, COLLECTIONS } from '../appwrite/database';
 import { AISpecialist, AISpecialistOrder, AISpecialistMessage, AITaskTimeline, AISpecialistSubscription } from '@/types';
+import { chatCompletion, OpenAIMessage } from './openai';
 
 export class AISpecialistsService {
   
@@ -226,41 +227,64 @@ export class AISpecialistsService {
     try {
       // Get order details
       const order = await this.getOrder(orderId);
-      
-      // Generate appropriate AI response based on message type and current status
       let aiResponse = '';
       let shouldUpdateStatus = false;
       let newStatus: AISpecialistOrder['status'] | null = null;
 
-      switch (messageType) {
-        case 'text':
-          // Generate contextual response based on order status
-          if (order.status === 'pending') {
-            aiResponse = `Thank you for the additional information! I'm reviewing everything and will start working on your project shortly. You can expect the first update within a few hours.`;
+      // --- Уникальный контекст для каждого спеца ---
+      const specialistId = order.specialistId;
+      let systemPrompt = '';
+      switch (specialistId) {
+        case 'alex-ai':
+          systemPrompt = 'Ты — профессиональный AI-специалист по созданию фото-аватаров и портретов для бизнеса, соцсетей и брендинга. Отвечай как эксперт по AI-аватарам, помогай с выбором стиля, техническими деталями, советуй лучшие практики.';
+          break;
+        case 'viktor-reels':
+          systemPrompt = 'Ты — AI-специалист по созданию вирусных видео для соцсетей (TikTok, Instagram Reels, YouTube Shorts). Отвечай как эксперт по видеомаркетингу, монтажу, трендам и вовлечению аудитории.';
+          break;
+        case 'luna-design':
+          systemPrompt = 'Ты — AI-дизайнер сайтов, логотипов и фирменного стиля. Отвечай как эксперт по веб-дизайну, UX/UI, брендингу и визуальной айдентике.';
+          break;
+        case 'max-bot':
+          systemPrompt = 'Ты — AI-разработчик Telegram-ботов и автоматизации. Отвечай как эксперт по созданию чат-ботов, интеграциям, автоматизации бизнес-процессов.';
+          break;
+        default:
+          systemPrompt = 'Ты — AI-специалист, помогающий пользователям с их задачами.';
+      }
+      // --- END контекст ---
+
+      // Если обычный текст — генерируем ответ через OpenAI
+      if (messageType === 'text') {
+        const openaiApiKey = process.env.OPENAI_API_KEY;
+        const messages: OpenAIMessage[] = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ];
+        try {
+          aiResponse = await chatCompletion({
+            apiKey: openaiApiKey,
+            messages
+          });
+        } catch (err) {
+          aiResponse = 'Извините, произошла ошибка при генерации AI-ответа.';
+        }
+        shouldUpdateStatus = order.status === 'pending';
+        newStatus = shouldUpdateStatus ? 'in_progress' : null;
+      } else {
+        // Старое поведение для других типов сообщений
+        switch (messageType) {
+          case 'approval':
+            if (message.toLowerCase().includes('approve') || message.toLowerCase().includes('accept')) {
+              aiResponse = `Excellent! I'm glad you're happy with the result. The project is now complete and the final deliverables are ready for download.`;
+              shouldUpdateStatus = true;
+              newStatus = 'completed';
+            }
+            break;
+          case 'briefing':
+            aiResponse = `Thank you for the detailed brief! I have everything I need to get started. I'll begin work immediately and keep you updated on progress.`;
             shouldUpdateStatus = true;
             newStatus = 'in_progress';
-          } else if (order.status === 'in_progress') {
-            aiResponse = `Got it! I'll incorporate your feedback into the current work. I'll send you an update shortly.`;
-          } else if (order.status === 'review') {
-            aiResponse = `Thank you for your feedback! I'll make the necessary adjustments and send you the revised version soon.`;
-            shouldUpdateStatus = true;
-            newStatus = 'in_progress';
-          }
-          break;
-
-        case 'approval':
-          if (message.toLowerCase().includes('approve') || message.toLowerCase().includes('accept')) {
-            aiResponse = `Excellent! I'm glad you're happy with the result. The project is now complete and the final deliverables are ready for download.`;
-            shouldUpdateStatus = true;
-            newStatus = 'completed';
-          }
-          break;
-
-        case 'briefing':
-          aiResponse = `Thank you for the detailed brief! I have everything I need to get started. I'll begin work immediately and keep you updated on progress.`;
-          shouldUpdateStatus = true;
-          newStatus = 'in_progress';
-          break;
+            break;
+        }
       }
 
       // Send AI response

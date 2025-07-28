@@ -1,6 +1,8 @@
 import { databases, DATABASE_ID, JOBS_COLLECTION_ID, PROPOSALS_COLLECTION_ID } from '@/lib/appwrite';
 import { ID, Query } from 'appwrite';
 import type { Job, Proposal, JobFilters, JobFormData } from '@/types';
+import { NotificationService } from '@/lib/services/notification-service';
+import { UnifiedChatService } from '@/lib/services/unified-chat-service';
 
 export class JobService {
   // Create new job
@@ -44,6 +46,55 @@ export class JobService {
           attachments: jobData.attachments || []
         }
       );
+
+      // Отправляем уведомление клиенту о создании job
+      try {
+        await NotificationService.createNotification({
+          userId: clientId,
+          title: '🎉 Заказ успешно создан!',
+          message: `Ваш заказ "${jobData.title}" опубликован и доступен для фрилансеров. Начните получать заявки уже сейчас!`,
+          type: 'job_created',
+          channels: ['push', 'email'],
+          priority: 'normal',
+          actionUrl: `/jobs/${job.$id}`,
+          actionText: 'Посмотреть заказ',
+          metadata: {
+            jobId: job.$id,
+            jobTitle: jobData.title,
+            budget: `$${jobData.budgetMin} - $${jobData.budgetMax}`
+          }
+        });
+
+        console.log('✅ Job creation notification sent to client');
+      } catch (notificationError) {
+        console.warn('Failed to send job creation notification:', notificationError);
+        // Не останавливаем создание job из-за ошибки уведомления
+      }
+
+      // Автоматически присваиваем статус "client" пользователю при создании первого job
+      try {
+        const currentUser = await databases.getDocument(
+          DATABASE_ID,
+          process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+          clientId
+        );
+
+        // Если пользователь еще не имеет тип "client", обновляем его
+        if (currentUser.userType !== 'client') {
+          await databases.updateDocument(
+            DATABASE_ID,
+            process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+            clientId,
+            {
+              userType: 'client'
+            }
+          );
+          console.log(`✅ Updated user ${clientId} type to 'client'`);
+        }
+      } catch (userUpdateError) {
+        console.warn('Failed to update user type to client:', userUpdateError);
+        // Не останавливаем создание job из-за ошибки обновления пользователя
+      }
 
       return { success: true, job: job as Job };
     } catch (error: any) {
@@ -387,6 +438,152 @@ export class JobService {
         }
       };
     } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Send invitation to freelancers
+  async sendInvitations(jobId: string, freelancerIds: string[], message: string, clientId: string) {
+    try {
+      const job = await this.getJobById(jobId);
+      if (!job.success || !job.job) {
+        throw new Error('Job not found');
+      }
+
+      const invitations = [];
+      const notifications = [];
+
+      for (const freelancerId of freelancerIds) {
+        try {
+          // Get freelancer info
+          const freelancerDoc = await databases.getDocument(
+            DATABASE_ID,
+            process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!,
+            freelancerId
+          );
+
+          // Create invitation
+          const invitation = await databases.createDocument(
+            DATABASE_ID,
+            'invitations', // Collection ID for invitations
+            ID.unique(),
+            {
+              job_id: jobId,
+              freelancer_id: freelancerId,
+              client_id: clientId,
+              freelancer_name: freelancerDoc.name,
+              freelancer_avatar: freelancerDoc.avatar || '',
+              freelancer_rating: freelancerDoc.rating || 0,
+              freelancer_skills: freelancerDoc.skills || [],
+              job_title: job.job.title,
+              job_budget: `$${job.job.budgetMin} - $${job.job.budgetMax}`,
+              message: message,
+              status: 'pending',
+              invited_at: new Date().toISOString()
+            }
+          );
+
+          invitations.push(invitation);
+
+          // Send notification
+          try {
+            await NotificationService.createNotification({
+              userId: freelancerId,
+              title: '🎯 Новое приглашение на работу!',
+              message: `Вас пригласили на проект "${job.job.title}". Бюджет: $${job.job.budgetMin} - $${job.job.budgetMax}`,
+              type: 'job_invitation',
+              channels: ['push', 'email'],
+              priority: 'high',
+              actionUrl: `/jobs/${jobId}`,
+              actionText: 'Посмотреть проект',
+              metadata: {
+                jobId: jobId,
+                jobTitle: job.job.title,
+                clientId: clientId,
+                invitationId: invitation.$id,
+                message: message
+              }
+            });
+
+            notifications.push({ freelancerId, status: 'sent' });
+          } catch (notificationError) {
+            console.warn(`Failed to send notification to ${freelancerId}:`, notificationError);
+            notifications.push({ freelancerId, status: 'failed' });
+          }
+
+          // Create conversation for direct messaging
+          try {
+            await UnifiedChatService.getOrCreateJobConversation(
+              jobId,
+              clientId,
+              freelancerId,
+              {
+                jobTitle: job.job.title,
+                budget: { min: job.job.budgetMin, max: job.job.budgetMax, currency: 'USD' },
+                skills: job.job.skills
+              }
+            );
+          } catch (chatError) {
+            console.warn(`Failed to create conversation for ${freelancerId}:`, chatError);
+          }
+
+        } catch (freelancerError) {
+          console.error(`Error inviting freelancer ${freelancerId}:`, freelancerError);
+        }
+      }
+
+      return { 
+        success: true, 
+        invitations, 
+        notifications,
+        summary: {
+          total: freelancerIds.length,
+          successful: invitations.length,
+          failed: freelancerIds.length - invitations.length
+        }
+      };
+    } catch (error: any) {
+      console.error('Error sending invitations:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get job invitations
+  async getJobInvitations(jobId: string) {
+    try {
+      const invitationsResponse = await databases.listDocuments(
+        DATABASE_ID,
+        'invitations',
+        [
+          Query.equal('job_id', jobId),
+          Query.orderDesc('invited_at')
+        ]
+      );
+
+      return { success: true, invitations: invitationsResponse.documents };
+    } catch (error: any) {
+      console.error('Error getting job invitations:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Update invitation status
+  async updateInvitationStatus(invitationId: string, status: string, responseMessage?: string) {
+    try {
+      const invitation = await databases.updateDocument(
+        DATABASE_ID,
+        'invitations',
+        invitationId,
+        {
+          status: status,
+          responded_at: new Date().toISOString(),
+          response_message: responseMessage || ''
+        }
+      );
+
+      return { success: true, invitation };
+    } catch (error: any) {
+      console.error('Error updating invitation status:', error);
       return { success: false, error: error.message };
     }
   }

@@ -1,4 +1,4 @@
-import { Client, Databases, ID, Query, Permission, Role } from 'appwrite';
+import { Client, Databases, Storage, ID, Query, Permission, Role } from 'appwrite';
 
 // Initialize Appwrite client
 const client = new Client()
@@ -6,6 +6,7 @@ const client = new Client()
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
 export const databases = new Databases(client);
+export const storage = new Storage(client);
 
 // Database and Collection IDs
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;

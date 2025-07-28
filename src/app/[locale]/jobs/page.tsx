@@ -22,6 +22,7 @@ import { useToast } from "@/components/Toast";
 import { JobsService } from "@/lib/appwrite/jobs";
 import { cn } from "@/lib/utils";
 import ApplyJobModal from "@/components/ApplyJobModal";
+import InteractionButtons from "@/components/shared/InteractionButtons";
 interface Job {
   id: string;
   title: string;
@@ -561,16 +562,6 @@ function JobCard({
               Urgent
             </span>
           )}
-          <button
-            onClick={onSave}
-            className="p-2 text-gray-400 hover:text-purple-400 transition-colors"
-          >
-            {isSaved ? (
-              <BookmarkCheck className="w-5 h-5" />
-            ) : (
-              <Bookmark className="w-5 h-5" />
-            )}
-          </button>
         </div>
       </div>
 
@@ -624,8 +615,8 @@ function JobCard({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-700">
+      {/* Interaction Buttons */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4 text-sm text-gray-400">
           <span>Posted {formatDate(job.postedAt)}</span>
           <span>•</span>
@@ -636,6 +627,18 @@ function JobCard({
           </div>
         </div>
 
+        <InteractionButtons 
+          targetId={job.id}
+          targetType="job"
+          showLike={true}
+          showFavorite={true}
+          showViews={false}
+          showShare={false}
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-700">
         <div className="flex items-center space-x-2">
           <Link
             href={`/en/jobs/${job.id}`}

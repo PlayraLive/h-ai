@@ -43,10 +43,16 @@ import {
   Heart,
   Trash2,
   Bot,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 // Navbar removed - using Sidebar instead
 import { cn, formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { ReelsService, Reel } from "@/lib/appwrite/reels";
+import EnhancedOnboardingModal from "@/components/onboarding/EnhancedOnboardingModal";
+import UserProgressCard from "@/components/gamification/UserProgressCard";
+import { useGamification } from "@/hooks/useGamification";
+import { ChatNavigationService } from "@/lib/chat-navigation";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -70,6 +76,10 @@ export default function DashboardPage() {
   // Add AI orders state
   const [aiOrders, setAiOrders] = useState<OrderCard[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Add Active Jobs state
+  const [activeJobs, setActiveJobs] = useState<any[]>([]);
+  const [loadingActiveJobs, setLoadingActiveJobs] = useState(false);
 
   // Real user stats from database
   const [userStats, setUserStats] = useState({
@@ -99,6 +109,78 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
 
+  // Состояния для онбординга и геймификации
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingTrigger, setOnboardingTrigger] = useState<'first_job' | 'first_application'>('first_job');
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const { recordView, awardXP } = useGamification();
+
+  // Проверка необходимости онбординга
+  useEffect(() => {
+    if (user) {
+      checkOnboardingStatus();
+      recordView('dashboard', 'page'); // Записываем просмотр дашборда
+    }
+  }, [user, recordView]);
+
+  const checkOnboardingStatus = async () => {
+    if (!user) return;
+
+    try {
+      // Проверяем, завершен ли онбординг
+      const profileResponse = await databases.listDocuments(
+        DATABASE_ID,
+        'user_profiles',
+        [Query.equal('user_id', user.$id)]
+      );
+
+      const hasProfile = profileResponse.documents.length > 0;
+      const profileCompleted = hasProfile && profileResponse.documents[0].onboarding_completed;
+
+      if (!profileCompleted) {
+        setNeedsOnboarding(true);
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
+
+  const triggerOnboarding = (trigger: 'first_job' | 'first_application') => {
+    setOnboardingTrigger(trigger);
+    setShowOnboarding(true);
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setNeedsOnboarding(false);
+    // Refresh user data
+    loadUserStats();
+    awardXP(25, 'onboarding_completed'); // Bonus XP for completing onboarding
+  };
+
+  // Navigate to appropriate chat
+  const navigateToChat = async (targetUserId?: string, jobId?: string, orderId?: string, projectId?: string) => {
+    if (!user) return;
+    
+    try {
+      const chatInfo = await ChatNavigationService.getChatUrl({
+        userId: user.$id,
+        targetUserId,
+        jobId,
+        orderId,
+        projectId,
+        conversationType: orderId ? 'ai_order' : jobId ? 'job' : projectId ? 'project' : 'direct'
+      });
+      
+      // Navigate to the chat
+      window.location.href = chatInfo.chatUrl;
+    } catch (error) {
+      console.error('Error navigating to chat:', error);
+      // Fallback to messages page
+      window.location.href = '/en/messages';
+    }
+  };
+
   // Load user's solutions and stats
   const loadSolutions = useCallback(async () => {
     if (!user) return;
@@ -127,7 +209,7 @@ export default function DashboardPage() {
         // Get portfolio count
         const portfolioResponse = await databases.listDocuments(
           DATABASE_ID,
-          COLLECTIONS.PORTFOLIO,
+          COLLECTIONS.PROJECTS,
           [Query.equal("userId", user.$id)],
         );
 
@@ -177,7 +259,7 @@ export default function DashboardPage() {
 
         // Calculate days since joining
         const joinDate = new Date(
-          userProfile.memberSince || userProfile.$createdAt,
+          userProfile.$createdAt || new Date().toISOString(),
         );
         const today = new Date();
         const daysSinceJoining = Math.floor(
@@ -197,7 +279,7 @@ export default function DashboardPage() {
           following: following.length,
           commentsReceived: userProfile.reviewsCount || 0,
           sharesReceived: 0,
-          joinedDate: userProfile.memberSince || userProfile.$createdAt,
+          joinedDate: userProfile.$createdAt || new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -207,23 +289,151 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  // Load AI orders
-  useEffect(() => {
+  // Load AI orders from API
+  const loadAIOrders = useCallback(async () => {
     if (!user) return;
     
     setLoadingOrders(true);
     try {
-      const userOrders = AIOrderService.getUserOrders(user.$id);
-      const orderCards = userOrders.map(order => 
-        AIOrderService.generateOrderCard(order, userType === 'freelancer' ? 'specialist' : 'client')
-      );
-      setAiOrders(orderCards);
+      // Загружаем заказы через API
+      const response = await fetch(`/api/orders?userId=${user.$id}&action=list`);
+      const data = await response.json();
+      
+      if (data.success && data.orders) {
+        // Преобразуем заказы в карточки для отображения
+        const orderCards = data.orders.map((order: any) => ({
+          orderId: order.$id,
+          userId: order.userId,
+          specialistId: order.specialistId,
+          specialist: {
+            id: order.specialistId,
+            name: order.specialistName,
+            title: order.specialistTitle,
+            avatar: `/avatars/${order.specialistId}.jpg`
+          },
+          tariff: {
+            name: order.tariffName,
+            price: order.amount,
+            features: []
+          },
+          status: order.status || 'active',
+          amount: order.amount,
+          requirements: order.requirements,
+          conversationId: order.conversationId,
+          timeline: order.timeline,
+          createdAt: order.createdAt,
+          lastUpdate: order.updatedAt,
+          actions: [
+            {
+              label: 'Открыть чат',
+              action: 'open_chat',
+              variant: 'primary'
+            },
+            {
+              label: 'AI чат',
+              action: 'chat_with_specialist',
+              variant: 'success'
+            }
+          ]
+        }));
+        
+        setAiOrders(orderCards);
+        console.log('✅ Loaded AI orders:', orderCards.length);
+      }
     } catch (error) {
       console.error('Error loading AI orders:', error);
+      setAiOrders([]); // Fallback to empty array
     } finally {
       setLoadingOrders(false);
     }
+  }, [user]);
+
+  // Load Active Jobs (jobs where user is actively working)
+  const loadActiveJobs = useCallback(async () => {
+    if (!user) return;
+    
+    setLoadingActiveJobs(true);
+    try {
+      // Load jobs based on user type
+      let jobs = [];
+      
+      if (userType === 'freelancer') {
+        // Get jobs where freelancer is assigned
+        const jobsResponse = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.JOBS,
+          [
+            Query.equal('assignedFreelancer', user.$id),
+            Query.equal('status', ['in_progress', 'review', 'pending_start']),
+            Query.orderDesc('$createdAt'),
+            Query.limit(20)
+          ]
+        );
+        jobs = jobsResponse.documents;
+      } else {
+        // Get client's active jobs
+        const jobsResponse = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.JOBS,
+          [
+            Query.equal('clientId', user.$id),
+            Query.equal('status', ['active', 'in_progress', 'review']),
+            Query.orderDesc('$createdAt'),
+            Query.limit(20)
+          ]
+        );
+        jobs = jobsResponse.documents;
+      }
+
+      // Enrich jobs with additional data
+      const enrichedJobs = await Promise.all(jobs.map(async (job: any) => {
+        try {
+          // Get applications count
+          const applicationsResponse = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.APPLICATIONS,
+            [Query.equal('jobId', job.$id)]
+          );
+
+          return {
+            ...job,
+            applicationsCount: applicationsResponse.documents.length,
+            applications: applicationsResponse.documents.slice(0, 3), // First 3 applications
+          };
+        } catch (error) {
+          console.warn('Error enriching job:', error);
+          return {
+            ...job,
+            applicationsCount: 0,
+            applications: []
+          };
+        }
+      }));
+
+      setActiveJobs(enrichedJobs);
+      console.log('✅ Loaded active jobs:', enrichedJobs.length);
+      
+    } catch (error) {
+      console.error('Error loading active jobs:', error);
+      setActiveJobs([]);
+    } finally {
+      setLoadingActiveJobs(false);
+    }
   }, [user, userType]);
+
+  // Load AI orders when user changes
+  useEffect(() => {
+    if (user) {
+      loadAIOrders();
+    }
+  }, [user, loadAIOrders]);
+
+  // Load Active Jobs when user or user type changes
+  useEffect(() => {
+    if (user) {
+      loadActiveJobs();
+    }
+  }, [user, loadActiveJobs]);
 
   // Set user type based on user data
   useEffect(() => {
@@ -254,6 +464,21 @@ export default function DashboardPage() {
       return (num / 1000).toFixed(1) + "K";
     }
     return num.toString();
+  };
+
+  // Safe currency formatter
+  const safeCurrency = (amount: number | string): string => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return formatCurrency(numAmount || 0);
+  };
+
+  // Safe relative time formatter
+  const safeRelativeTime = (dateString: string): string => {
+    try {
+      return formatRelativeTime(dateString);
+    } catch {
+      return 'недавно';
+    }
   };
 
   // Handle edit solution
@@ -327,22 +552,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Safe formatting functions
-  const safeCurrency = (amount: number) => {
-    try {
-      return formatCurrency(amount);
-    } catch (e) {
-      return `$${amount}`;
-    }
-  };
 
-  const safeRelativeTime = (date: string) => {
-    try {
-      return formatRelativeTime(date);
-    } catch (e) {
-      return new Date(date).toLocaleDateString();
-    }
-  };
 
   // Temporarily disable auth check
   // if (!isAuthenticated) {
@@ -615,6 +825,7 @@ export default function DashboardPage() {
     userType === "freelancer"
       ? [
           { id: "overview", label: "Overview" },
+          { id: "active_jobs", label: "Active Jobs" },
           { id: "portfolio", label: "Portfolio" },
           { id: "solutions", label: "Solutions" },
           { id: "ai_orders", label: "AI Orders" },
@@ -623,6 +834,7 @@ export default function DashboardPage() {
         ]
       : [
           { id: "overview", label: "Overview" },
+          { id: "active_jobs", label: "Active Jobs" },
           { id: "projects", label: "Projects" },
           { id: "solutions", label: "Solutions" },
           { id: "ai_orders", label: "AI Orders" },
@@ -635,74 +847,126 @@ export default function DashboardPage() {
       {/* Top Navigation */}
       <Navbar />
 
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <EnhancedOnboardingModal
+          isOpen={showOnboarding}
+          onClose={handleOnboardingComplete}
+          userType={userType}
+          trigger={onboardingTrigger}
+        />
+      )}
+
       {/* Main Content */}
       <div className="w-full pb-20 lg:pb-0 main-content">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4 sm:space-y-6">
-          {/* Header */}
-          <div className="relative bg-gradient-to-r from-[#1A1A2E] via-[#1A1A2E] to-[#2A1A3E] border-b border-gray-700/50 p-4 md:p-6 lg:p-8 overflow-hidden rounded-t-2xl">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5"></div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
-
-            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
-                  Welcome back, {user?.name || "User"}! 👋
-                </h1>
-                <p className="text-gray-400 text-sm sm:text-base">
-                  {userType === "freelancer"
-                    ? "Manage your projects and find new opportunities"
-                    : "Post jobs and manage your hired freelancers"}
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {/* User Type Switcher */}
-                <div className="flex bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm">
-                  <button
-                    onClick={() => setUserType("freelancer")}
-                    className={cn(
-                      "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                      userType === "freelancer"
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                        : "text-gray-400 hover:text-white hover:bg-gray-700/50",
-                    )}
-                  >
-                    👨‍💻 Freelancer
-                  </button>
-                  <button
-                    onClick={() => setUserType("client")}
-                    className={cn(
-                      "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                      userType === "client"
-                        ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
-                        : "text-gray-400 hover:text-white hover:bg-gray-700/50",
-                    )}
-                  >
-                    🏢 Client
-                  </button>
+          
+          {/* Onboarding Alert */}
+          {needsOnboarding && !showOnboarding && (
+            <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      {userType === 'client' ? 'Завершите настройку профиля' : 'Создайте профессиональный профиль'}
+                    </h3>
+                    <p className="text-gray-400">
+                      {userType === 'client' 
+                        ? 'Заполните информацию о компании для привлечения лучших фрилансеров'
+                        : 'Добавьте информацию о навыках для получения большего количества заказов'}
+                    </p>
+                  </div>
                 </div>
-
-                {/* Action Button */}
-                {userType === "client" ? (
-                  <Link
-                    href="/en/jobs/create"
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 hover:shadow-green-600/40"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Post New Job
-                  </Link>
-                ) : (
-                  <Link
-                    href="/en/jobs"
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40"
-                  >
-                    <Briefcase className="w-4 h-4" />
-                    Find Jobs
-                  </Link>
-                )}
+                <button
+                  onClick={() => triggerOnboarding(userType === 'client' ? 'first_job' : 'first_application')}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                >
+                  <span>Настроить</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             </div>
+          )}
+
+          {/* Header with Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Welcome Section */}
+            <div className="lg:col-span-2 relative bg-gradient-to-r from-[#1A1A2E] via-[#1A1A2E] to-[#2A1A3E] border-b border-gray-700/50 p-4 md:p-6 lg:p-8 overflow-hidden rounded-2xl">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5"></div>
+              <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
+
+              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+                    Welcome back, {user?.name || "User"}! 👋
+                  </h1>
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    {userType === "freelancer"
+                      ? "Manage your projects and find new opportunities"
+                      : "Post jobs and manage your hired freelancers"}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* User Type Switcher */}
+                  <div className="flex bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm">
+                    <button
+                      onClick={() => setUserType("freelancer")}
+                      className={cn(
+                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                        userType === "freelancer"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                          : "text-gray-400 hover:text-white hover:bg-gray-700/50",
+                      )}
+                    >
+                      👨‍💻 Freelancer
+                    </button>
+                    <button
+                      onClick={() => setUserType("client")}
+                      className={cn(
+                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                        userType === "client"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
+                          : "text-gray-400 hover:text-white hover:bg-gray-700/50",
+                      )}
+                    >
+                      🏢 Client
+                    </button>
+                  </div>
+
+                  {/* Action Button */}
+                  {userType === "client" ? (
+                    <Link
+                      href="/en/jobs/create"
+                      onClick={() => {
+                        if (needsOnboarding) {
+                          triggerOnboarding('first_job');
+                        }
+                      }}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 hover:shadow-green-600/40"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Post New Job
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/en/jobs"
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40"
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      Find Jobs
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* User Progress Card */}
+            <UserProgressCard />
           </div>
 
           {/* Stats Grid */}
@@ -712,7 +976,8 @@ export default function DashboardPage() {
               return (
                 <div
                   key={index}
-                  className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 rounded-2xl hover:bg-[#1A1A2E]/70 transition-all duration-200 group"
+                  className="bg-[#1A1A2E]/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 rounded-2xl hover:bg-[#1A1A2E]/70 transition-all duration-200 group cursor-pointer"
+                  onClick={() => recordView(`stat_${stat.label}`, 'stat')}
                 >
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div
@@ -773,125 +1038,350 @@ export default function DashboardPage() {
           <div className="mt-6">
             {activeTab === "overview" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                {/* Recent Projects */}
+                {/* Recent Activities */}
                 <div className="lg:col-span-2">
                   <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-xl font-semibold text-white">
-                        {userType === "freelancer"
-                          ? "Recent Portfolio"
-                          : "Recent Projects"}
+                        Последние активности
                       </h3>
-                      <button
-                        onClick={() =>
-                          setActiveTab(
-                            userType === "freelancer"
-                              ? "portfolio"
-                              : "projects",
-                          )
-                        }
-                        className="text-purple-400 hover:text-purple-300 transition-colors"
-                      >
-                        View All
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-400">Обновлено {new Date().toLocaleTimeString('ru')}</span>
+                        <button
+                          onClick={() => {
+                            loadActiveJobs();
+                            loadAIOrders();
+                            loadSolutions();
+                          }}
+                          className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50"
+                          title="Обновить"
+                        >
+                          <Clock className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-3 sm:space-y-4">
-                      {recentProjects.slice(0, 4).map((project) => (
-                        <div
-                          key={project.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-200 border border-gray-700/50"
-                        >
-                          <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-0">
-                            {getStatusIcon(project.status)}
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-white font-medium text-sm sm:text-base truncate">
-                                {project.title}
-                              </h4>
-                              <p className="text-xs sm:text-sm text-gray-400 truncate">
-                                {userType === "freelancer"
-                                  ? `Client: ${(project as any).client}`
-                                  : `Freelancer: ${(project as any).freelancer}`}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4">
-                            <div className="text-left sm:text-right">
-                              <div className="text-white font-medium text-sm sm:text-base">
-                                {safeCurrency(project.budget)}
-                              </div>
-                              <div className="text-xs sm:text-sm text-gray-400">
-                                Due {safeRelativeTime(project.deadline)}
-                              </div>
-                            </div>
-
+                    <div className="space-y-4">
+                      {/* Active Jobs Section */}
+                      {activeJobs.length > 0 && (
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
-                              {project.messages > 0 && (
-                                <Link
-                                  href={`/en/messages?project=${project.id}`}
-                                  className="flex items-center space-x-1 text-purple-400 hover:text-purple-300 transition-colors p-2 rounded-lg hover:bg-purple-500/10"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                  <span className="text-sm hidden sm:inline">
-                                    {project.messages}
-                                  </span>
-                                </Link>
-                              )}
-
-                              <Link
-                                href={`/en/projects/${project.id}`}
-                                className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50"
-                                title="View Project"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Link>
+                              <Briefcase className="w-5 h-5 text-purple-400" />
+                              <h4 className="text-lg font-medium text-white">Активные заказы</h4>
+                              <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium">
+                                {activeJobs.length}
+                              </span>
                             </div>
+                            <button
+                              onClick={() => setActiveTab("active_jobs")}
+                              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center space-x-1"
+                            >
+                              <span>Все заказы</span>
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {activeJobs.slice(0, 3).map((job: any) => (
+                              <div
+                                key={job.$id}
+                                className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:bg-gray-800/70 transition-all duration-200"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusIcon(job.status)}
+                                    <span className={cn(
+                                      "px-2 py-1 rounded-full text-xs font-medium",
+                                      getStatusColor(job.status)
+                                    )}>
+                                      {job.status === 'active' ? 'Активный' : 
+                                       job.status === 'in_progress' ? 'В работе' : 
+                                       job.status === 'review' ? 'На проверке' : job.status}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <h5 className="text-white font-medium text-sm">{job.title}</h5>
+                                    <p className="text-gray-400 text-xs">
+                                      {formatCurrency(job.budgetMin)} - {formatCurrency(job.budgetMax)} • 
+                                      {job.applicationsCount} заявок
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Link
+                                    href={`/en/jobs/${job.$id}`}
+                                    className="p-2 text-purple-400 hover:text-purple-300 transition-colors rounded-lg hover:bg-purple-500/10"
+                                    title="Открыть заказ"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
+                                  <Link
+                                    href={`/en/messages?job=${job.$id}`}
+                                    className="p-2 text-blue-400 hover:text-blue-300 transition-colors rounded-lg hover:bg-blue-500/10"
+                                    title="Сообщения"
+                                  >
+                                    <MessageCircle className="w-4 h-4" />
+                                  </Link>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
+                      )}
+
+                      {/* AI Orders Section */}
+                      {aiOrders.length > 0 && (
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <Bot className="w-5 h-5 text-blue-400" />
+                              <h4 className="text-lg font-medium text-white">AI заказы</h4>
+                              <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium">
+                                {aiOrders.length}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setActiveTab("ai_orders")}
+                              className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center space-x-1"
+                            >
+                              <span>Все AI заказы</span>
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {aiOrders.slice(0, 3).map((order: any) => (
+                              <div
+                                key={order.orderId}
+                                className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:bg-gray-800/70 transition-all duration-200"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <img
+                                    src={order.specialist?.avatar || `/images/specialists/ai-specialist-${order.specialistId}.jpg`}
+                                    alt={order.specialist?.name}
+                                    className="w-8 h-8 rounded-full border border-gray-600"
+                                  />
+                                  <div>
+                                    <h5 className="text-white font-medium text-sm">{order.specialist?.name}</h5>
+                                    <p className="text-gray-400 text-xs">
+                                      {formatCurrency(order.amount)} • {order.status}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Link
+                                    href={`/en/ai-specialists/${order.specialistId}/order`}
+                                    className="p-2 text-blue-400 hover:text-blue-300 transition-colors rounded-lg hover:bg-blue-500/10"
+                                    title="Открыть заказ"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
+                                  <Link
+                                    href={`/en/ai-specialists/${order.specialistId}/chat`}
+                                    className="p-2 text-green-400 hover:text-green-300 transition-colors rounded-lg hover:bg-green-500/10"
+                                    title="Чат с AI"
+                                  >
+                                    <MessageCircle className="w-4 h-4" />
+                                  </Link>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Solutions Section */}
+                      {solutions.length > 0 && (
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <VideoIcon className="w-5 h-5 text-green-400" />
+                              <h4 className="text-lg font-medium text-white">Мои решения</h4>
+                              <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded-full text-xs font-medium">
+                                {solutions.length}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setActiveTab("solutions")}
+                              className="text-green-400 hover:text-green-300 text-sm font-medium flex items-center space-x-1"
+                            >
+                              <span>Все решения</span>
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {solutions.slice(0, 3).map((solution: any) => (
+                              <div
+                                key={solution.$id}
+                                className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:bg-gray-800/70 transition-all duration-200"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                                    <VideoIcon className="w-4 h-4 text-white" />
+                                  </div>
+                                  <div>
+                                    <h5 className="text-white font-medium text-sm">{solution.title}</h5>
+                                    <p className="text-gray-400 text-xs">
+                                      {solution.viewsCount || 0} просмотров • {solution.likesCount || 0} лайков
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Link
+                                    href={`/en/solutions/${solution.$id}`}
+                                    className="p-2 text-green-400 hover:text-green-300 transition-colors rounded-lg hover:bg-green-500/10"
+                                    title="Открыть решение"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
+                                  <button
+                                    onClick={() => handleEditSolution(solution)}
+                                    className="p-2 text-yellow-400 hover:text-yellow-300 transition-colors rounded-lg hover:bg-yellow-500/10"
+                                    title="Редактировать"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Empty State */}
+                      {activeJobs.length === 0 && aiOrders.length === 0 && solutions.length === 0 && (
+                        <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700/50">
+                          <Briefcase className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                          <h4 className="text-lg font-medium text-white mb-2">Пока нет активностей</h4>
+                          <p className="text-gray-400 mb-6">
+                            {userType === "freelancer" 
+                              ? "Начните искать проекты или создайте портфолио" 
+                              : "Создайте первый заказ или закажите AI решение"}
+                          </p>
+                          <div className="flex justify-center space-x-3">
+                            {userType === "freelancer" ? (
+                              <>
+                                <Link
+                                  href="/en/jobs"
+                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                                >
+                                  <Search className="w-4 h-4" />
+                                  <span>Найти работу</span>
+                                </Link>
+                                <button
+                                  onClick={() => setActiveTab("portfolio")}
+                                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  <span>Портфолио</span>
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <Link
+                                  href="/en/jobs/create"
+                                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  <span>Создать заказ</span>
+                                </Link>
+                                <Link
+                                  href="/en/ai-specialists"
+                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                                >
+                                  <Bot className="w-4 h-4" />
+                                  <span>AI Специалисты</span>
+                                </Link>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Sidebar */}
+                {/* Sidebar - Quick Stats & Navigation */}
                 <div className="space-y-6">
-                  {/* Upcoming Deadlines */}
-                  <div className="glass-card p-6 rounded-2xl">
+                  {/* Quick Stats Cards */}
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
                     <h3 className="text-lg font-semibold text-white mb-4">
-                      Upcoming Deadlines
+                      Быстрая статистика
                     </h3>
-                    <div className="space-y-3">
-                      {upcomingDeadlines.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {/* Active Jobs */}
+                      <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 relative">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-white text-sm font-medium">
-                              {item.project}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {new Date(item.deadline).toLocaleDateString()}
-                            </p>
+                            <p className="text-2xl font-bold text-purple-400">{activeJobs.length}</p>
+                            <p className="text-xs text-gray-400">Активных заказов</p>
                           </div>
-                          <span
-                            className={cn(
-                              "text-sm font-medium",
-                              getPriorityColor(item.priority),
-                            )}
-                          >
-                            {item.daysLeft}d
-                          </span>
+                          <Briefcase className="w-6 h-6 text-purple-400/60" />
                         </div>
-                      ))}
+                        <button
+                          onClick={() => setActiveTab("active_jobs")}
+                          className="absolute inset-0 w-full h-full rounded-xl hover:bg-purple-500/5 transition-colors"
+                          aria-label="Перейти к активным заказам"
+                        />
+                      </div>
+
+                      {/* AI Orders */}
+                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 relative">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-blue-400">{aiOrders.length}</p>
+                            <p className="text-xs text-gray-400">AI заказов</p>
+                          </div>
+                          <Bot className="w-6 h-6 text-blue-400/60" />
+                        </div>
+                        <button
+                          onClick={() => setActiveTab("ai_orders")}
+                          className="absolute inset-0 w-full h-full rounded-xl hover:bg-blue-500/5 transition-colors"
+                          aria-label="Перейти к AI заказам"
+                        />
+                      </div>
+
+                      {/* Solutions */}
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 relative">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-green-400">{solutions.length}</p>
+                            <p className="text-xs text-gray-400">Решений</p>
+                          </div>
+                          <VideoIcon className="w-6 h-6 text-green-400/60" />
+                        </div>
+                        <button
+                          onClick={() => setActiveTab("solutions")}
+                          className="absolute inset-0 w-full h-full rounded-xl hover:bg-green-500/5 transition-colors"
+                          aria-label="Перейти к решениям"
+                        />
+                      </div>
+
+                      {/* Portfolio Items */}
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 relative">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-yellow-400">{userStats.portfolioItems}</p>
+                            <p className="text-xs text-gray-400">Портфолио</p>
+                          </div>
+                          <Star className="w-6 h-6 text-yellow-400/60" />
+                        </div>
+                        <button
+                          onClick={() => setActiveTab("portfolio")}
+                          className="absolute inset-0 w-full h-full rounded-xl hover:bg-yellow-500/5 transition-colors"
+                          aria-label="Перейти к портфолио"
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {/* Navigation Card */}
                   <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
                     <h3 className="text-lg font-semibold text-white mb-4">
-                      Navigation
+                      Быстрая навигация
                     </h3>
 
                     {/* Main Navigation Grid */}
@@ -909,11 +1399,7 @@ export default function DashboardPage() {
                       </Link>
 
                       <Link
-                        href={
-                          userType === "freelancer"
-                            ? "/en/projects"
-                            : "/en/jobs"
-                        }
+                        href={userType === "freelancer" ? "/en/projects" : "/en/jobs"}
                         className="flex flex-col items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all duration-200 group"
                       >
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/25">
@@ -936,52 +1422,15 @@ export default function DashboardPage() {
                         </span>
                       </Link>
 
-                      {/* AI Orders Quick Access */}
-                      <button
-                        onClick={() => setActiveTab("ai_orders")}
-                        className="flex flex-col items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all duration-200 group"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/25">
-                          <Bot className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-xs text-purple-400 text-center font-medium">
-                          AI Orders
-                        </span>
-                      </button>
-
                       <Link
-                        href="/en/payments"
-                        className="flex flex-col items-center p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all duration-200 group"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-yellow-500/25">
-                          <DollarSign className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-xs text-yellow-400 text-center font-medium">
-                          Payments
-                        </span>
-                      </Link>
-
-                      <Link
-                        href="/en/reviews"
+                        href="/en/ai-specialists"
                         className="flex flex-col items-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all duration-200 group"
                       >
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/25">
-                          <Star className="w-5 h-5 text-white" />
+                          <Bot className="w-5 h-5 text-white" />
                         </div>
                         <span className="text-xs text-orange-400 text-center font-medium">
-                          Reviews
-                        </span>
-                      </Link>
-
-                      <Link
-                        href="/en/reports"
-                        className="flex flex-col items-center p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all duration-200 group"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/25">
-                          <FileText className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-xs text-indigo-400 text-center font-medium">
-                          Reports
+                          AI Специалисты
                         </span>
                       </Link>
                     </div>
@@ -989,7 +1438,7 @@ export default function DashboardPage() {
                     {/* Quick Actions */}
                     <div className="border-t border-gray-800/50 pt-4">
                       <h4 className="text-sm font-medium text-gray-400 mb-3">
-                        Quick Actions
+                        Быстрые действия
                       </h4>
                       <div className="space-y-2">
                         {userType === "client" ? (
@@ -1014,31 +1463,270 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Recent Activity */}
-                  <div className="glass-card p-6 rounded-2xl">
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
                     <h3 className="text-lg font-semibold text-white mb-4">
-                      Recent Activity
+                      Последние уведомления
                     </h3>
                     <div className="space-y-3 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-300">Project completed</span>
-                        <span className="text-gray-500">2h ago</span>
+                      <div className="flex items-center justify-between p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <span className="text-green-300">Проект завершён</span>
+                        </div>
+                        <span className="text-gray-500 text-xs">2ч назад</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                        <span className="text-gray-300">
-                          New message received
-                        </span>
-                        <span className="text-gray-500">4h ago</span>
+                      <div className="flex items-center justify-between p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                          <span className="text-blue-300">Новое сообщение</span>
+                        </div>
+                        <span className="text-gray-500 text-xs">4ч назад</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                        <span className="text-gray-300">Payment received</span>
-                        <span className="text-gray-500">1d ago</span>
+                      <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                          <span className="text-purple-300">Платёж получен</span>
+                        </div>
+                        <span className="text-gray-500 text-xs">1д назад</span>
                       </div>
+                      
+                      <Link
+                        href="/en/notifications"
+                        className="block w-full text-center py-2 text-gray-400 hover:text-white transition-colors border border-gray-700/50 rounded-lg hover:bg-gray-800/50"
+                      >
+                        Все уведомления
+                      </Link>
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === "active_jobs" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">
+                    {userType === "freelancer" ? "My Active Jobs" : "Active Jobs"}
+                  </h2>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={loadActiveJobs}
+                      className="px-4 py-2 bg-gray-700/50 text-gray-300 rounded-xl hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>Refresh</span>
+                    </button>
+                    {userType === "client" && (
+                      <Link
+                        href="/en/jobs/create"
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Post New Job</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {loadingActiveJobs ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading active jobs...</p>
+                    </div>
+                  </div>
+                ) : activeJobs.length > 0 ? (
+                  <div className="space-y-6">
+                    {activeJobs.map((job) => (
+                      <div
+                        key={job.$id}
+                        className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-6 rounded-2xl hover:border-gray-700/50 transition-all duration-200"
+                      >
+                        {/* Job Header */}
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              {getStatusIcon(job.status)}
+                              <h3 className="text-xl font-semibold text-white">
+                                {job.title}
+                              </h3>
+                              <span
+                                className={cn(
+                                  "px-3 py-1 rounded-full text-xs font-medium",
+                                  getStatusColor(job.status)
+                                )}
+                              >
+                                {job.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-gray-400 text-sm line-clamp-2 mb-3">
+                              {job.description}
+                            </p>
+                            
+                            {/* Job Info */}
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
+                              <div className="flex items-center space-x-1">
+                                <DollarSign className="w-4 h-4 text-green-400" />
+                                <span>${job.budgetMin} - ${job.budgetMax}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Clock className="w-4 h-4 text-blue-400" />
+                                <span>{job.duration}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Users className="w-4 h-4 text-purple-400" />
+                                <span>{job.applicationsCount} applications</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-gray-500">
+                                  Created {safeRelativeTime(job.$createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+                            <Link
+                              href={`/en/jobs/${job.$id}`}
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span>View Details</span>
+                            </Link>
+                            <Link
+                              href={`/en/messages?job=${job.$id}`}
+                              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Messages</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* Skills */}
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex flex-wrap gap-2">
+                              {job.skills.slice(0, 5).map((skill: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.skills.length > 5 && (
+                                <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded-full">
+                                  +{job.skills.length - 5} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Progress for freelancers */}
+                        {userType === "freelancer" && job.assignedFreelancer === user.$id && (
+                          <div className="border-t border-gray-700/50 pt-4 mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-300">Progress</span>
+                              <span className="text-sm text-gray-300">0%</span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                                style={{ width: "0%" }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recent Applications for clients */}
+                        {userType === "client" && job.applications && job.applications.length > 0 && (
+                          <div className="border-t border-gray-700/50 pt-4 mt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-sm font-medium text-gray-300">Recent Applications</h4>
+                              <Link
+                                href={`/en/jobs/${job.$id}#applications`}
+                                className="text-purple-400 hover:text-purple-300 text-sm"
+                              >
+                                View All ({job.applicationsCount})
+                              </Link>
+                            </div>
+                            <div className="space-y-2">
+                              {job.applications.slice(0, 2).map((application: any) => (
+                                <div
+                                  key={application.$id}
+                                  className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                      <span className="text-white text-sm font-semibold">
+                                        {application.freelancerName?.charAt(0) || 'F'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <p className="text-white text-sm font-medium">
+                                        {application.freelancerName}
+                                      </p>
+                                      <p className="text-gray-400 text-xs">
+                                        Proposed: ${application.proposedBudget}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      "px-2 py-1 rounded-full text-xs",
+                                      application.status === 'pending'
+                                        ? "bg-yellow-500/20 text-yellow-400"
+                                        : application.status === 'accepted'
+                                        ? "bg-green-500/20 text-green-400"
+                                        : "bg-red-500/20 text-red-400"
+                                    )}
+                                  >
+                                    {application.status}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-8 text-center">
+                    <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">No Active Jobs</h3>
+                    <p className="text-gray-400 mb-6">
+                      {userType === 'freelancer' 
+                        ? 'No active jobs at the moment. Browse available jobs to find new opportunities.'
+                        : 'No active jobs posted. Create your first job to start finding talented freelancers.'
+                      }
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      {userType === "freelancer" ? (
+                        <Link
+                          href="/en/jobs"
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                        >
+                          <Search className="w-5 h-5" />
+                          <span>Browse Jobs</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/en/jobs/create"
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                        >
+                          <Plus className="w-5 h-5" />
+                          <span>Post Your First Job</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

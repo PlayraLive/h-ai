@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, DollarSign, Clock, FileText, Send, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Upload, DollarSign, Clock, FileText, Send, AlertCircle, CheckCircle, Zap } from 'lucide-react';
 import { ApplicationsService } from '@/lib/appwrite/jobs';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface ApplyJobModalProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
   const { user } = useAuthContext();
   const [formData, setFormData] = useState<FormData>({
     coverLetter: '',
-    proposedBudget: '',
+    proposedBudget: job.budget.min.toString(),
     estimatedDuration: '',
     attachments: []
   });
@@ -47,28 +48,40 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Durations (same as in create job)
+  const durations = [
+    { value: '1h', label: '1 час', icon: Zap },
+    { value: '1d', label: '1 день', icon: Clock },
+    { value: '1-week', label: 'Менее 1 недели', icon: Clock },
+    { value: '1-2-weeks', label: '1-2 недели', icon: Clock },
+    { value: '2-4-weeks', label: '2-4 недели', icon: Clock },
+    { value: '1-2-months', label: '1-2 месяца', icon: Clock },
+    { value: '2-6-months', label: '2-6 месяцев', icon: Clock },
+    { value: '6-months+', label: 'Более 6 месяцев', icon: Clock }
+  ];
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.coverLetter.trim()) {
-      newErrors.coverLetter = 'Cover letter is required';
+      newErrors.coverLetter = 'Сопроводительное письмо обязательно';
     } else if (formData.coverLetter.trim().length < 50) {
-      newErrors.coverLetter = 'Cover letter must be at least 50 characters long';
+      newErrors.coverLetter = 'Сопроводительное письмо должно содержать минимум 50 символов';
     }
 
     if (!formData.proposedBudget.trim()) {
-      newErrors.proposedBudget = 'Proposed budget is required';
+      newErrors.proposedBudget = 'Предлагаемый бюджет обязателен';
     } else {
       const budget = parseFloat(formData.proposedBudget);
       if (isNaN(budget) || budget <= 0) {
-        newErrors.proposedBudget = 'Please enter a valid budget amount';
-      } else if (budget < job.budget.min || budget > job.budget.max) {
-        newErrors.proposedBudget = `Budget should be between $${job.budget.min} - $${job.budget.max}`;
+        newErrors.proposedBudget = 'Пожалуйста, введите корректную сумму бюджета';
+      } else if (budget < Math.max(1, job.budget.min) || budget > job.budget.max) {
+        newErrors.proposedBudget = `Бюджет должен быть между $${Math.max(1, job.budget.min)} - $${job.budget.max}`;
       }
     }
 
     if (!formData.estimatedDuration.trim()) {
-      newErrors.estimatedDuration = 'Estimated duration is required';
+      newErrors.estimatedDuration = 'Предполагаемая длительность обязательна';
     }
 
     setErrors(newErrors);
@@ -79,7 +92,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
     e.preventDefault();
 
     if (!user) {
-      alert('Please log in to apply for jobs');
+      alert('Пожалуйста, войдите в систему для подачи заявки на работу');
       return;
     }
 
@@ -122,7 +135,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
   const resetForm = () => {
     setFormData({
       coverLetter: '',
-      proposedBudget: '',
+      proposedBudget: job.budget.min.toString(),
       estimatedDuration: '',
       attachments: []
     });
@@ -133,15 +146,10 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
 
     const validFiles = files.filter(file => {
       if (file.size > maxSize) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-        return false;
-      }
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File ${file.name} type is not supported. Please upload PDF, DOC, DOCX, or TXT files.`);
+        alert(`Файл ${file.name} слишком большой. Максимальный размер 10MB.`);
         return false;
       }
       return true;
@@ -149,7 +157,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
 
     setFormData(prev => ({
       ...prev,
-      attachments: [...prev.attachments, ...validFiles].slice(0, 3) // Max 3 files
+      attachments: [...prev.attachments, ...validFiles].slice(0, 5) // Max 5 files
     }));
   };
 
@@ -181,12 +189,12 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
               {submitStatus === 'success' ? (
                 <>
                   <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-green-300">Application submitted successfully!</span>
+                  <span className="text-green-300">Заявка успешно отправлена!</span>
                 </>
               ) : (
                 <>
                   <AlertCircle className="w-5 h-5 text-red-400" />
-                  <span className="text-red-300">Failed to submit application. Please try again.</span>
+                  <span className="text-red-300">Не удалось отправить заявку. Попробуйте еще раз.</span>
                 </>
               )}
             </div>
@@ -196,9 +204,9 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
         {/* Header */}
         <div className={`flex items-center justify-between p-6 border-b border-gray-700/50 ${submitStatus !== 'idle' ? 'mt-16' : ''}`}>
           <div>
-            <h2 className="text-2xl font-bold text-white">Apply for Position</h2>
+            <h2 className="text-2xl font-bold text-white">Подать заявку на позицию</h2>
             <p className="text-gray-400 mt-1">
-              {job.title} at {job.company}
+              {job.title} в {job.company}
             </p>
           </div>
           <button
@@ -215,13 +223,13 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
           {/* Cover Letter */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Cover Letter <span className="text-red-400">*</span>
+              Сопроводительное письмо <span className="text-red-400">*</span>
             </label>
             <div className="relative">
               <textarea
                 value={formData.coverLetter}
                 onChange={(e) => setFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
-                placeholder="Tell the client why you're the perfect fit for this project. Highlight your relevant experience and how you plan to deliver exceptional results..."
+                placeholder="Расскажите клиенту, почему вы идеально подходите для этого проекта. Выделите ваш релевантный опыт и как вы планируете достичь исключительных результатов..."
                 className={`w-full h-32 px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all duration-300 resize-none ${
                   errors.coverLetter
                     ? 'border-red-500 focus:ring-red-500/20'
@@ -238,7 +246,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
               </p>
             )}
             <p className="mt-2 text-xs text-gray-500">
-              {formData.coverLetter.length}/500 characters
+              {formData.coverLetter.length}/500 символов
             </p>
           </div>
 
@@ -247,7 +255,8 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
             {/* Proposed Budget */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Proposed Budget <span className="text-red-400">*</span>
+                Предлагаемый бюджет <span className="text-red-400">*</span>
+                <span className="text-xs text-gray-500 ml-2">(фиксированная цена от $1)</span>
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -255,14 +264,14 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
                   type="number"
                   value={formData.proposedBudget}
                   onChange={(e) => setFormData(prev => ({ ...prev, proposedBudget: e.target.value }))}
-                  placeholder="Enter your rate"
+                  placeholder="Введите ваш тариф"
                   className={`w-full pl-10 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all duration-300 ${
                     errors.proposedBudget
                       ? 'border-red-500 focus:ring-red-500/20'
                       : 'border-gray-600 focus:border-purple-500 focus:ring-purple-500/20'
                   }`}
                   disabled={isSubmitting}
-                  min={job.budget.min}
+                  min={Math.max(1, job.budget.min)}
                   max={job.budget.max}
                 />
               </div>
@@ -273,35 +282,35 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
                 </p>
               )}
               <p className="mt-2 text-xs text-gray-500">
-                Budget range: ${job.budget.min.toLocaleString()} - ${job.budget.max.toLocaleString()} {job.budget.currency}
+                Диапазон бюджета: ${Math.max(1, job.budget.min).toLocaleString()} - ${job.budget.max.toLocaleString()} {job.budget.currency}
               </p>
             </div>
 
             {/* Estimated Duration */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Estimated Duration <span className="text-red-400">*</span>
+                Предполагаемая длительность <span className="text-red-400">*</span>
               </label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={formData.estimatedDuration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimatedDuration: e.target.value }))}
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:ring-2 transition-all duration-300 ${
-                    errors.estimatedDuration
-                      ? 'border-red-500 focus:ring-red-500/20'
-                      : 'border-gray-600 focus:border-purple-500 focus:ring-purple-500/20'
-                  }`}
-                  disabled={isSubmitting}
-                >
-                  <option value="">Select duration</option>
-                  <option value="1-3 days">1-3 days</option>
-                  <option value="1 week">1 week</option>
-                  <option value="2 weeks">2 weeks</option>
-                  <option value="1 month">1 month</option>
-                  <option value="2-3 months">2-3 months</option>
-                  <option value="3+ months">3+ months</option>
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                {durations.map((duration) => {
+                  const Icon = duration.icon;
+                  return (
+                    <button
+                      key={duration.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, estimatedDuration: duration.value }))}
+                      className={cn(
+                        "flex items-center justify-center space-x-1 p-2 rounded-lg border transition-all duration-200 text-xs",
+                        formData.estimatedDuration === duration.value
+                          ? "border-purple-500 bg-purple-500/20 text-purple-300"
+                          : "border-gray-600 bg-gray-800/50 text-gray-400 hover:border-purple-400/50 hover:text-purple-400"
+                      )}
+                    >
+                      <Icon className="w-3 h-3" />
+                      <span className="truncate">{duration.label}</span>
+                    </button>
+                  );
+                })}
               </div>
               {errors.estimatedDuration && (
                 <p className="mt-2 text-sm text-red-400 flex items-center space-x-1">
@@ -315,23 +324,22 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
           {/* File Attachments */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Attachments (Optional)
+              Прикрепленные файлы (необязательно)
             </label>
             <div className="space-y-3">
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-4 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-400">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                    <Upload className="w-6 h-6 mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-400">
+                      <span className="font-semibold">Нажмите для загрузки</span> или перетащите файлы
                     </p>
-                    <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT (MAX. 10MB each)</p>
+                    <p className="text-xs text-gray-500">Любые файлы (МАКС. 10MB каждый)</p>
                   </div>
                   <input
                     type="file"
                     className="hidden"
                     multiple
-                    accept=".pdf,.doc,.docx,.txt"
                     onChange={handleFileUpload}
                     disabled={isSubmitting}
                   />
@@ -342,7 +350,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
               {formData.attachments.length > 0 && (
                 <div className="space-y-2">
                   {formData.attachments.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700">
                       <div className="flex items-center space-x-3">
                         <FileText className="w-5 h-5 text-blue-400" />
                         <div>
@@ -366,7 +374,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
               )}
             </div>
             <p className="mt-2 text-xs text-gray-500">
-              Upload your portfolio, resume, or relevant work samples (max 3 files)
+              Загрузите ваше портфолио, резюме или релевантные образцы работ (макс. 5 файлов)
             </p>
           </div>
 
@@ -374,7 +382,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
           {job.skills.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
-                Required Skills
+                Требуемые навыки
               </label>
               <div className="flex flex-wrap gap-2">
                 {job.skills.map((skill, index) => (
@@ -394,7 +402,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
         <div className="px-6 py-4 border-t border-gray-700/50 bg-gray-900/50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-400">
-              Make sure to highlight your relevant experience
+              Убедитесь, что выделили ваш релевантный опыт
             </div>
             <div className="flex space-x-3">
               <button
@@ -403,7 +411,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
                 className="px-6 py-2 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
                 disabled={isSubmitting}
               >
-                Cancel
+                Отмена
               </button>
               <button
                 onClick={handleSubmit}
@@ -413,12 +421,12 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSuccess }: Apply
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Submitting...</span>
+                    <span>Отправка...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Submit Application</span>
+                    <span>Подать заявку</span>
                   </>
                 )}
               </button>

@@ -305,7 +305,7 @@ export class NotificationService {
       action_url: `/messages?conversation=${conversationId}`,
       metadata: JSON.stringify({
         sender_name: senderName,
-        conversation_id: conversationId
+        conversationId: conversationId
       })
     });
   }

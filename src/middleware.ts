@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
 
-export function middleware(request: NextRequest) {
-  // Простой редирект с корня на /en
-  if (request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/en', request.url));
-  }
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: ['en', 'ru'],
 
-  // Пропускаем все остальные запросы
-  return NextResponse.next();
-}
+  // Used when no locale matches
+  defaultLocale: 'en',
+
+  // Always show the locale in the URL
+  localePrefix: 'always'
+});
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', '/']
+  // Match only internationalized pathnames
+  matcher: ['/', '/(ru|en)/:path*']
 };

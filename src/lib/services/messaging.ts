@@ -2,17 +2,16 @@ import { databases, DATABASE_ID, COLLECTIONS, ID, Query } from '@/lib/appwrite';
 
 export interface Message {
   $id: string;
-  conversation_id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  message_type: 'text' | 'file' | 'image' | 'system' | 'milestone' | 'payment';
+  text: string;
+  senderId: string;
+  receiverId: string;
+  conversationId: string; // Исправлено поле
+  timestamp: string;
+  read: boolean;
+  messageType?: 'text' | 'image' | 'file' | 'system';
   attachments?: string[];
-  is_read: boolean;
-  read_at?: string;
-  metadata?: string;
-  created_at: string;
-  updated_at: string;
+  editedAt?: string;
+  replyTo?: string;
 }
 
 export interface Conversation {
@@ -86,7 +85,7 @@ export class MessagingService {
 
     // Update conversation
     await this.updateConversationLastMessage(
-      messageData.conversation_id,
+      messageData.conversationId,
       messageData.content,
       messageData.sender_id,
       now
@@ -101,7 +100,7 @@ export class MessagingService {
       DATABASE_ID,
       COLLECTIONS.MESSAGES,
       [
-        Query.equal('conversation_id', conversationId),
+        Query.equal('conversationId', conversationId),
         Query.orderDesc('created_at'),
         Query.limit(limit),
         Query.offset(offset),
@@ -135,7 +134,7 @@ export class MessagingService {
       DATABASE_ID,
       COLLECTIONS.MESSAGES,
       [
-        Query.equal('conversation_id', conversationId),
+        Query.equal('conversationId', conversationId),
         Query.equal('receiver_id', userId),
         Query.equal('is_read', false),
       ]
@@ -217,7 +216,7 @@ export class MessagingService {
     ) as Conversation;
 
     return this.sendMessage({
-      conversation_id: conversationId,
+      conversationId: conversationId,
       sender_id: 'system',
       receiver_id: conversation.client_id, // System messages go to both, but we need a receiver
       content,
@@ -234,7 +233,7 @@ export class MessagingService {
     milestoneData: any
   ): Promise<Message> {
     return this.sendMessage({
-      conversation_id: conversationId,
+      conversationId: conversationId,
       sender_id: senderId,
       receiver_id: receiverId,
       content: `Milestone "${milestoneData.title}" has been ${milestoneData.status}`,
@@ -251,7 +250,7 @@ export class MessagingService {
     paymentData: any
   ): Promise<Message> {
     return this.sendMessage({
-      conversation_id: conversationId,
+      conversationId: conversationId,
       sender_id: senderId,
       receiver_id: receiverId,
       content: `Payment of $${paymentData.amount} has been ${paymentData.status}`,

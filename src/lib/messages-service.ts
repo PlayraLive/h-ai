@@ -3,27 +3,27 @@ import { databases, ID, Query, DATABASE_ID, COLLECTIONS, client } from './appwri
 export interface Message {
   $id: string;
   text: string;
-  sender_id: string;
-  receiver_id: string;
-  conversation_id: string;
+  senderId: string;
+  receiverId: string;
+  conversationId: string; // Исправлено поле
   timestamp: string;
   read: boolean;
-  message_type: 'text' | 'file' | 'image';
-  file_url?: string;
-  file_name?: string;
-  project_id?: string;
+  messageType?: 'text' | 'image' | 'file' | 'system' | 'order_card';
+  attachments?: string[];
+  editedAt?: string;
+  replyTo?: string;
 }
 
 export interface Conversation {
   $id: string;
   participants: string[];
-  last_message: string;
-  last_message_time: string;
-  unread_count: Record<string, number>;
-  project_id?: string;
-  project_title?: string;
-  created_at: string;
-  updated_at: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: Record<string, number>;
+  projectId?: string;
+  projectTitle?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ChatUser {
@@ -32,7 +32,7 @@ export interface ChatUser {
   email: string;
   avatar?: string;
   online: boolean;
-  last_seen: string;
+  lastSeen: string;
   userType: 'freelancer' | 'client';
 }
 
@@ -70,7 +70,7 @@ export class MessagesService {
         this.CONVERSATIONS_COLLECTION,
         [
           Query.contains('participants', userId),
-          Query.orderDesc('updated_at'),
+          Query.orderDesc('updatedAt'),
           Query.limit(50)
         ]
       );
@@ -82,7 +82,7 @@ export class MessagesService {
       // Если коллекция не существует или атрибуты не найдены
       if (error.code === 404 || error.message?.includes('Attribute not found')) {
         console.log('⚠️ Conversations collection or attributes not found. Please create them in Appwrite Console.');
-        console.log('📋 Required attributes: participants, updated_at, last_message, last_message_time, unread_count, created_at');
+        console.log('📋 Required attributes: participants, updatedAt, lastMessage, lastMessageTime, unreadCount, createdAt');
       }
 
       return [];
@@ -103,7 +103,7 @@ export class MessagesService {
         this.DATABASE_ID,
         this.MESSAGES_COLLECTION,
         [
-          Query.equal('conversation_id', conversationId),
+          Query.equal('conversationId', conversationId), // Исправлено поле
           Query.orderDesc('timestamp'),
           Query.limit(limit)
         ]
@@ -116,7 +116,7 @@ export class MessagesService {
       // Если коллекция не существует или атрибуты не найдены
       if (error.code === 404 || error.message?.includes('Attribute not found')) {
         console.log('⚠️ Messages collection or attributes not found. Please create them in Appwrite Console.');
-        console.log('📋 Required attributes: conversation_id, timestamp, text, sender_id, receiver_id, read, message_type');
+        console.log('📋 Required attributes: conversationId, timestamp, text, senderId, receiverId, read, messageType');
       }
 
       return [];
@@ -168,13 +168,13 @@ export class MessagesService {
         ID.unique(),
         {
           text,
-          sender_id: senderId,
-          receiver_id: receiverId,
-          conversation_id: conversation.$id,
+          senderId: senderId,
+          receiverId: receiverId,
+          conversationId: conversation.$id,
           timestamp: new Date().toISOString(),
           read: false,
-          message_type: 'text',
-          project_id: projectId
+          messageType: 'text',
+          projectId: projectId
         }
       );
 
@@ -234,12 +234,12 @@ export class MessagesService {
         ID.unique(),
         {
           participants: [user1Id, user2Id],
-          last_message: '',
-          last_message_time: new Date().toISOString(),
-          unread_count: JSON.stringify({ [user1Id]: 0, [user2Id]: 0 }),
-          project_id: projectId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          lastMessage: '',
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: JSON.stringify({ [user1Id]: 0, [user2Id]: 0 }),
+          projectId: projectId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }
       );
 
@@ -264,9 +264,9 @@ export class MessagesService {
         conversationId
       ) as Conversation;
 
-      const currentUnreadCount = typeof conversation.unread_count === 'string'
-        ? JSON.parse(conversation.unread_count)
-        : conversation.unread_count || {};
+      const currentUnreadCount = typeof conversation.unreadCount === 'string'
+        ? JSON.parse(conversation.unreadCount)
+        : conversation.unreadCount || {};
 
       const updatedUnreadCount = { ...currentUnreadCount };
       updatedUnreadCount[receiverId] = (updatedUnreadCount[receiverId] || 0) + 1;
@@ -276,10 +276,10 @@ export class MessagesService {
         this.CONVERSATIONS_COLLECTION,
         conversationId,
         {
-          last_message: lastMessage,
-          last_message_time: new Date().toISOString(),
-          unread_count: JSON.stringify(updatedUnreadCount),
-          updated_at: new Date().toISOString()
+          lastMessage: lastMessage,
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: JSON.stringify(updatedUnreadCount),
+          updatedAt: new Date().toISOString()
         }
       );
 
@@ -298,8 +298,8 @@ export class MessagesService {
         this.DATABASE_ID,
         this.MESSAGES_COLLECTION,
         [
-          Query.equal('conversation_id', conversationId),
-          Query.equal('receiver_id', userId),
+          Query.equal('conversationId', conversationId),
+          Query.equal('receiverId', userId),
           Query.equal('read', false)
         ]
       );
@@ -323,9 +323,9 @@ export class MessagesService {
         conversationId
       ) as Conversation;
 
-      const currentUnreadCount = typeof conversation.unread_count === 'string'
-        ? JSON.parse(conversation.unread_count)
-        : conversation.unread_count || {};
+      const currentUnreadCount = typeof conversation.unreadCount === 'string'
+        ? JSON.parse(conversation.unreadCount)
+        : conversation.unreadCount || {};
 
       const updatedUnreadCount = { ...currentUnreadCount };
       updatedUnreadCount[userId] = 0;
@@ -334,7 +334,7 @@ export class MessagesService {
         this.DATABASE_ID,
         this.CONVERSATIONS_COLLECTION,
         conversationId,
-        { unread_count: JSON.stringify(updatedUnreadCount) }
+        { unreadCount: JSON.stringify(updatedUnreadCount) }
       );
 
       return true;
@@ -359,7 +359,7 @@ export class MessagesService {
         email: user.email,
         avatar: user.avatar,
         online: user.online || false,
-        last_seen: user.last_seen || new Date().toISOString(),
+        lastSeen: user.lastSeen || new Date().toISOString(),
         userType: user.userType || 'freelancer'
       };
     } catch (error) {
@@ -421,7 +421,7 @@ export class MessagesService {
         email: user.email,
         avatar: user.avatar,
         online: user.online || false,
-        last_seen: user.last_seen || new Date().toISOString(),
+        lastSeen: user.lastSeen || new Date().toISOString(),
         userType: user.userType || 'freelancer'
       }));
     } catch (error) {
@@ -441,9 +441,9 @@ export class MessagesService {
       const totalConversations = conversations.length;
       
       const unreadMessages = conversations.reduce((total, conv) => {
-        const unreadCount = typeof conv.unread_count === 'string'
-          ? JSON.parse(conv.unread_count)
-          : conv.unread_count || {};
+        const unreadCount = typeof conv.unreadCount === 'string'
+          ? JSON.parse(conv.unreadCount)
+          : conv.unreadCount || {};
         return total + (unreadCount[userId] || 0);
       }, 0);
 
@@ -455,7 +455,7 @@ export class MessagesService {
         this.DATABASE_ID,
         this.MESSAGES_COLLECTION,
         [
-          Query.equal('sender_id', userId),
+          Query.equal('senderId', userId),
           Query.greaterThan('timestamp', today.toISOString())
         ]
       );
@@ -493,7 +493,7 @@ export class MessagesService {
       if (response.events.some(event => event.includes('messages'))) {
         // Новое сообщение
         const message = response.payload as Message;
-        if (message.conversation_id === conversationId) {
+        if (message.conversationId === conversationId) {
           onMessage(message);
         }
       }
@@ -575,7 +575,7 @@ export class MessagesService {
         userId,
         {
           online,
-          last_seen: new Date().toISOString()
+          lastSeen: new Date().toISOString()
         }
       );
 

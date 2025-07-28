@@ -22,6 +22,7 @@ import {
   Settings,
   MessageCircle,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -354,21 +355,21 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 m-2.5">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-white/20 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href={`/${locale}`} className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center border-2 border-white/30">
+              <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               AI Freelance
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             {navLinks.map((link) => {
               const Icon = link.icon;
               return (
@@ -376,10 +377,10 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 text-sm no-underline",
+                    "flex items-center space-x-2 px-4 py-2.5 rounded-2xl transition-all duration-300 text-sm no-underline font-medium border-2",
                     isActive(link.href)
-                      ? "bg-purple-500/10 text-purple-400"
-                      : "text-gray-300 hover:text-white hover:bg-white/5",
+                      ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-400/50"
+                      : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/20 dark:hover:bg-white/10 border-transparent hover:border-white/30",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -391,6 +392,11 @@ export default function Navbar() {
 
           {/* Desktop Right side */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <div className="p-1 bg-white/10 dark:bg-white/5 rounded-2xl border-2 border-white/20 dark:border-white/10">
+              <ThemeToggle />
+            </div>
+            
             {/* Test User Button for non-authenticated users */}
             {!isAuthenticated && !initializing && (
               <div className="flex items-center space-x-3">
@@ -407,7 +413,7 @@ export default function Navbar() {
                       alert("Test login failed. Please try again.");
                     }
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-green-500/20 hover:bg-green-500/30 text-green-700 dark:text-green-400 px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 border-2 border-green-400/40 hover:border-green-400/60 backdrop-blur-md"
                 >
                   Test User
                 </button>
@@ -427,12 +433,12 @@ export default function Navbar() {
             <div className="relative notification-dropdown">
               <button
                 onClick={handleNotificationClick}
-                className="relative p-2 text-purple-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-300"
+                className="relative p-3 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 hover:bg-purple-100/20 dark:hover:bg-purple-500/10 rounded-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-300/30 backdrop-blur-md"
                 title="Notifications"
               >
                 <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-gray-900 animate-pulse">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold border-2 border-white animate-pulse">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -444,15 +450,20 @@ export default function Navbar() {
 
           {/* Mobile Right Section */}
           <div className="flex md:hidden items-center space-x-2">
+            {/* Mobile Theme Toggle */}
+            <div className="p-1 bg-white/10 dark:bg-white/5 rounded-2xl border-2 border-white/20 dark:border-white/10">
+              <ThemeToggle />
+            </div>
+            
             {/* Mobile Notifications Bell */}
             <div className="relative notification-dropdown">
               <button
                 onClick={handleNotificationClick}
-                className="p-2 text-purple-400 hover:text-white transition-colors relative"
+                className="p-3 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors relative rounded-2xl border-2 border-transparent hover:border-purple-300/30 backdrop-blur-md hover:bg-purple-100/20 dark:hover:bg-purple-500/10"
               >
                 <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium animate-pulse border-2 border-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -464,7 +475,7 @@ export default function Navbar() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-gray-400 hover:text-white transition-colors"
+              className="p-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors rounded-2xl border-2 border-transparent hover:border-gray-300/30 backdrop-blur-md hover:bg-gray-100/20 dark:hover:bg-gray-500/10"
             >
               {isOpen ? (
                 <X className="w-6 h-6" />
@@ -477,8 +488,8 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-white/10 animate-in slide-in-from-top duration-300">
-            <div className="space-y-2 px-4">
+          <div className="md:hidden py-4 border-t border-white/20 dark:border-white/10 animate-in slide-in-from-top duration-300">
+            <div className="space-y-3 px-4">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -486,10 +497,10 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300",
+                      "flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-300 font-medium border-2",
                       isActive(link.href)
-                        ? "bg-purple-500/20 text-purple-400"
-                        : "text-gray-300 hover:text-white hover:bg-white/5",
+                        ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-400/50"
+                        : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/20 dark:hover:bg-white/10 border-transparent hover:border-white/30",
                     )}
                     onClick={() => setIsOpen(false)}
                   >

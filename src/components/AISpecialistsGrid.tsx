@@ -75,7 +75,7 @@ function AISpecialistCard({ specialist, onOrder }: AISpecialistCardProps) {
 
   return (
     <div 
-      className="relative group bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/30 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20"
+      className="relative group modern-card overflow-hidden border border-white/10 dark:border-gray-700/30 hover:border-blue-400/50 transition-all duration-500 transform hover:scale-105"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -160,9 +160,9 @@ function AISpecialistCard({ specialist, onOrder }: AISpecialistCardProps) {
       <div className="p-4 space-y-3">
         {/* Header */}
         <div>
-          <h3 className="text-white font-bold text-lg leading-tight">{specialist.name}</h3>
-          <p className="text-purple-400 text-sm font-medium">{specialist.title}</p>
-          <p className="text-gray-400 text-sm mt-1 line-clamp-2">{specialist.shortDescription}</p>
+          <h3 className="text-gray-900 dark:text-white font-bold text-lg leading-tight">{specialist.name}</h3>
+          <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">{specialist.title}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 line-clamp-2">{specialist.shortDescription}</p>
         </div>
 
         {/* AI Providers */}
