@@ -358,18 +358,24 @@ export default function DashboardPage() {
       let jobs = [];
       
       if (userType === 'freelancer') {
-        // Get jobs where freelancer is assigned
-        const jobsResponse = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTIONS.JOBS,
-          [
-            Query.equal('assignedFreelancer', user.$id),
-            Query.equal('status', ['in_progress', 'review', 'pending_start']),
-            Query.orderDesc('$createdAt'),
-            Query.limit(20)
-          ]
-        );
-        jobs = jobsResponse.documents;
+        // Get jobs where freelancer is assigned - with safe error handling
+        try {
+          const jobsResponse = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.JOBS,
+            [
+              Query.equal('assignedFreelancer', user.$id),
+              Query.notEqual('status', 'completed'),
+              Query.orderDesc('$createdAt'),
+              Query.limit(20)
+            ]
+          );
+          jobs = jobsResponse.documents;
+          console.log(`✅ Found ${jobs.length} assigned jobs for freelancer`);
+        } catch (error) {
+          console.warn('Failed to load assigned jobs:', error);
+          jobs = [];
+        }
       } else {
         // Get client's active jobs
         const jobsResponse = await databases.listDocuments(
