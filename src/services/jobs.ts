@@ -53,7 +53,7 @@ export class JobService {
           userId: clientId,
           title: '🎉 Заказ успешно создан!',
           message: `Ваш заказ "${jobData.title}" опубликован и доступен для фрилансеров. Начните получать заявки уже сейчас!`,
-          type: 'job_created',
+          type: 'job',
           channels: ['push', 'email'],
           priority: 'normal',
           actionUrl: `/jobs/${job.$id}`,
@@ -513,7 +513,7 @@ export class JobService {
 
           // Create conversation for direct messaging
           try {
-            await UnifiedChatService.getOrCreateJobConversation(
+            const conversation = await UnifiedChatService.getOrCreateJobConversation(
               jobId,
               clientId,
               freelancerId,
@@ -523,6 +523,39 @@ export class JobService {
                 skills: job.job.skills
               }
             );
+            
+            // Создаем карточку job в сообщениях
+            if (conversation) {
+              const jobCardData = {
+                jobId: jobId,
+                jobTitle: job.job.title,
+                budget: `$${job.job.budgetMin} - $${job.job.budgetMax}`,
+                freelancerName: freelancerDoc.name,
+                freelancerAvatar: freelancerDoc.avatar || '',
+                freelancerRating: freelancerDoc.rating || 0,
+                freelancerSkills: freelancerDoc.skills || [],
+                invitationMessage: message,
+                status: 'pending',
+                invitedAt: new Date().toISOString()
+              };
+              
+              // Отправляем карточку job через сервис сообщений
+              try {
+                const messagesService = new (await import('@/lib/messages-service')).MessagesService();
+                await messagesService.sendMessage({
+                  conversationId: conversation.$id,
+                  senderId: clientId,
+                  receiverId: freelancerId,
+                  content: `Приглашение на работу: ${job.job.title}`,
+                  messageType: 'job_card',
+                  jobCardData: jobCardData
+                });
+                
+                console.log(`✅ Создана карточка job в сообщениях для ${freelancerId}`);
+              } catch (cardError) {
+                console.warn(`Failed to create job card for ${freelancerId}:`, cardError);
+              }
+            }
           } catch (chatError) {
             console.warn(`Failed to create conversation for ${freelancerId}:`, chatError);
           }

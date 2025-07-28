@@ -173,6 +173,44 @@ export class AIOrderService {
           order.conversationId = conversation.$id;
           // Update order with conversation ID
           this.updateOrder(orderId, { conversationId: conversation.$id });
+          
+          // Создаем карточку AI заказа в сообщениях
+          try {
+            const aiOrderCardData = {
+              orderId: orderId,
+              userId: orderData.clientId,
+              specialistId: orderData.specialistId,
+              specialist: {
+                id: orderData.specialistId,
+                name: orderData.specialistName,
+                title: orderData.specialistTitle,
+                avatar: orderData.specialistAvatar
+              },
+              tariff: {
+                name: orderData.orderType === 'task' ? 'Задача' : 'Месячная подписка',
+                price: orderData.price,
+                features: ['AI разработка', 'Техническая поддержка', 'Консультации']
+              },
+              requirements: orderData.description,
+              status: 'pending',
+              amount: order.totalAmount,
+              conversationId: conversation.$id,
+              createdAt: now
+            };
+            
+            await this.messagesService.sendMessage({
+              conversationId: conversation.$id,
+              senderId: orderData.clientId,
+              receiverId: orderData.specialistId,
+              content: `AI Заказ: ${orderData.title}`,
+              messageType: 'ai_order',
+              aiOrderData: aiOrderCardData
+            });
+            
+            console.log(`✅ Создана карточка AI заказа в сообщениях: ${orderId}`);
+          } catch (cardError) {
+            console.warn('Failed to create AI order card in messages:', cardError);
+          }
         }
       } catch (error) {
         console.warn('Failed to create conversation for order:', error);

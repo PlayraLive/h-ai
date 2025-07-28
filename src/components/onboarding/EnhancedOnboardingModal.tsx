@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { databases, DATABASE_ID, ID, storage } from '@/lib/appwrite/database';
+import { databases, DATABASE_ID, ID, storage, Query } from '@/lib/appwrite/database';
 import { 
   Upload, 
   Building2, 
@@ -268,12 +268,16 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
     
     setIsLoading(true);
     try {
-      // Create user profile
-      await databases.createDocument(
-        DATABASE_ID,
-        'user_profiles',
-        ID.unique(),
-        {
+      // Update existing user profile or create if doesn't exist
+      try {
+        // First try to get existing profile
+        const existingProfile = await databases.listDocuments(
+          DATABASE_ID,
+          'user_profiles',
+          [Query.equal('user_id', user.$id)]
+        );
+
+        const profileData = {
           user_id: user.$id,
           avatar_url: formData.avatarUrl || '',
           bio: formData.bio || '',
@@ -287,15 +291,61 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
           hourly_rate_max: formData.hourlyRateMax || 0,
           onboarding_completed: true,
           profile_completion: calculateCompletion()
-        }
-      );
+        };
 
-      // Create user progress
-      await databases.createDocument(
-        DATABASE_ID,
-        'user_progress',
-        ID.unique(),
-        {
+        if (existingProfile.documents.length > 0) {
+          // Update existing profile
+          await databases.updateDocument(
+            DATABASE_ID,
+            'user_profiles',
+            existingProfile.documents[0].$id,
+            profileData
+          );
+          console.log('✅ Updated existing user profile');
+        } else {
+          // Create new profile
+          await databases.createDocument(
+            DATABASE_ID,
+            'user_profiles',
+            ID.unique(),
+            profileData
+          );
+          console.log('✅ Created new user profile');
+        }
+      } catch (profileError) {
+        console.error('Error handling user profile:', profileError);
+        // Create new profile as fallback
+        await databases.createDocument(
+          DATABASE_ID,
+          'user_profiles',
+          ID.unique(),
+          {
+            user_id: user.$id,
+            avatar_url: formData.avatarUrl || '',
+            bio: formData.bio || '',
+            company_name: formData.companyName || '',
+            company_size: formData.companySize || '',
+            industry: formData.industry || '',
+            interests: userType === 'client' ? formData.interests : [],
+            specializations: userType === 'freelancer' ? formData.specializations : [],
+            experience_years: formData.experienceYears || 0,
+            hourly_rate_min: formData.hourlyRateMin || 0,
+            hourly_rate_max: formData.hourlyRateMax || 0,
+            onboarding_completed: true,
+            profile_completion: calculateCompletion()
+          }
+        );
+      }
+
+      // Update or create user progress
+      try {
+        const existingProgress = await databases.listDocuments(
+          DATABASE_ID,
+          'user_progress',
+          [Query.equal('user_id', user.$id)]
+        );
+
+        const progressData = {
           user_id: user.$id,
           current_level: 1,
           current_xp: 50,
@@ -308,10 +358,39 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
           total_earnings: 0,
           streak_days: 1,
           achievements_count: 1
-        }
-      );
+        };
 
-      // Create onboarding step record
+        if (existingProgress.documents.length > 0) {
+          // Update existing progress (only if not already higher)
+          const current = existingProgress.documents[0];
+          if (current.current_level <= 1) {
+            await databases.updateDocument(
+              DATABASE_ID,
+              'user_progress',
+              current.$id,
+              {
+                current_xp: Math.max(current.current_xp, 50),
+                total_xp: current.total_xp + 50,
+                rank_title: progressData.rank_title,
+                streak_days: Math.max(current.streak_days, 1),
+                achievements_count: current.achievements_count + 1
+              }
+            );
+          }
+        } else {
+          // Create new progress
+          await databases.createDocument(
+            DATABASE_ID,
+            'user_progress',
+            ID.unique(),
+            progressData
+          );
+        }
+      } catch (progressError) {
+        console.error('Error handling user progress:', progressError);
+      }
+
+      // Create onboarding completion record
       await databases.createDocument(
         DATABASE_ID,
         'onboarding_steps',
@@ -329,33 +408,48 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
         }
       );
 
-      // Award welcome achievement
-      await databases.createDocument(
-        DATABASE_ID,
-        'achievements',
-        ID.unique(),
-        {
-          user_id: user.$id,
-          achievement_id: 'welcome_onboard',
-          achievement_name: userType === 'client' ? '🎉 Добро пожаловать!' : '🚀 Старт карьеры!',
-          achievement_description: userType === 'client' 
-            ? 'Первый шаг к поиску лучших фрилансеров' 
-            : 'Начало пути профессионального фрилансера',
-          achievement_icon: userType === 'client' ? '🎉' : '🚀',
-          achievement_category: 'onboarding',
-          xp_reward: 50,
-          rarity: 'common',
-          unlocked_at: new Date().toISOString(),
-          progress_current: 1,
-          progress_required: 1
-        }
-      );
+      // Award welcome achievement (check if not already exists)
+      try {
+        const existingAchievement = await databases.listDocuments(
+          DATABASE_ID,
+          'achievements',
+          [
+            Query.equal('user_id', user.$id),
+            Query.equal('achievement_id', 'welcome_onboard')
+          ]
+        );
 
-      showToast('success', 'Профиль успешно создан! Добро пожаловать! 🎉');
+        if (existingAchievement.documents.length === 0) {
+          await databases.createDocument(
+            DATABASE_ID,
+            'achievements',
+            ID.unique(),
+            {
+              user_id: user.$id,
+              achievement_id: 'welcome_onboard',
+              achievement_name: userType === 'client' ? '🎉 Добро пожаловать!' : '🚀 Старт карьеры!',
+              achievement_description: userType === 'client' 
+                ? 'Первый шаг к поиску лучших фрилансеров' 
+                : 'Начало пути профессионального фрилансера',
+              achievement_icon: userType === 'client' ? '🎉' : '🚀',
+              achievement_category: 'onboarding',
+              xp_reward: 50,
+              rarity: 'common',
+              unlocked_at: new Date().toISOString(),
+              progress_current: 1,
+              progress_required: 1
+            }
+          );
+        }
+      } catch (achievementError) {
+        console.error('Error handling achievement:', achievementError);
+      }
+
+      showToast('success', 'Профиль успешно обновлен! Добро пожаловать! 🎉');
       setTimeout(() => onClose(), 1500);
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      showToast('error', 'Ошибка при создании профиля');
+      showToast('error', 'Ошибка при обновлении профиля');
     } finally {
       setIsLoading(false);
     }
