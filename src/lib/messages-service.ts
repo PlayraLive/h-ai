@@ -104,7 +104,7 @@ export class MessagesService {
         this.MESSAGES_COLLECTION,
         [
           Query.equal('conversationId', conversationId), // Исправлено поле
-          Query.orderDesc('timestamp'),
+          Query.orderDesc('$createdAt'),
           Query.limit(limit)
         ]
       );
@@ -300,7 +300,7 @@ export class MessagesService {
         [
           Query.equal('conversationId', conversationId),
           Query.equal('receiverId', userId),
-          Query.equal('read', false)
+          Query.equal('isRead', false)
         ]
       );
 
@@ -310,7 +310,7 @@ export class MessagesService {
           this.DATABASE_ID,
           this.MESSAGES_COLLECTION,
           message.$id,
-          { read: true }
+          { isRead: true }
         )
       );
 

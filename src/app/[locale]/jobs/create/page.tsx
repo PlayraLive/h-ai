@@ -18,18 +18,72 @@ import {
   Target,
   Clock,
   MapPin,
-  Zap
+  Zap,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 import { JobService } from '@/services/jobs';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
+// Success notification component
+const SuccessNotification = ({ show, message, onClose }: { show: boolean; message: string; onClose: () => void }) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 max-w-md">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl shadow-xl border border-green-400/20 backdrop-blur-sm">
+        <div className="flex items-start space-x-3">
+          <CheckCircle2 className="w-6 h-6 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium">{message}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Error notification component  
+const ErrorNotification = ({ show, message, onClose }: { show: boolean; message: string; onClose: () => void }) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 max-w-md">
+      <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white p-4 rounded-xl shadow-xl border border-red-400/20 backdrop-blur-sm">
+        <div className="flex items-start space-x-3">
+          <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium">{message}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function CreateJobPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = React.use(params);
   const router = useRouter();
   const { user, isAuthenticated } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -97,6 +151,18 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     { value: 'expert', label: 'Эксперт', description: 'Обширный опыт и подтвержденный послужной список' }
   ];
 
+  const showSuccessNotification = (message: string) => {
+    setSuccessMessage(message);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 5000);
+  };
+
+  const showErrorNotification = (message: string) => {
+    setErrorMessage(message);
+    setShowError(true);
+    setTimeout(() => setShowError(false), 5000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -109,7 +175,7 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     if (!isAuthenticated || !user) {
       console.log('User not authenticated, redirecting to login');
       console.log('Auth state:', { isAuthenticated, user: user ? 'exists' : 'null' });
-      alert('Пожалуйста, войдите в систему для размещения заказа');
+      showErrorNotification('Пожалуйста, войдите в систему для размещения заказа');
       router.push('/en/login');
       return;
     }
@@ -119,12 +185,12 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     const budgetMax = parseFloat(formData.budgetMax);
     
     if (budgetMin < 1) {
-      alert('Минимальный бюджет должен быть не менее $1');
+      showErrorNotification('Минимальный бюджет должен быть не менее $1');
       return;
     }
     
     if (budgetMax < budgetMin) {
-      alert('Максимальный бюджет должен быть больше минимального');
+      showErrorNotification('Максимальный бюджет должен быть больше минимального');
       return;
     }
 
@@ -133,8 +199,10 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
         !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
         !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID) {
       console.warn('Appwrite not configured, simulating job creation');
-      alert('Заказ создан успешно! (Демо режим - Appwrite не настроен)');
-      router.push(`/${locale}/jobs`);
+      showSuccessNotification('Заказ создан успешно! (Демо режим - Appwrite не настроен)');
+      setTimeout(() => {
+        router.push(`/${locale}/jobs`);
+      }, 2000);
       return;
     }
 
@@ -152,7 +220,12 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
         budgetMax: formData.budgetMax,
         duration: formData.duration,
         experienceLevel: formData.experienceLevel as 'beginner' | 'intermediate' | 'expert',
-        attachments: formData.attachments
+        attachments: formData.attachments,
+        // Добавляем обязательные поля
+        userId: user.$id, // Добавляем userId
+        clientId: user.$id,
+        location: 'Remote',
+        currency: 'USD'
       };
 
       // Create job in database
@@ -160,7 +233,7 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
       const result = await jobService.createJob(jobData, user.$id);
 
       if (!result.success || !result.job) {
-        alert('Не удалось создать заказ: ' + (result.error || 'Неизвестная ошибка'));
+        showErrorNotification('Не удалось создать заказ: ' + (result.error || 'Неизвестная ошибка'));
         return;
       }
 
@@ -168,15 +241,17 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
 
       console.log('Job created successfully:', createdJob);
 
-      // Показать уведомление об успехе
-      alert('Заказ успешно создан! Вы будете перенаправлены на страницу заказа.');
+      // Показать красивое уведомление об успехе
+      showSuccessNotification('🎉 Заказ успешно создан! Перенаправляем на страницу заказа...');
 
-      // Redirect to job details page
-      router.push(`/en/jobs/${createdJob.$id}`);
+      // Redirect to job details page after delay
+      setTimeout(() => {
+        router.push(`/en/jobs/${createdJob.$id}`);
+      }, 2000);
 
     } catch (error) {
       console.error('Error creating job:', error);
-      alert('Не удалось создать заказ. Попробуйте еще раз.');
+      showErrorNotification('Не удалось создать заказ. Попробуйте еще раз.');
     } finally {
       setIsSubmitting(false);
     }
@@ -205,7 +280,7 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     const maxSize = 10 * 1024 * 1024; // 10MB
     const validFiles = files.filter(file => {
       if (file.size > maxSize) {
-        alert(`Файл ${file.name} слишком большой. Максимальный размер 10MB.`);
+        showErrorNotification(`Файл ${file.name} слишком большой. Максимальный размер 10MB.`);
         return false;
       }
       return true;
@@ -584,6 +659,8 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
           </form>
         </div>
       </div>
+      <SuccessNotification show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
+      <ErrorNotification show={showError} message={errorMessage} onClose={() => setShowError(false)} />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { AIConversationService, AIConversation, AIMessage } from '@/lib/appwrite/ai-conversations';
 import { LocalAIStorageService, LocalAIConversation, LocalAIMessage } from './local-ai-storage';
 import { AI_SPECIALIST_CONTEXTS, AISpecialistContext } from './openai';
-import MultiAIEngine, { MultiAIOptions, MultiAIResponse } from './multi-ai-engine';
+import { MultiAIEngine } from './multi-ai-engine';
 
 // Enhanced OpenAI client for server-side use only
 const openai = typeof window === 'undefined' ? new OpenAI({

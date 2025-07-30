@@ -230,7 +230,7 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
 
       // Создаем заказ
       const order = await OrderService.createOrder({
-        userId: user?.id || 'guest',
+        userId: user?.$id || '',
         specialistId: specialist.id,
         specialistName: specialist.name,
         specialistTitle: specialist.title,
@@ -248,7 +248,7 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
       // Создаем карточку заказа в сообщениях
       const orderCard = await OrderService.createOrderCard({
         orderId: order.$id,
-        userId: user?.id || 'guest',
+        userId: user?.$id || '',
         receiverId: specialist.id, // Здесь должен быть реальный ID получателя
         specialistId: specialist.id,
         specialist: {

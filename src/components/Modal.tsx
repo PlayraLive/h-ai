@@ -51,106 +51,144 @@ export function Modal({
     }
   };
 
-  const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-full mx-4'
-  };
-
   if (!isOpen) return null;
 
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+    full: 'max-w-full h-full'
+  };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={handleOverlayClick}
+    >
       <div
-        className="flex min-h-screen items-center justify-center p-4"
-        onClick={handleOverlayClick}
+        ref={modalRef}
+        className={cn(
+          "w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl",
+          "border border-gray-200 dark:border-gray-700",
+          "backdrop-blur-xl bg-white/95 dark:bg-gray-800/95",
+          sizeClasses[size],
+          className
+        )}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
-        
-        {/* Modal */}
-        <div
-          ref={modalRef}
-          className={cn(
-            "relative w-full glass-card rounded-2xl shadow-2xl transform transition-all",
-            sizeClasses[size],
-            className
-          )}
-        >
-          {/* Header */}
-          {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              {title && (
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
-              )}
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-white transition-colors p-1"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          )}
-          
-          {/* Content */}
-          <div className="p-6">
-            {children}
+        {/* Header */}
+        {(title || showCloseButton) && (
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            {title && (
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {title}
+              </h2>
+            )}
+            {showCloseButton && (
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            )}
           </div>
+        )}
+
+        {/* Content */}
+        <div className="p-6">
+          {children}
         </div>
       </div>
     </div>
   );
 }
 
-interface ConfirmModalProps {
+// Confirmation Modal для подтверждения действий
+interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  description: string;
+  message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  type?: 'danger' | 'warning' | 'info';
   loading?: boolean;
 }
 
-export function ConfirmModal({
+export function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
   title,
-  description,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  variant = 'info',
+  message,
+  confirmText = 'Подтвердить',
+  cancelText = 'Отмена',
+  type = 'danger',
   loading = false
-}: ConfirmModalProps) {
+}: ConfirmationModalProps) {
+  
   const getVariantStyles = () => {
-    switch (variant) {
+    switch (type) {
       case 'danger':
-        return 'bg-red-500 hover:bg-red-600';
+        return 'bg-red-500 hover:bg-red-600 focus:ring-red-500';
       case 'warning':
-        return 'bg-yellow-500 hover:bg-yellow-600';
+        return 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500';
+      case 'info':
+        return 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500';
       default:
-        return 'bg-purple-500 hover:bg-purple-600';
+        return 'bg-red-500 hover:bg-red-600 focus:ring-red-500';
+    }
+  };
+
+  const getIconColor = () => {
+    switch (type) {
+      case 'danger':
+        return 'text-red-500';
+      case 'warning':
+        return 'text-amber-500';
+      case 'info':
+        return 'text-blue-500';
+      default:
+        return 'text-red-500';
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-gray-300 mb-6">{description}</p>
-        
+        {/* Icon */}
+        <div className={cn(
+          "w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center",
+          type === 'danger' && "bg-red-100 dark:bg-red-900/30",
+          type === 'warning' && "bg-amber-100 dark:bg-amber-900/30",
+          type === 'info' && "bg-blue-100 dark:bg-blue-900/30"
+        )}>
+          <div className={cn("w-6 h-6 rounded-full", getIconColor())}>
+            {type === 'danger' && '⚠️'}
+            {type === 'warning' && '⚠️'}
+            {type === 'info' && 'ℹ️'}
+          </div>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          {title}
+        </h3>
+
+        {/* Message */}
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          {message}
+        </p>
+
+        {/* Actions */}
         <div className="flex space-x-3 justify-center">
           <button
             onClick={onClose}
             disabled={loading}
-            className="btn-secondary"
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelText}
           </button>
@@ -158,12 +196,12 @@ export function ConfirmModal({
             onClick={onConfirm}
             disabled={loading}
             className={cn(
-              "px-4 py-2 rounded-lg text-white font-medium transition-colors",
+              "px-4 py-2 rounded-xl text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
               getVariantStyles(),
               loading && "opacity-50 cursor-not-allowed"
             )}
           >
-            {loading ? 'Loading...' : confirmText}
+            {loading ? 'Загрузка...' : confirmText}
           </button>
         </div>
       </div>

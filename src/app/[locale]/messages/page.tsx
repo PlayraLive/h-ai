@@ -1,680 +1,1074 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+"use client";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { MessagesService, Message, Conversation, ChatUser } from '@/lib/messages-service';
-import { NotificationService } from '@/lib/services/notifications';
-import StartConversationModal from '@/components/StartConversationModal';
-import { NotificationDropdown } from '@/components/NotificationDropdown';
-import UserProfileDropdown from '@/components/UserProfileDropdown';
-import { AIOrderService, OrderCard as OrderCardType } from '@/lib/services/ai-order-service';
-import OrderCard from '@/components/messaging/OrderCard';
-import { useRouter } from 'next/navigation';
-import EmojiPicker from '@/components/messaging/EmojiPicker';
+import { 
+  EnhancedMessagingService, 
+  EnhancedMessage, 
+  EnhancedConversation 
+} from '@/lib/services/enhanced-messaging';
+import { UnifiedOrderService, UnifiedOrder } from '@/lib/services/unified-order-service';
 import Navbar from '@/components/Navbar';
-
+import EnhancedOrderTimeline from '@/components/messaging/EnhancedOrderTimeline';
+import { cn } from '@/lib/utils';
 import {
+  MessageSquare,
   Search,
-  Send,
-  Paperclip,
-  MoreVertical,
   Phone,
   Video,
+  Info,
+  Archive,
+  Star,
+  Plus,
+  Filter,
+  X,
   CheckCircle2,
-  Plus
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
+  Bot,
+  Briefcase,
+  ArrowLeft,
+  Users,
+  Send,
+  Paperclip,
+  Smile,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Reply,
+  Forward,
+  Clock,
+  Check,
+  CheckCheck,
+  DollarSign
 } from 'lucide-react';
-
-// Create service instance outside component
-const messagesService = new MessagesService();
-
-interface ChatWithUser extends Conversation {
-  user: ChatUser;
+// Order Card Interface
+interface OrderCard {
+  $id: string;
+  orderId: string;
+  userId: string;
+  type: 'ai_order' | 'job' | 'project' | 'solution';
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  amount: number;
+  currency: string;
+  deadline?: string;
+  clientName: string;
+  specialistName?: string;
+  category: string;
+  skills: string[];
+  createdAt: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  unreadCount?: number;
+  progress?: number;
+  conversationId?: string;
 }
-
-export default function MessagesPage() {
-  const searchParams = useSearchParams();
-  const projectId = searchParams.get('project');
-  const aiOrderId = searchParams.get('ai_order');
-  const conversationId = searchParams.get('conversation');
-  const { user, isAuthenticated, isLoading } = useAuthContext();
-  const router = useRouter();
-
-  const [selectedChat, setSelectedChat] = useState<string>('');
-  const [messageText, setMessageText] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [orderCards, setOrderCards] = useState<OrderCardType[]>([]);
-  const [conversations, setConversations] = useState<ChatWithUser[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [showNewConversationModal, setShowNewConversationModal] = useState(false);
-
-  // Load user's order cards
-  useEffect(() => {
-    if (!user) return;
-    try {
-      const userOrders = AIOrderService.getUserOrders(user.$id);
-      const cards = userOrders.map(order => 
-        AIOrderService.generateOrderCard(order, 'client')
-      );
-      setOrderCards(cards);
-    } catch (error) {
-      console.error('Error loading order cards:', error);
-    }
-  }, [user]);
-
-  // Load conversations
-  useEffect(() => {
-    const loadConversations = async () => {
-      if (!user || !isAuthenticated) return;
-      setLoading(true);
-      try {
-        const userConversations = await messagesService.getUserConversations(user.$id);
-        const conversationsWithUsers = await Promise.all(
-          userConversations.map(async (conversation) => {
-            const otherUserId = conversation.participants.find(id => id !== user.$id);
-            if (!otherUserId) return null;
-            const otherUser = await messagesService.getUserInfo(otherUserId);
-            if (!otherUser) return null;
-            return { ...conversation, user: otherUser };
-          })
-        );
-        const validConversations = conversationsWithUsers.filter(Boolean) as ChatWithUser[];
-        setConversations(validConversations);
-      } catch (error) {
-        console.error('❌ Error loading conversations:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user && isAuthenticated && !isLoading) {
-      loadConversations();
-    }
-  }, [user, isAuthenticated, isLoading]);
-
-  // Auto-select conversation
-  useEffect(() => {
-    if (conversations.length === 0) return;
-    if (conversationId) {
-      const targetConversation = conversations.find(conv => conv.$id === conversationId);
-      if (targetConversation) {
-        setSelectedChat(conversationId);
-        return;
-      }
-    }
-    if (aiOrderId) {
-      const aiOrderConversation = conversations.find(conv => conv.project_id === aiOrderId);
-      if (aiOrderConversation) {
-        setSelectedChat(aiOrderConversation.$id);
-      } else if (conversations.length > 0) {
-        setSelectedChat(conversations[0].$id);
-      }
-    } else if (projectId) {
-      const projectConversation = conversations.find(conv => conv.project_id === projectId);
-      if (projectConversation) {
-        setSelectedChat(projectConversation.$id);
-      }
-    } else if (!selectedChat && conversations.length > 0) {
-      setSelectedChat(conversations[0].$id);
-    }
-  }, [conversations, aiOrderId, projectId, conversationId, selectedChat]);
-
-  // Load messages
-  useEffect(() => {
-    if (!selectedChat || !user) return;
-    const loadMessages = async () => {
-      try {
-        const conversationMessages = await messagesService.getConversationMessages(selectedChat);
-        setMessages(conversationMessages);
-        await messagesService.markMessagesAsRead(selectedChat, user.$id);
-      } catch (error) {
-        console.error('❌ Error loading messages:', error);
-      }
-    };
-    loadMessages();
-  }, [selectedChat, user]);
-
-  // Mock data for demo
-  const mockChats = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=6366f1&color=fff',
-      lastMessage: 'The logo design looks great! Can we make the text a bit larger? 👍',
-      timestamp: '2 min ago',
-      unread: 2,
-      online: true,
-      projectTitle: 'AI Logo Design for TechCorp'
-    },
-    {
-      id: '2',
-      name: 'Mike Davis',
-      avatar: 'https://ui-avatars.com/api/?name=Mike+Davis&background=8b5cf6&color=fff',
-      lastMessage: 'Perfect! The chatbot is working exactly as expected. 🚀',
-      timestamp: '1 hour ago',
-      unread: 0,
-      online: false,
-      projectTitle: 'Chatbot Development'
-    },
-    {
-      id: '3',
-      name: 'Emma Wilson',
-      avatar: 'https://ui-avatars.com/api/?name=Emma+Wilson&background=06b6d4&color=fff',
-      lastMessage: 'Thank you for the amazing video content! 🎥',
-      timestamp: '3 hours ago',
-      unread: 0,
-      online: true,
-      projectTitle: 'AI Video Content Creation'
-    }
-  ];
-
-  const mockMessages: Record<string, any[]> = {
-    '1': [
-      { id: '1', text: 'Hi! I\'ve reviewed your portfolio and I\'m impressed with your AI design work. 🎨', sender_id: 'other-user-1', timestamp: '10:30 AM', read: true },
-      { id: '2', text: 'Thank you! I\'d love to work on your logo project. Can you share more details about your vision? ✨', sender_id: user?.$id || 'current-user', timestamp: '10:32 AM', read: true },
-      { id: '3', text: 'Sure! We\'re looking for a modern, tech-focused logo that represents AI innovation. 🚀', sender_id: 'other-user-1', timestamp: '10:35 AM', read: true },
-      { id: '4', text: 'I\'ve attached the initial concepts. Let me know what you think! 📎', sender_id: user?.$id || 'current-user', timestamp: '2:15 PM', read: true },
-      { id: '5', text: 'The logo design looks great! Can we make the text a bit larger? 👏', sender_id: 'other-user-1', timestamp: '2:18 PM', read: false }
-    ],
-    '2': [
-      { id: '1', text: 'The chatbot integration is complete. Would you like to test it? 🤖', sender_id: user?.$id || 'current-user', timestamp: '9:00 AM', read: true },
-      { id: '2', text: 'Perfect! The chatbot is working exactly as expected. Great job! 🎉', sender_id: 'other-user-2', timestamp: '11:30 AM', read: true }
-    ],
-    '3': [
-      { id: '1', text: 'The video content has been delivered. Please review when you have time. 📹', sender_id: user?.$id || 'current-user', timestamp: '8:00 AM', read: true },
-      { id: '2', text: 'Thank you for the amazing video content! Exactly what we were looking for! 🙌', sender_id: 'other-user-3', timestamp: '9:15 AM', read: true }
-    ]
-  };
-
-  const chatsToShow = conversations.length > 0 ? conversations : mockChats;
-  const currentChat = conversations.find(chat => chat.$id === selectedChat) || mockChats.find(chat => chat.id === selectedChat);
+// Demo data
+const demoConversations: EnhancedConversation[] = [
+  {
+    $id: 'conv-1',
+    title: 'Алекс AI - Дизайн логотипа',
+    participants: ['user1', 'alex-ai'],
+    lastMessage: 'Отлично! Уже готов первый концепт дизайна 🎨',
+    lastMessageTime: new Date(Date.now() - 30000).toISOString(),
+    unreadCount: { 'user1': 2, 'alex-ai': 0 },
+    type: 'ai_specialist',
+    avatar: '/images/specialists/alex-ai.jpg',
+    status: 'active',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 30000).toISOString()
+  },
+  {
+    $id: 'conv-2', 
+    title: 'Проект веб-разработки',
+    participants: ['user1', 'freelancer2'],
+    lastMessage: 'Когда сможете начать работу?',
+    lastMessageTime: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    unreadCount: { 'user1': 0, 'freelancer2': 1 },
+    type: 'project',
+    avatar: '/images/default-avatar.jpg',
+    status: 'active',
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  }
+];
+const demoOrderCards: OrderCard[] = [
+  {
+    $id: 'order-1',
+    orderId: 'AI-2025-001',
+    userId: 'user1',
+    type: 'ai_order',
+    title: '🎨 AI Дизайн логотипа для стартапа',
+    description: 'Создание современного логотипа для IT стартапа с использованием нейросетей.',
+    status: 'in_progress',
+    amount: 15000,
+    currency: 'RUB',
+    deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    clientName: 'Александр К.',
+    specialistName: 'Алекс AI',
+    category: 'design',
+    skills: ['AI Design', 'Branding', 'Logo', 'Figma'],
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    priority: 'high',
+    unreadCount: 3,
+    progress: 65,
+    conversationId: 'conv-1'
+  }
+];
+// Demo unified order
+const demoUnifiedOrder: UnifiedOrder = {
+  $id: 'unified-order-1',
+  orderId: 'AI-2025-001',
+  type: 'ai_order',
+  title: '🎨 AI Дизайн логотипа для стартапа',
+  description: 'Создание современного логотипа для IT стартапа с использованием нейросетей и современных дизайн-принципов.',
+  status: 'in_progress',
+  totalAmount: 15000,
+  currency: 'RUB',
+  progress: 65,
   
-  const messagesToShow = messages.length > 0 ? messages : 
-    (selectedChat && mockMessages[selectedChat] ? 
-      mockMessages[selectedChat].map(msg => ({
-        $id: msg.id,
-        text: msg.text,
-        sender_id: msg.sender_id,
-        timestamp: msg.timestamp,
-        read: msg.read
-      })) : []);
-
-  const filteredChats = chatsToShow.filter(chat => {
-    const name = 'user' in chat ? chat.user.name : (chat as any).name;
-    const projectTitle = 'project_title' in chat ? (chat as any).project_title : (chat as any).projectTitle;
-    return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           projectTitle?.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const handleSendMessage = async () => {
-    if (!messageText.trim() || !user || !selectedChat || sending) return;
-    setSending(true);
-    
+  clientId: 'demo-user',
+  clientName: 'Александр К.',
+  clientAvatar: '/images/default-avatar.jpg',
+  workerId: 'alex-ai',
+  workerName: 'Алекс AI',
+  workerAvatar: '/images/specialists/alex-ai.jpg',
+  workerType: 'ai_specialist',
+  
+  createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  updatedAt: new Date().toISOString(),
+  deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+  
+  category: 'design',
+  skills: ['AI Design', 'Branding', 'Logo', 'Figma'],
+  priority: 'high',
+  requirements: [
+    'Современный минималистичный дизайн',
+    'Подходит для IT компании',
+    'Векторный формат',
+    'Несколько цветовых вариантов'
+  ],
+  
+  milestones: [
+    {
+      id: 'milestone-1',
+      title: 'Initial Concepts',
+      description: 'Create 3-5 initial logo concepts based on requirements',
+      status: 'completed',
+      percentage: 40,
+      amount: 6000,
+      completedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      deliverables: [
+        {
+          id: 'deliverable-1',
+          name: 'Logo Concepts v1.pdf',
+          url: '/demo/logo-concepts.pdf',
+          type: 'file',
+          uploadedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          uploadedBy: 'alex-ai',
+          description: '5 initial logo concepts with variations'
+        }
+      ],
+      approvedBy: 'demo-user',
+      approvedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      rating: 5,
+      feedback: 'Отличные концепты! Особенно понравился вариант #3.'
+    },
+    {
+      id: 'milestone-2',
+      title: 'Refinement & Variations',
+      description: 'Refine selected concept and create color variations',
+      status: 'in_progress',
+      percentage: 35,
+      amount: 5250,
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: 'milestone-3',
+      title: 'Final Delivery',
+      description: 'Final logo files in all required formats',
+      status: 'pending',
+      percentage: 25,
+      amount: 3750,
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ],
+  
+  payments: [
+    {
+      id: 'payment-1',
+      milestoneId: 'milestone-1',
+      amount: 6000,
+      currency: 'RUB',
+      status: 'completed',
+      description: 'Payment for initial concepts',
+      processedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      releasedAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+      escrowStatus: 'released',
+      platformFee: 300,
+      workerReceives: 5700
+    },
+    {
+      id: 'payment-2',
+      milestoneId: 'milestone-2',
+      amount: 5250,
+      currency: 'RUB',
+      status: 'pending',
+      description: 'Payment for refinement phase',
+      escrowStatus: 'held'
+    },
+    {
+      id: 'payment-3',
+      milestoneId: 'milestone-3',
+      amount: 3750,
+      currency: 'RUB',
+      status: 'pending',
+      description: 'Final delivery payment',
+      escrowStatus: 'held'
+    }
+  ],
+  
+  timeline: [
+    {
+      id: 'event-1',
+      type: 'created',
+      title: 'Order Created',
+      description: 'AI Design order created by client',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      userId: 'demo-user',
+      userType: 'client'
+    },
+    {
+      id: 'event-2',
+      type: 'started',
+      title: 'Work Started',
+      description: 'AI specialist began working on the project',
+      timestamp: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+      userId: 'alex-ai',
+      userType: 'worker'
+    },
+    {
+      id: 'event-3',
+      type: 'milestone_completed',
+      title: 'Initial Concepts Completed',
+      description: 'First milestone completed with 5 logo concepts',
+      timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      userId: 'alex-ai',
+      userType: 'worker',
+      data: { 
+        milestoneId: 'milestone-1',
+        deliverables: 1
+      }
+    },
+    {
+      id: 'event-4',
+      type: 'milestone_approved',
+      title: 'Concepts Approved',
+      description: 'Client approved initial concepts with 5-star rating',
+      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      userId: 'demo-user',
+      userType: 'client',
+      data: {
+        milestoneId: 'milestone-1',
+        rating: 5,
+        paymentAmount: 6000
+      }
+    }
+  ],
+  
+  conversationId: 'conv-1',
+  lastActivity: new Date().toISOString(),
+  
+  metadata: {
+    specialistType: 'design',
+    aiModel: 'advanced-design-v2',
+    clientIndustry: 'technology',
+    brandGuidelines: 'modern, minimalist, tech-focused',
+    revisions: 1,
+    priorityLevel: 'high'
+  }
+};
+export default function EnhancedMessagesPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuthContext();
+  // State
+  const [selectedConversation, setSelectedConversation] = useState<string>('');
+  const [currentConversation, setCurrentConversation] = useState<EnhancedConversation | null>(null);
+  const [messages, setMessages] = useState<EnhancedMessage[]>([]);
+  const [conversations, setConversations] = useState<EnhancedConversation[]>(demoConversations);
+  const [orderCards, setOrderCards] = useState<OrderCard[]>(demoOrderCards);
+  const [unifiedOrders, setUnifiedOrders] = useState<UnifiedOrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<UnifiedOrder | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  
+  // UI State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeView, setActiveView] = useState<'conversations' | 'orders'>('conversations');
+  const [viewMode, setViewMode] = useState<'chat' | 'order_timeline'>('chat');
+  const [newMessage, setNewMessage] = useState('');
+  // Load initial data
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadInitialData();
+    }
+  }, [isAuthenticated, user]);
+  const loadInitialData = async () => {
+    setLoading(true);
     try {
-      let conversation = conversations.find(c => c.$id === selectedChat);
+      // Load real conversations from database
+      const userConversations = await EnhancedMessagingService.getUserConversations(user.$id);
+      setConversations(userConversations);
       
+      // Load unified orders
+      const clientOrders = await UnifiedOrderService.getUserOrders(user.$id, 'client');
+      const workerOrders = await UnifiedOrderService.getUserOrders(user.$id, 'worker');
+      const allOrders = [...clientOrders, ...workerOrders];
+      setUnifiedOrders(allOrders);
+      
+      // Load demo order cards for now
+      setOrderCards(demoOrderCards);
+      setUnifiedOrders([demoUnifiedOrder]);
+    } catch (error) {
+      console.error('❌ Error loading initial data:', error);
+      // Fallback to demo data
+      setConversations(demoConversations);
+      setOrderCards(demoOrderCards);
+      setUnifiedOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Load conversation messages  
+  const loadConversationMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId || !user) return;
+    try {
+      // Load real messages from database
+      const conversationMessages = await EnhancedMessagingService.getConversationMessages(conversationId);
+      setMessages(conversationMessages.reverse()); // Reverse to show chronologically
+      
+      // Mark messages as read
+      await EnhancedMessagingService.markMessagesAsRead(conversationId, user.$id);
+      
+      // Update conversation in state
+      setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
+    } catch (error) {
+      console.error('❌ Error loading messages:', error);
+      // Fallback to demo messages
+      const demoMessages: EnhancedMessage[] = [
+        {
+          $id: 'msg-1',
+          conversationId,
+          senderId: user.$id,
+          receiverId: 'alex-ai',
+          content: 'Привет! Как дела с проектом дизайна логотипа?',
+          messageType: 'text',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          read: true,
+          status: 'read',
+          senderName: user.name || 'Вы',
+          senderAvatar: user.avatar
+        },
+        {
+          $id: 'msg-2',
+          conversationId,
+          senderId: 'alex-ai',
+          receiverId: user.$id,
+          content: 'Привет! Отлично работаю над концепцией. Уже готов первый вариант дизайна 🎨',
+          messageType: 'text',
+          timestamp: new Date(Date.now() - 3000000).toISOString(),
+          read: false,
+          status: 'delivered',
+          senderName: 'Алекс AI',
+          senderAvatar: '/images/specialists/alex-ai.jpg'
+        }
+      ];
+      setMessages(demoMessages);
+      setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
+    }
+  }, [user, conversations]);
+  // Handle conversation selection
+  const handleSelectConversation = useCallback((conversationId: string) => {
+    setSelectedConversation(conversationId);
+    loadConversationMessages(conversationId);
+  }, [loadConversationMessages]);
+  // Handle order selection
+  const handleSelectOrder = useCallback((orderId: string) => {
+    console.log('📋 Selecting order:', orderId);
+    
+    // Find order in unified orders
+    const order = unifiedOrders.find(o => o.orderId === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setViewMode('order_timeline');
+      
+      // Also load the conversation
+      if (order.conversationId) {
+        handleSelectConversation(order.conversationId);
+      }
+    } else {
+      // Fallback to old logic for demo orders
+    const orderConversationId = `order-${orderId}`;
+    handleSelectConversation(orderConversationId);
+    }
+  }, [unifiedOrders, handleSelectConversation]);
+  // Handle order updates
+  const handleUpdateOrder = useCallback(async (orderId: string, updates: Partial<UnifiedOrder>) => {
+    try {
+      const updatedOrder = await UnifiedOrderService.updateOrder(orderId, updates, user.$id, 'client');
+      
+      // Update in state
+      setUnifiedOrders(prev => prev.map(order => 
+        order.orderId === orderId ? updatedOrder : order
+      ));
+      
+      // Update selected order if it's the current one
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(updatedOrder);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error updating order:', error);
+      alert('Не удалось обновить заказ. Попробуйте еще раз.');
+    }
+  }, [user, selectedOrder]);
+  // Send message
+  const handleSendMessage = useCallback(async () => {
+    if (!newMessage.trim() || !selectedConversation || !user || sending) return;
+    setSending(true);
+    try {
+      // Find conversation to get receiver
+      const conversation = conversations.find(c => c.$id === selectedConversation);
       if (!conversation) {
-        const mockChat = mockChats.find(chat => chat.id === selectedChat);
-        if (mockChat) {
-          // Add to mock messages for demo
-          const newMockMessage = {
-            id: Date.now().toString(),
-            text: messageText,
-            sender_id: user.$id,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            read: false
-          };
-          
-          if (!mockMessages[selectedChat]) {
-            mockMessages[selectedChat] = [];
-          }
-          mockMessages[selectedChat].push(newMockMessage);
-          
-          setMessages(prev => [...prev, {
-            $id: newMockMessage.id,
-            text: newMockMessage.text,
-            sender_id: newMockMessage.sender_id,
-            timestamp: new Date().toISOString(),
-            read: false
-          } as any]);
-          
-          setMessageText('');
-          setSending(false);
-          return;
-        }
-      } else {
-        const receiverId = conversation.participants.find(id => id !== user.$id);
-        if (!receiverId) {
-          setSending(false);
-          return;
-        }
-
-        const result = await messagesService.sendMessage(
-          user.$id,
-          receiverId,
-          messageText,
-          selectedChat,
-          projectId || undefined
-        );
-
-        if (result.success && result.message) {
-          setMessages(prev => [...prev, result.message!]);
-          setMessageText('');
-          try {
-            const receiverUser = await messagesService.getUserInfo(receiverId);
-            if (receiverUser) {
-              await NotificationService.createMessageNotification(
-                receiverId,
-                user.name,
-                messageText,
-                selectedChat
-              );
+        throw new Error('Conversation not found');
+      }
+      // Find receiver (other participant)
+      const receiverId = conversation.participants.find(p => p !== user.$id) || 'alex-ai';
+      
+      // Send message to database
+      const sentMessage = await EnhancedMessagingService.sendMessage({
+        conversationId: selectedConversation,
+        senderId: user.$id,
+        receiverId,
+        content: newMessage.trim(),
+        messageType: 'text',
+        senderName: user.name || 'Вы',
+        senderAvatar: user.avatar
+      });
+      // Add message to state
+      setMessages(prev => [...prev, sentMessage]);
+      setNewMessage('');
+      // Update conversation in state
+      const updatedConversations = conversations.map(conv => 
+        conv.$id === selectedConversation 
+          ? {
+              ...conv,
+              lastMessage: newMessage.trim(),
+              lastMessageTime: sentMessage.timestamp,
+              updatedAt: sentMessage.timestamp
             }
-          } catch (notificationError) {
-            console.warn('⚠️ Failed to create notification:', notificationError);
+          : conv
+      );
+      setConversations(updatedConversations);
+      // Simulate AI response for AI specialists
+      if (receiverId === 'alex-ai') {
+        setTimeout(async () => {
+          try {
+            const aiResponse = await EnhancedMessagingService.sendMessage({
+              conversationId: selectedConversation,
+          senderId: 'alex-ai',
+          receiverId: user.$id,
+              content: getAIResponse(newMessage.trim()),
+              messageType: 'ai_response',
+              senderName: 'Алекс AI',
+              senderAvatar: '/images/specialists/alex-ai.jpg'
+            });
+        
+        setMessages(prev => [...prev, aiResponse]);
+          } catch (error) {
+            console.error('Error sending AI response:', error);
           }
-        }
+        }, 2000);
       }
     } catch (error) {
       console.error('❌ Error sending message:', error);
+      // Show error to user
+      alert('Не удалось отправить сообщение. Попробуйте еще раз.');
     } finally {
       setSending(false);
     }
+  }, [newMessage, selectedConversation, user, sending, conversations]);
+  // Handle order timeline messages
+  const handleOrderTimelineMessage = useCallback(async (content: string, type: 'text' | 'milestone' | 'payment' = 'text') => {
+    if (!selectedOrder || !selectedConversation) return;
+    
+    // Set the message content and send
+    setNewMessage(content);
+    await handleSendMessage();
+    
+    // Add specific formatting for milestone/payment messages
+    if (type === 'milestone') {
+      // Add milestone-specific styling or data
+    } else if (type === 'payment') {
+      // Add payment-specific styling or data
+    }
+  }, [selectedOrder, selectedConversation, handleSendMessage]);
+  // Create new conversation
+  const handleCreateNewConversation = useCallback(async (
+    participantId: string,
+    participantName: string,
+    type: 'ai_specialist' | 'direct' = 'direct'
+  ) => {
+    if (!user) return;
+    try {
+      const conversation = await EnhancedMessagingService.getOrCreateConversation(
+        [user.$id, participantId],
+        type === 'ai_specialist' 
+          ? `${participantName} - AI Специалист`
+          : `Чат с ${participantName}`,
+        type,
+        {
+          participantName,
+          participantId,
+          avatar: type === 'ai_specialist' 
+            ? `/images/specialists/${participantId}.jpg`
+            : '/images/default-avatar.jpg'
+        }
+      );
+      // Add to conversations list if not exists
+      const existingConv = conversations.find(c => c.$id === conversation.$id);
+      if (!existingConv) {
+        setConversations(prev => [conversation, ...prev]);
+      }
+      // Select the conversation
+      handleSelectConversation(conversation.$id!);
+    } catch (error) {
+      console.error('❌ Error creating conversation:', error);
+      alert('Не удалось создать разговор. Попробуйте еще раз.');
+    }
+  }, [user, conversations, handleSelectConversation]);
+  // Quick start AI conversation
+  const handleStartAIConversation = useCallback(() => {
+    handleCreateNewConversation('alex-ai', 'Алекс AI', 'ai_specialist');
+  }, [handleCreateNewConversation]);
+  // Get AI response
+  const getAIResponse = (userMessage: string): string => {
+    const responses = [
+      'Понял! Работаю над вашим запросом. Скоро пришлю варианты 🤖✨',
+      'Отличная идея! Уже начинаю работу над концепцией 🎨',
+      'Учту все ваши пожелания. В течение часа будет готов первый вариант 📝',
+      'Спасибо за уточнения! Это поможет сделать результат еще лучше 👍',
+      'Работаю над этим. Покажу несколько вариантов на выбор ⚡',
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
   };
-
-  const handleConversationStarted = (conversationId: string) => {
-    setSelectedChat(conversationId);
+  // Format time
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
-
+  // Format date
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) {
+      return 'Сегодня';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Вчера';
+    } else {
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'short'
+      });
+    }
+  };
+  // Render message status icon
+  const MessageStatusIcon = ({ status }: { status: EnhancedMessage['status'] }) => {
+    switch (status) {
+      case 'sending':
+        return <Clock className="w-3 h-3 text-gray-400 animate-pulse" />;
+      case 'sent':
+        return <Check className="w-3 h-3 text-gray-400" />;
+      case 'delivered':
+        return <CheckCheck className="w-3 h-3 text-gray-400" />;
+      case 'read':
+        return <CheckCheck className="w-3 h-3 text-blue-500" />;
+      case 'failed':
+        return <AlertCircle className="w-3 h-3 text-red-500" />;
+      default:
+        return null;
+    }
+  };
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading messages...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Загрузка сообщений...</p>
+          </div>
         </div>
       </div>
     );
   }
-
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-white mb-2">Please log in</h2>
-          <p className="text-gray-400">You need to be logged in to access messages</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+          <div className="text-center max-w-md mx-auto px-6">
+            <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageSquare className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Войдите для доступа к сообщениям</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Войдите в систему, чтобы общаться с AI специалистами и управлять заказами
+            </p>
+              <button
+                onClick={() => router.push('/login')}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-6 rounded-xl font-medium transition-all"
+              >
+                Войти в систему
+              </button>
+          </div>
         </div>
       </div>
     );
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+      return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Navbar />
       
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-      
-      <div className="relative h-screen pt-16">
-        <div className="flex h-full">
-          {/* Chat List */}
-          <div className="w-80 bg-gray-900/80 backdrop-blur-lg border-r border-gray-800/50 flex flex-col">
+      {/* Main Content with proper padding */}
+      <div className="pt-16 md:pt-20">
+        <div className="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)]">
+          {/* Sidebar */}
+          <div className={cn(
+            "bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 transition-all duration-300",
+            "flex flex-col",
+            selectedConversation 
+              ? "w-0 lg:w-80 xl:w-96 overflow-hidden lg:overflow-visible" 
+              : "w-full lg:w-80 xl:w-96"
+          )}>
             {/* Header */}
-            <div className="p-4 border-b border-gray-800/50">
+            <div className="p-4 md:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-xl font-bold text-white">Messages</h1>
-                <button
-                  onClick={() => setShowNewConversationModal(true)}
-                  className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-200 shadow-lg"
-                  title="Start new conversation"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search conversations..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-sm"
-                />
-              </div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                  Сообщения
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                    <Search className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                  <button className="p-2 rounded-xl bg-purple-100/50 dark:bg-purple-900/20 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 transition-all">
+                    <Plus className="w-4 h-4 md:w-5 md:h-5 text-purple-600 dark:text-purple-400" />
+                  </button>
             </div>
-
-            {/* Chat List */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Active Orders Section */}
-              {orderCards.length > 0 && (
-                <div className="p-4 border-b border-gray-800/50">
-                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse"></div>
-                    Активные заказы
-                  </h3>
-                  <div className="space-y-3">
-                    {orderCards.slice(0, 2).map((order) => (
-                      <OrderCard
-                        key={order.orderId}
-                        order={order}
-                        onActionClick={(action, orderId) => {
-                          if (action === 'open_chat') {
-                            const orderConversation = conversations.find(conv => 
-                              conv.project_id === orderId
-                            );
-                            if (orderConversation) {
-                              setSelectedChat(orderConversation.$id);
-                            }
-                          }
-                        }}
-                        className="transform hover:scale-105 transition-transform"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {loading ? (
-                <div className="p-4 text-center">
-                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-gray-400 text-sm">Loading conversations...</p>
-                </div>
-              ) : filteredChats.length > 0 ? (
-                filteredChats.map((chat) => {
-                  const isRealChat = 'user' in chat;
-                  const chatId = isRealChat ? chat.$id : chat.id;
-                  const chatName = isRealChat ? chat.user.name : chat.name;
-                  const chatAvatar = isRealChat ? (chat.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.user.name)}&background=6366f1&color=fff`) : chat.avatar;
-                  const chatOnline = isRealChat ? chat.user.online : chat.online;
-                  const chatLastMessage = isRealChat ? chat.last_message : chat.lastMessage;
-                  const chatTimestamp = isRealChat ? new Date(chat.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : chat.timestamp;
-                  const chatUnread = isRealChat ? (() => {
-                    const unreadCount = typeof chat.unread_count === 'string'
-                      ? JSON.parse(chat.unread_count)
-                      : chat.unread_count || {};
-                    return unreadCount[user?.$id || ''] || 0;
-                  })() : chat.unread;
-                  const chatProjectTitle = isRealChat ? chat.project_title : chat.projectTitle;
-
-                  return (
-                    <div
-                      key={chatId}
-                      onClick={() => setSelectedChat(chatId)}
-                      className={`p-4 border-b border-gray-800/50 cursor-pointer hover:bg-gray-800/50 transition-all duration-200 ${
-                        selectedChat === chatId ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-r-2 border-r-purple-500' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          <img
-                            src={chatAvatar}
-                            alt={chatName}
-                            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-700/50"
-                          />
-                          {chatOnline && (
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse"></div>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-white font-medium truncate">{chatName}</h3>
-                            <span className="text-xs text-gray-400">{chatTimestamp}</span>
-                          </div>
-
-                          {chatProjectTitle && (
-                            <p className="text-xs text-purple-400 mb-1 truncate">{chatProjectTitle}</p>
-                          )}
-
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-400 truncate">{chatLastMessage || 'No messages yet'}</p>
-                            {chatUnread > 0 && (
-                              <span className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center animate-pulse">
-                                {chatUnread}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="p-4 text-center">
-                  <p className="text-gray-400">No conversations yet</p>
-                  <p className="text-gray-500 text-sm mt-1">Start a conversation with a freelancer or client</p>
-                </div>
-              )}
+              </div>
+            {/* Tabs */}
+            <div className="flex space-x-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl p-1">
+              {['conversations', 'orders'].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setActiveView(view as any)}
+                  className={cn(
+                    "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    activeView === view
+                      ? "bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  )}
+                >
+                  {view === 'conversations' ? 'Чаты' : 'Заказы'}
+                </button>
+          ))}
+        </div>
+            {/* Search */}
+            <div className="relative mt-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Поиск..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+              />
             </div>
           </div>
-
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
-            {currentChat ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-4 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800/50 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <img
-                        src={(currentChat as any).avatar}
-                        alt={'user' in currentChat ? currentChat.user.name : (currentChat as any).name}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-700/50"
-                      />
-                      {(currentChat as any).online && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse"></div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-white font-medium">
-                        {'user' in currentChat ? currentChat.user.name : currentChat.name}
-                      </h2>
-                      {(('project_title' in currentChat && (currentChat as any).project_title) ||
-                        ('projectTitle' in currentChat && (currentChat as any).projectTitle)) && (
-                        <p className="text-sm text-purple-400">
-                          {'project_title' in currentChat ? (currentChat as any).project_title : (currentChat as any).projectTitle}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400">
-                        {'user' in currentChat
-                          ? (currentChat.user.online ? 'Online' : `Last seen ${new Date(currentChat.user.last_seen).toLocaleDateString()}`)
-                          : (currentChat.online ? 'Online' : 'Last seen 2 hours ago')
-                        }
-                      </p>
-                    </div>
-                  </div>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto">
+            {activeView === 'conversations' ? (
+              <div className="p-4 space-y-2">
+                {conversations.map((conversation) => {
+                  const userUnreadCount = user ? (conversation.unreadCount[user.$id] || 0) : 0;
                   
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50">
-                      <Phone className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50">
-                      <Video className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messagesToShow.length > 0 ? (
-                    messagesToShow.map((message, index) => {
-                      const isMyMessage = message.sender_id === user?.$id;
-                      const showAvatar = index === messagesToShow.length - 1 || 
-                        messagesToShow[index + 1]?.sender_id !== message.sender_id;
-                      const isConsecutive = index > 0 && 
-                        messagesToShow[index - 1]?.sender_id === message.sender_id;
-                      
-                      return (
-                        <div
-                          key={message.$id}
-                          className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'} ${
-                            isConsecutive ? 'mt-1' : 'mt-4'
-                          } animate-in slide-in-from-bottom-2 duration-300`}
-                        >
-                          {!isMyMessage && showAvatar && (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-medium mr-3 mt-auto">
-                              {(currentChat as any)?.user?.name?.[0] || (currentChat as any)?.name?.[0] || 'U'}
+      return (
+                    <div
+                      key={conversation.$id}
+                      onClick={() => conversation.$id && handleSelectConversation(conversation.$id)}
+                      className={cn(
+                        "p-4 rounded-xl cursor-pointer transition-all",
+                        selectedConversation === conversation.$id
+                          ? "bg-purple-100/50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-700/30"
+                          : "bg-white/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                            {conversation.type === 'ai_specialist' ? (
+                              <Bot className="w-6 h-6" />
+                            ) : (
+                              conversation.title.charAt(0).toUpperCase()
+                            )}
+          </div>
+                          {userUnreadCount > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
+                              {userUnreadCount}
                             </div>
                           )}
-                          
-                          {!isMyMessage && !showAvatar && (
-                            <div className="w-8 mr-3"></div>
-                          )}
-                          
-                          <div className={`group relative max-w-xs lg:max-w-md ${isMyMessage ? 'ml-auto' : ''}`}>
-                            <div
-                              className={`px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm border transition-all duration-200 hover:shadow-xl ${
-                                isMyMessage
-                                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white border-transparent ml-auto'
-                                  : 'bg-gray-800/80 text-white border-gray-700/50'
-                              } ${
-                                isConsecutive 
-                                  ? isMyMessage 
-                                    ? 'rounded-tr-md' 
-                                    : 'rounded-tl-md'
-                                  : ''
-                              }`}
-                            >
-                              <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
-                              
-                              <div className="flex items-center justify-end mt-2 space-x-1">
-                                <span className="text-xs opacity-70">
-                                  {typeof message.timestamp === 'string' && message.timestamp.includes(':') 
-                                    ? message.timestamp 
-                                    : new Date(message.timestamp).toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })
-                                  }
-                                </span>
-                                {isMyMessage && (
-                                  <div className="flex items-center space-x-1">
-                                    <CheckCircle2 className={`w-3 h-3 transition-colors ${
-                                      message.read ? 'text-blue-300' : 'text-gray-300'
-                                    }`} />
-                                    {message.read && (
-                                      <CheckCircle2 className="w-3 h-3 text-blue-300 -ml-2" />
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Message reactions */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-2 right-0 bg-gray-800/90 backdrop-blur-md rounded-full p-1 shadow-lg border border-gray-700/50">
-                              <div className="flex space-x-1">
-                                <button className="w-6 h-6 text-xs hover:bg-gray-700 rounded-full transition-colors" title="React">❤️</button>
-                                <button className="w-6 h-6 text-xs hover:bg-gray-700 rounded-full transition-colors" title="React">👍</button>
-                                <button className="w-6 h-6 text-xs hover:bg-gray-700 rounded-full transition-colors" title="React">😂</button>
-                              </div>
-                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                              {conversation.title}
+                            </h3>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDate(conversation.lastMessageTime)}
+                            </span>
                           </div>
-
-                          {isMyMessage && showAvatar && (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center text-white text-sm font-medium ml-3 mt-auto">
-                              {user?.name?.[0] || 'M'}
-                            </div>
-                          )}
-                          
-                          {isMyMessage && !showAvatar && (
-                            <div className="w-8 ml-3"></div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            {conversation.lastMessage}
+                          </p>
+                        </div>
+                      </div>
+        </div>
+      );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 space-y-3">
+                {/* Unified Orders */}
+                {unifiedOrders.length > 0 ? (
+                  unifiedOrders.map((order) => (
+                    <div
+                      key={order.$id}
+                      onClick={() => handleSelectOrder(order.orderId)}
+                      className="p-4 bg-white/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl border border-gray-200/30 dark:border-gray-700/30 cursor-pointer transition-all"
+                    >
+                      {/* Order Header */}
+            <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                            {order.type === 'ai_order' ? (
+                              <Bot className="w-4 h-4 text-white" />
+                            ) : (
+                              <Briefcase className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+                              {order.title}
+              </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                              #{order.orderId}
+                            </p>
+                          </div>
+                        </div>
+              <span className={cn(
+                "px-2 py-1 rounded-lg text-xs font-medium",
+                          order.status === 'in_progress' && "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+                          order.status === 'pending' && "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+                          order.status === 'completed' && "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400",
+                          order.status === 'review' && "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400",
+                          order.status === 'revision' && "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400"
+                        )}>
+                          {order.status === 'in_progress' && 'В работе'}
+                          {order.status === 'pending' && 'Ожидает'}
+                          {order.status === 'completed' && 'Завершен'}
+                          {order.status === 'review' && 'На проверке'}
+                          {order.status === 'revision' && 'Доработка'}
+                          {order.status === 'cancelled' && 'Отменен'}
+              </span>
+            </div>
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {order.description}
+                      </p>
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500 mb-1">
+                          <span>Прогресс</span>
+                          <span>{order.progress}%</span>
+            </div>
+                        <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-1.5">
+                          <div
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${order.progress}%` }}
+                          />
+          </div>
+      </div>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center space-x-3">
+                          <span>
+                            {user?.$id === order.clientId ? order.workerName : order.clientName}
+                          </span>
+                          {order.deadline && (
+                            <span className="flex items-center space-x-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{new Date(order.deadline).toLocaleDateString()}</span>
+                            </span>
                           )}
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Send className="w-8 h-8 text-gray-400" />
+                        <div className="flex items-center space-x-1">
+                          <DollarSign className="w-3 h-3" />
+                          <span className="font-semibold">
+                            {order.totalAmount.toLocaleString()} {order.currency}
+                          </span>
                         </div>
-                        <h3 className="text-lg font-medium text-white mb-2">No messages yet</h3>
-                        <p className="text-gray-400">Start the conversation! 💬</p>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                {/* Message Input */}
-                <div className="p-4 bg-gray-900/80 backdrop-blur-lg border-t border-gray-800/50">
-                  <div className="flex items-end space-x-2">
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50">
-                      <Paperclip className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="flex-1 relative">
-                      <textarea
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        placeholder="Type a message... (Shift+Enter for new line)"
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none min-h-[44px] max-h-32 backdrop-blur-sm"
-                        rows={1}
-                        onInput={(e) => {
-                          const target = e.target as HTMLTextAreaElement;
-                          target.style.height = 'auto';
-                          target.style.height = Math.min(target.scrollHeight, 128) + 'px';
-                        }}
-                      />
-                    </div>
-                    
-                    <EmojiPicker
-                      onEmojiSelect={(emoji) => {
-                        setMessageText(prev => prev + emoji);
-                      }}
-                    />
-                    
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={sending || !messageText.trim()}
-                      className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg"
+                  ))
+                ) : (
+                  // Fallback to demo order cards
+                  orderCards.map((order) => (
+                    <div
+                      key={order.$id}
+                      onClick={() => handleSelectOrder(order.orderId)}
+                      className="p-4 bg-white/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl border border-gray-200/30 dark:border-gray-700/30 cursor-pointer transition-all"
                     >
-                      {sending ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Send className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-xl font-medium text-white mb-2">Select a conversation</h3>
-                  <p className="text-gray-400">Choose a chat to start messaging</p>
-                </div>
-              </div>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+                          {order.title}
+                        </h3>
+                        <span className={cn(
+                          "px-2 py-1 rounded-lg text-xs font-medium",
+                          order.status === 'in_progress' && "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+                          order.status === 'pending' && "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+                          order.status === 'completed' && "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                        )}>
+                          {order.status === 'in_progress' && 'В работе'}
+                          {order.status === 'pending' && 'Ожидает'}
+                          {order.status === 'completed' && 'Завершен'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {order.description}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span>{order.clientName}</span>
+                        <span className="font-semibold">
+                          {order.amount.toLocaleString()} {order.currency}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+            </div>
             )}
           </div>
         </div>
-        
-        {/* Start Conversation Modal */}
-        <StartConversationModal
-          isOpen={showNewConversationModal}
-          onClose={() => setShowNewConversationModal(false)}
-          onConversationStarted={handleConversationStarted}
-          projectId={projectId || undefined}
-        />
+        {/* Chat Area */}
+        <div className={cn(
+          "flex-1 flex flex-col",
+          selectedConversation ? "flex" : "hidden lg:flex"
+        )}>
+          {!selectedConversation ? (
+            // Empty state
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl">
+                  <MessageSquare className="w-12 h-12 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                  Выберите чат
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-lg mb-6">
+                  Выберите существующий разговор или создайте новый чат
+                </p>
+                
+                {/* Quick actions */}
+                <div className="space-y-3">
+                <button
+                    onClick={handleStartAIConversation}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-6 rounded-xl font-medium transition-all flex items-center justify-center space-x-2"
+                >
+                    <Bot className="w-5 h-5" />
+                    <span>Начать чат с AI специалистом</span>
+                </button>
+                  
+                  <button className="w-full bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 text-gray-900 dark:text-white py-3 px-6 rounded-xl font-medium transition-all border border-gray-200/50 dark:border-gray-700/50 flex items-center justify-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>Найти фрилансера</span>
+                  </button>
+            </div>
+          </div>
+        </div>
+          ) : (
+            <>
+              {/* Chat Header */}
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => setSelectedConversation('')}
+                      className="lg:hidden p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                      <Bot className="w-5 h-5" />
+                  </div>
+                    <div>
+                      <h2 className="font-semibold text-gray-900 dark:text-white">
+                        {currentConversation?.title || 'Чат'}
+                      </h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        В сети
+                      </p>
+                </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {/* View Mode Toggle */}
+                    {selectedOrder && (
+                      <div className="flex items-center space-x-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg p-1">
+                    <button
+                          onClick={() => setViewMode('chat')}
+                      className={cn(
+                            "px-3 py-1 rounded text-sm font-medium transition-all",
+                            viewMode === 'chat'
+                              ? "bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm"
+                              : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          )}
+                        >
+                          Chat
+                    </button>
+                    <button
+                          onClick={() => setViewMode('order_timeline')}
+                      className={cn(
+                            "px-3 py-1 rounded text-sm font-medium transition-all",
+                            viewMode === 'order_timeline'
+                              ? "bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm"
+                              : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          )}
+                        >
+                          Timeline
+                    </button>
+                </div>
+                    )}
+                    
+                    <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                      <Phone className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </button>
+                    <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                      <Video className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </button>
+                    <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                      <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {/* Main Content Area */}
+              {viewMode === 'order_timeline' && selectedOrder ? (
+                // Enhanced Order Timeline
+                <div className="flex-1 overflow-y-auto p-4">
+                  <EnhancedOrderTimeline 
+                    order={selectedOrder}
+                    onUpdateOrder={handleUpdateOrder}
+                    onSendMessage={handleOrderTimelineMessage}
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((message) => (
+                      <div
+                        key={message.$id}
+                        className={cn(
+                          "flex",
+                          message.senderId === user?.$id ? "justify-end" : "justify-start"
+                        )}
+                      >
+                        <div className={cn(
+                          "max-w-xs lg:max-w-md xl:max-w-lg",
+                          message.senderId === user?.$id ? "order-2" : "order-1"
+                        )}>
+                          <div className={cn(
+                            "rounded-2xl px-4 py-3 break-words",
+                            message.senderId === user?.$id
+                              ? "bg-purple-600 text-white rounded-br-sm"
+                              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
+                          )}>
+                            <p className="text-sm leading-relaxed">{message.content}</p>
+                          </div>
+                          <div className={cn(
+                            "flex items-center mt-1 space-x-1 text-xs text-gray-500 dark:text-gray-400",
+                            message.senderId === user?.$id ? "justify-end" : "justify-start"
+                          )}>
+                            <span>{formatTime(message.timestamp)}</span>
+                            {message.senderId === user?.$id && (
+                              <MessageStatusIcon status={message.status} />
+                )}
+              </div>
+            </div>
+          </div>
+                    ))}
+                  </div>
+                  {/* Message Input */}
+                  <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-4">
+                    <div className="flex items-end space-x-3">
+                      <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                        <Paperclip className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                      <div className="flex-1">
+                        <textarea
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          placeholder="Напишите сообщение..."
+                          rows={1}
+                          className="w-full px-4 py-3 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                        />
+                </div>
+                      <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                        <Smile className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                      </button>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim() || sending}
+                        className={cn(
+                          "p-3 rounded-xl transition-all",
+                          newMessage.trim() && !sending
+                            ? "bg-purple-600 hover:bg-purple-700 text-white"
+                            : "bg-gray-200/50 dark:bg-gray-700/50 text-gray-400 cursor-not-allowed"
+                        )}
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+              </div>
+              </div>
+                </>
+              )}
+            </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+} 

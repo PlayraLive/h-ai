@@ -266,6 +266,40 @@ export class ApplicationsService {
         // Не прерываем процесс, если не удалось обновить счетчик
       }
 
+      // Send notification to job client
+      try {
+        // Get job details to find client
+        const job = await JobsService.getJob(applicationData.jobId);
+        if (job && job.clientId) {
+          // Try to send notification using NotificationService
+          try {
+            const { NotificationService } = await import('@/lib/services/notifications');
+            await NotificationService.createNotification({
+              userId: job.clientId,
+              title: '🎯 Новая заявка на ваш заказ!',
+              message: `${applicationData.freelancerName} подал заявку на "${job.title}". Предложенный бюджет: $${applicationData.proposedBudget}`,
+              type: 'job_application',
+              channels: ['push', 'email'],
+              priority: 'high',
+              actionUrl: `/en/jobs/${applicationData.jobId}`,
+              actionText: 'Посмотреть заявку',
+              metadata: {
+                applicationId: application.$id,
+                jobId: applicationData.jobId,
+                freelancerId: applicationData.freelancerId,
+                proposedBudget: applicationData.proposedBudget
+              }
+            });
+            console.log('✅ Notification sent to client successfully');
+          } catch (notificationError) {
+            console.warn('Failed to send notification to client:', notificationError);
+            // Не прерываем процесс, если не удалось отправить уведомление
+          }
+        }
+      } catch (jobError) {
+        console.warn('Failed to get job details for notification:', jobError);
+      }
+
       return application as ApplicationDocument;
     } catch (error) {
       console.error('Error submitting application:', error);

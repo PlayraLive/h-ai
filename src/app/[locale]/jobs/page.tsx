@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
   MapPin,
@@ -15,11 +15,13 @@ import {
   Users,
   ArrowRight,
   SlidersHorizontal,
+  CheckCircle2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { JobCardSkeleton } from "@/components/Loading";
 import { useToast } from "@/components/Toast";
-import { JobsService } from "@/lib/appwrite/jobs";
+import { JobsService, ApplicationsService } from "@/lib/appwrite/jobs";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import ApplyJobModal from "@/components/ApplyJobModal";
 import InteractionButtons from "@/components/shared/InteractionButtons";
@@ -44,6 +46,7 @@ interface Job {
   category: string;
   featured: boolean;
   urgent: boolean;
+  hasApplied?: boolean; // Добавляем поле для статуса заявки
 }
 
 const mockJobs: Job[] = [
@@ -128,6 +131,8 @@ export default function JobsPage() {
 
   const searchParams = useSearchParams();
   const { success, info } = useToast();
+  const router = useRouter();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     // Получение параметров из URL
@@ -193,6 +198,17 @@ export default function JobsPage() {
         return;
       }
 
+      // Get user applications if user is a freelancer
+      let userApplications: string[] = [];
+      if (user && user.userType === 'freelancer') {
+        try {
+          const applications = await ApplicationsService.getFreelancerApplications(user.$id);
+          userApplications = applications.map(app => app.jobId);
+        } catch (error) {
+          console.warn('Could not load user applications:', error);
+        }
+      }
+
       // Convert Appwrite documents to Job interface
       const convertedJobs: Job[] = loadedJobs.jobs.map(
         (job: Record<string, any>) => ({
@@ -220,6 +236,7 @@ export default function JobsPage() {
           category: job.category,
           featured: job.featured || false,
           urgent: job.urgent || false,
+          hasApplied: userApplications.includes(job.$id!), // Проверяем подавал ли фрилансер заявку
         }),
       );
 
@@ -238,6 +255,7 @@ export default function JobsPage() {
     experienceLevel,
     sortBy,
     searchQuery,
+    user, // Добавляем user в зависимости
   ]);
 
   useEffect(() => {
@@ -266,13 +284,21 @@ export default function JobsPage() {
     setSelectedJob(null);
   };
 
-  const handleApplicationSuccess = () => {
+  const handleApplicationSuccess = async () => {
     success(
-      "Application Submitted!",
-      "Your application has been sent to the employer.",
+      "🎉 Заявка отправлена!",
+      "Ваша заявка успешно отправлена работодателю. Перенаправляем на страницу джоба...",
     );
-    // Optionally reload jobs to update proposal count
+    
+    // Reload jobs to update proposal count
     loadJobs();
+    
+    // Redirect to the specific job page to show application status
+    if (selectedJob) {
+      setTimeout(() => {
+        router.push(`/en/jobs/${selectedJob.id}`);
+      }, 2000);
+    }
   };
 
   const filteredJobs = jobs.filter((job) => {
@@ -649,10 +675,25 @@ function JobCard({
           </Link>
           <button
             onClick={onApply}
-            className="btn-primary flex items-center space-x-2"
+            disabled={job.hasApplied}
+            className={cn(
+              "flex items-center space-x-2 transition-all",
+              job.hasApplied 
+                ? "bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                : "btn-primary"
+            )}
           >
-            <span>Apply Now</span>
-            <ArrowRight className="w-4 h-4" />
+            {job.hasApplied ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Application Submitted</span>
+              </>
+            ) : (
+              <>
+                <span>Apply Now</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </div>
