@@ -109,8 +109,12 @@ export async function POST(request: NextRequest) {
 
     console.log('🎭 Mock AI Chat Request:', { message, specialistId });
 
-    // Get specialist data
+    // Get specialist data  
+    console.log('🔍 Looking for specialist:', specialistId);
+    console.log('🔍 Available specialists:', Object.keys(SPECIALIST_RESPONSES));
+    
     const specialist = SPECIALIST_RESPONSES[specialistId as keyof typeof SPECIALIST_RESPONSES] || SPECIALIST_RESPONSES['alex-ai'];
+    console.log('✅ Mock AI Response generated for', specialist.name);
     
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));

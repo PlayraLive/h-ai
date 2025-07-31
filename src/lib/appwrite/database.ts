@@ -7,6 +7,7 @@ const client = new Client()
 
 export const databases = new Databases(client);
 export const storage = new Storage(client);
+export { Permission, Role };
 
 // Database and Collection IDs
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;

@@ -27,6 +27,7 @@ import { FreelancerCardSkeleton } from "@/components/Loading";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 import UserJobsModal from "@/components/UserJobsModal";
+import FullScreenVideoAvatar from "@/components/FullScreenVideoAvatar";
 
 interface Freelancer {
   id: string;
@@ -100,7 +101,7 @@ export default function FreelancersPage({
       name: "Sarah Chen",
       title: "AI Artist & Creative Technologist",
       avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
       rating: 4.8,
       reviewCount: 32,
       hourlyRate: 85,
@@ -132,7 +133,7 @@ export default function FreelancersPage({
       name: "Mike Johnson",
       title: "IoT & Hardware Engineer",
       avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
       rating: 4.7,
       reviewCount: 28,
       hourlyRate: 80,
@@ -437,6 +438,8 @@ function FreelancerCard({
   onFavorite: () => void;
   onHire: (freelancer: Freelancer) => void;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
       case "available":
@@ -466,75 +469,103 @@ function FreelancerCard({
   return (
     <div
       className={cn(
-        "glass-card p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 group",
-        freelancer.topRated && "ring-2 ring-purple-500/30",
+        "relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-300 group cursor-pointer",
+        "min-h-[400px] bg-gradient-to-br from-gray-900 to-gray-800",
+        freelancer.topRated && "ring-2 ring-purple-500/50",
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <img
-              src={freelancer.avatar}
-              alt={freelancer.name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
+      {/* Video Avatar Background */}
+      <div className="absolute inset-0">
+        <FullScreenVideoAvatar
+          specialistId={freelancer.id}
+          specialistName={freelancer.name}
+          specialistType="freelancer"
+          className="w-full h-full"
+          autoPlay={true}
+          isHovered={isHovered}
+          showControls={false}
+          onVideoReady={() => console.log(`Video ready for ${freelancer.name}`)}
+          onError={(error) => {
+            console.error(`Video error for ${freelancer.name}:`, error);
+          }}
+        />
+      </div>
+      
+      {/* Dark overlay for content readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      
+      {/* Content overlay */}
+      <div className="relative z-10 p-6 h-full flex flex-col justify-between">
+        {/* Top section - Status indicators */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            {/* Availability indicator */}
             <div
               className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-950",
+                "w-3 h-3 rounded-full border-2 border-white/50",
                 getAvailabilityColor(freelancer.availability),
               )}
-            ></div>
+            />
+            {freelancer.verified && (
+              <CheckCircle className="w-5 h-5 text-blue-400" />
+            )}
+            {freelancer.topRated && (
+              <Star className="w-5 h-5 text-yellow-400 fill-current" />
+            )}
           </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFavorite();
+            }}
+            className="p-2 bg-black/30 backdrop-blur-sm rounded-full text-white/70 hover:text-red-400 transition-all hover:bg-black/50"
+          >
+            {isFavorite ? (
+              <HeartHandshake className="w-5 h-5 text-red-400" />
+            ) : (
+              <Heart className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+        
+        {/* Middle section - grows to fill space */}
+        <div className="flex-1" />
+        
+        {/* Bottom section - Freelancer info */}
+        <div className="space-y-4">
+          {/* Name and title */}
           <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors">
+            <div className="flex items-center space-x-2 mb-1">
+              <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
                 {freelancer.name}
               </h3>
-              {freelancer.verified && (
-                <CheckCircle className="w-4 h-4 text-blue-400" />
-              )}
             </div>
-            <p className="text-sm text-gray-400">{freelancer.title}</p>
+            <p className="text-sm text-white/80">{freelancer.title}</p>
           </div>
-        </div>
-        <button
-          onClick={onFavorite}
-          className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-        >
-          {isFavorite ? (
-            <HeartHandshake className="w-5 h-5 text-red-400" />
-          ) : (
-            <Heart className="w-5 h-5" />
-          )}
-        </button>
-      </div>
 
-      {/* Badges */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {freelancer.topRated && (
-          <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-            Top Rated
-          </span>
-        )}
-        {freelancer.verified && (
-          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-            Verified
-          </span>
-        )}
-        <span
-          className={cn(
-            "px-2 py-1 text-xs rounded-full",
-            freelancer.availability === "available"
-              ? "bg-green-500/20 text-green-400"
-              : freelancer.availability === "busy"
-                ? "bg-yellow-500/20 text-yellow-400"
-                : "bg-gray-500/20 text-gray-400",
-          )}
-        >
-          {getAvailabilityText(freelancer.availability)}
-        </span>
-      </div>
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {freelancer.topRated && (
+              <span className="px-2 py-1 bg-purple-500/30 backdrop-blur-sm text-purple-300 text-xs rounded-full border border-purple-400/30">
+                Top Rated
+              </span>
+            )}
+            {freelancer.verified && (
+              <span className="px-2 py-1 bg-blue-500/30 backdrop-blur-sm text-blue-300 text-xs rounded-full border border-blue-400/30">
+                Verified
+              </span>
+            )}
+            <span
+              className={cn(
+                "px-2 py-1 text-xs rounded-full backdrop-blur-sm border",
+                getAvailabilityStyles(freelancer.availability),
+              )}
+            >
+              {getAvailabilityText(freelancer.availability)}
+            </span>
+          </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -545,7 +576,7 @@ function FreelancerCard({
               {freelancer.rating}
             </span>
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-white/60">
             ({freelancer.reviewCount} reviews)
           </div>
         </div>
@@ -553,81 +584,34 @@ function FreelancerCard({
           <div className="text-white font-semibold mb-1">
             ${freelancer.hourlyRate}/hr
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-white/60">
             {freelancer.completedJobs} jobs
           </div>
         </div>
       </div>
 
-      {/* Description */}
-      <p className="text-gray-300 text-sm mb-4 line-clamp-2">
-        {freelancer.description}
-      </p>
-
-      {/* Skills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {freelancer.skills.slice(0, 3).map((skill, index) => (
-          <span
-            key={index}
-            className="bg-gray-800/50 text-gray-300 text-xs px-2 py-1 rounded-full"
-          >
-            {skill}
-          </span>
-        ))}
-        {freelancer.skills.length > 3 && (
-          <span className="text-gray-400 text-xs px-2 py-1">
-            +{freelancer.skills.length - 3} more
-          </span>
-        )}
-      </div>
-
-      {/* Meta Info */}
-      <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
-        <div className="flex items-center space-x-1">
-          <MapPin className="w-3 h-3" />
-          <span>{freelancer.location}</span>
+          {/* Actions */}
+          <div className="flex space-x-3">
+            <Link
+              href={`/en/messages?freelancer=${freelancer.id}`}
+              className="flex-1 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all border border-white/20 text-center flex items-center justify-center space-x-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Message</span>
+            </Link>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onHire(freelancer);
+              }}
+              className="flex-1 bg-green-500/80 backdrop-blur-sm hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-all border border-green-400/30 text-center flex items-center justify-center space-x-2"
+            >
+              <Briefcase className="w-4 h-4" />
+              <span>Hire</span>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center space-x-1">
-          <Clock className="w-3 h-3" />
-          <span>Responds in {freelancer.responseTime}</span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="space-y-3">
-        <div className="flex space-x-2">
-          <Link
-            href={`/en/freelancers/${freelancer.id}`}
-            className="flex-1 btn-secondary text-center flex items-center justify-center space-x-2"
-          >
-            <Eye className="w-4 h-4" />
-            <span>Profile</span>
-          </Link>
-          <Link
-            href={`/en/freelancer/${freelancer.id}/portfolio`}
-            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-center flex items-center justify-center space-x-2"
-          >
-            <Award className="w-4 h-4" />
-            <span>Portfolio</span>
-          </Link>
-        </div>
-        <div className="flex space-x-2">
-          <Link
-            href={`/en/messages?freelancer=${freelancer.id}`}
-            className="flex-1 btn-primary text-center flex items-center justify-center space-x-2"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Message</span>
-          </Link>
-          <button
-            onClick={() => onHire(freelancer)}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors text-center flex items-center justify-center space-x-2"
-          >
-            <Briefcase className="w-4 h-4" />
-            <span>Hire</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

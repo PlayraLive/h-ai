@@ -35,7 +35,7 @@ const mockNotifications = [
     time: "2 minutes ago",
     read: false,
     avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
+              "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=32&h=32&fit=crop&crop=face",
   },
   {
     id: "2",
@@ -54,7 +54,7 @@ const mockNotifications = [
     time: "3 hours ago",
     read: false,
     avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face",
+              "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=32&h=32&fit=crop&crop=face",
   },
   {
     id: "4",

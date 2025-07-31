@@ -16,6 +16,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import UserJobsModal from "@/components/UserJobsModal";
+import VideoAvatar from "@/components/VideoAvatar";
 
 interface FeaturedFreelancersSectionProps {
   locale: string;
@@ -183,19 +184,17 @@ export function FeaturedFreelancersSection({
               >
                 {/* Header */}
                 <div className="flex items-center space-x-4 mb-4">
-                  {/* Avatar */}
+                  {/* Video Avatar */}
                   <div className="relative">
-                    {freelancer.avatar ? (
-                      <img
-                        src={freelancer.avatar}
-                        alt={freelancer.name}
-                        className="w-12 h-12 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                        {getInitials(freelancer.name)}
-                      </div>
-                    )}
+                    <VideoAvatar
+                      specialistId={freelancer.$id}
+                      specialistName={freelancer.name}
+                      specialistType="freelancer"
+                      size="lg"
+                      autoPlay={true}
+                      showControls={false}
+                      className="rounded-xl"
+                    />
 
                     {/* Online indicator */}
                     {freelancer.isOnline && (

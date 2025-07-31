@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2025-07-30T16:00:49.725Z",
+  "specialists": [
+    {
+      "id": "viktor-reels",
+      "name": "Viktor Reels",
+      "title": "AI Reels Creator",
+      "videoUrl": "/videos/specialists/viktor-reels-avatar.html",
+      "thumbnailUrl": "/images/specialists/viktor-reels-thumb.svg",
+      "colors": [
+        "#F59E0B",
+        "#EF4444",
+        "#10B981"
+      ],
+      "duration": 5,
+      "quality": "demo"
+    },
+    {
+      "id": "luna-design",
+      "name": "Luna Design",
+      "title": "UI/UX Designer",
+      "videoUrl": "/videos/specialists/luna-design-avatar.html",
+      "thumbnailUrl": "/images/specialists/luna-design-thumb.svg",
+      "colors": [
+        "#06b6d4",
+        "#8b5cf6",
+        "#f97316"
+      ],
+      "duration": 5,
+      "quality": "demo"
+    },
+    {
+      "id": "alex-ai",
+      "name": "Alex AI",
+      "title": "AI Developer",
+      "videoUrl": "/videos/specialists/alex-ai-avatar.html",
+      "thumbnailUrl": "/images/specialists/alex-ai-thumb.svg",
+      "colors": [
+        "#8B5CF6",
+        "#EC4899",
+        "#06B6D4"
+      ],
+      "duration": 5,
+      "quality": "demo"
+    },
+    {
+      "id": "max-bot",
+      "name": "Max Bot",
+      "title": "Bot Developer",
+      "videoUrl": "/videos/specialists/max-bot-avatar.html",
+      "thumbnailUrl": "/images/specialists/max-bot-thumb.svg",
+      "colors": [
+        "#10b981",
+        "#3b82f6",
+        "#6366f1"
+      ],
+      "duration": 5,
+      "quality": "demo"
+    }
+  ]
+}

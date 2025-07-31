@@ -1,6 +1,41 @@
 import { databases, DATABASE_ID, ID, Query, COLLECTIONS } from '../appwrite/database';
 import { AISpecialist, AISpecialistOrder, AISpecialistMessage, AITaskTimeline, AISpecialistSubscription } from '@/types';
-import { chatCompletion, OpenAIMessage } from './openai';
+import InstagramVideoSpecialist from './instagram-video-specialist';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = typeof window === 'undefined' ? new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+}) : null;
+
+interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+// Chat completion function
+async function chatCompletion(options: { 
+  apiKey?: string;
+  messages: OpenAIMessage[];
+}): Promise<string> {
+  if (!openai) {
+    throw new Error('OpenAI not available on client side');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: options.messages,
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    return response.choices[0]?.message?.content || 'Извините, не смог сгенерировать ответ.';
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    throw error;
+  }
+}
 
 export class AISpecialistsService {
   
@@ -254,21 +289,54 @@ export class AISpecialistsService {
 
       // Если обычный текст — генерируем ответ через OpenAI
       if (messageType === 'text') {
-        const openaiApiKey = process.env.OPENAI_API_KEY;
-        const messages: OpenAIMessage[] = [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ];
-        try {
-          aiResponse = await chatCompletion({
-            apiKey: openaiApiKey,
-            messages
-          });
-        } catch (err) {
-          aiResponse = 'Извините, произошла ошибка при генерации AI-ответа.';
+        // Специальная обработка для Instagram Video Specialist
+        if (specialistId === 'viktor-reels') {
+          try {
+            const videoSpecialist = InstagramVideoSpecialist.getInstance();
+            const result = await videoSpecialist.processClientMessage(
+              message,
+              orderId,
+              order.clientId
+            );
+            
+            aiResponse = result.response;
+            
+            // Если есть варианты видео - добавляем их в ответ
+            if (result.options && result.options.length > 0) {
+              aiResponse += '\n\n' + result.options.map((option, index) => 
+                `**${index + 1}. ${option.title}**\n${option.concept}`
+              ).join('\n\n');
+            }
+            
+            // Если есть техническое задание - добавляем его
+            if (result.technicalSpec) {
+              aiResponse += '\n\n📋 **Техническое задание:**\n' + 
+                result.technicalSpec.deliverables.join('\n');
+            }
+            
+            shouldUpdateStatus = order.status === 'pending';
+            newStatus = shouldUpdateStatus ? 'in_progress' : null;
+            
+          } catch (err) {
+            console.error('Error with Instagram Video Specialist:', err);
+            aiResponse = 'Привет! Я Viktor Reels, специалист по Instagram видео. Расскажите о вашем проекте - создам крутое видео для вашего бренда!';
+          }
+        } else {
+          // Стандартная обработка для других специалистов
+          const messages: OpenAIMessage[] = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ];
+          try {
+            aiResponse = await chatCompletion({
+              messages
+            });
+          } catch (err) {
+            aiResponse = 'Извините, произошла ошибка при генерации AI-ответа.';
+          }
+          shouldUpdateStatus = order.status === 'pending';
+          newStatus = shouldUpdateStatus ? 'in_progress' : null;
         }
-        shouldUpdateStatus = order.status === 'pending';
-        newStatus = shouldUpdateStatus ? 'in_progress' : null;
       } else {
         // Старое поведение для других типов сообщений
         switch (messageType) {

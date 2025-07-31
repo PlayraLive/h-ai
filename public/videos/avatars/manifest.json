@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2025-07-30T15:18:29.253Z",
+  "avatars": [
+    {
+      "id": "alex-ai",
+      "name": "Алекс AI",
+      "type": "ai_specialist",
+      "specialization": "AI Дизайн",
+      "style": "professional",
+      "videoUrl": "/videos/avatars/alex-ai-avatar.mp4",
+      "thumbnailUrl": "/images/avatars/alex-ai-thumb.jpg",
+      "duration": 5,
+      "colors": [
+        "#8B5CF6",
+        "#EC4899",
+        "#06B6D4"
+      ],
+      "prompt": "Стильный AI дизайнер в футуристическом офисе. \n            Работает с голографическими интерфейсами, неоновая подсветка фиолетового и розового цветов.\n            Современная техническая атмосфера, высокотехнологичный стиль.\n            4K качество, профессиональное освещение, кинематографический стиль."
+    },
+    {
+      "id": "viktor-reels",
+      "name": "Viktor Reels",
+      "type": "ai_specialist",
+      "specialization": "Видео продакшн",
+      "style": "creative",
+      "videoUrl": "/videos/avatars/viktor-reels-avatar.mp4",
+      "thumbnailUrl": "/images/avatars/viktor-reels-thumb.jpg",
+      "duration": 5,
+      "colors": [
+        "#F59E0B",
+        "#EF4444",
+        "#10B981"
+      ],
+      "prompt": "Креативный видеограф и режиссер в современной студии.\n            Профессиональные камеры, студийное освещение, динамичные движения.\n            Яркие оранжевые и красные акценты, творческая атмосфера.\n            4K качество, динамичное освещение, энергичный стиль."
+    },
+    {
+      "id": "max-powerful",
+      "name": "Max Powerful",
+      "type": "ai_specialist",
+      "specialization": "AI Разработка",
+      "style": "tech",
+      "videoUrl": "/videos/avatars/max-powerful-avatar.mp4",
+      "thumbnailUrl": "/images/avatars/max-powerful-thumb.jpg",
+      "duration": 5,
+      "colors": [
+        "#6366F1",
+        "#14B8A6",
+        "#F97316"
+      ],
+      "prompt": "Мощный AI инженер с множественными экранами и высокотехнологичным оборудованием.\n            Код на экранах, матричные эффекты, синие и голубые неоновые подсветки.\n            Высокотехнологичная среда, футуристический интерфейс.\n            4K качество, техно-стиль, профессиональная съемка."
+    }
+  ]
+}

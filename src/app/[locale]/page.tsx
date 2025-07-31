@@ -1,6 +1,6 @@
 import HeroSection from '@/components/HeroSection';
 import MobileHeroSection from '@/components/MobileHeroSection';
-import SpecialistCarousel from '@/components/SpecialistCarousel';
+import AISpecialistsGrid from '@/components/AISpecialistsGrid';
 import SolutionsCarousel from '@/components/SolutionsCarousel';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -27,7 +27,7 @@ export default async function HomePage({
         </div>
 
         {/* AI Specialists Carousel */}
-        <SpecialistCarousel />
+                      <AISpecialistsGrid limit={4} title="AI Специалисты" />
 
         {/* AI Solutions Carousel */}
         <SolutionsCarousel />

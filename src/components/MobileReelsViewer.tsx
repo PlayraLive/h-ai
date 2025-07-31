@@ -79,7 +79,7 @@ export default function MobileReelsViewer({
       creatorId: "creator1",
       creatorName: "Alex Designer",
       creatorAvatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face",
       isPremium: true,
       views: 15420,
       likes: 892,
@@ -99,7 +99,7 @@ export default function MobileReelsViewer({
       creatorId: "creator2",
       creatorName: "Video Master",
       creatorAvatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b169a9e8?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
       isPremium: false,
       views: 23100,
       likes: 1340,
@@ -135,7 +135,7 @@ export default function MobileReelsViewer({
       creatorId: "creator4",
       creatorName: "Design Guru",
       creatorAvatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
       isPremium: false,
       views: 12890,
       likes: 743,

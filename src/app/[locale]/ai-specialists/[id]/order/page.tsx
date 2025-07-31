@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { getAISpecialists } from '@/lib/data/ai-specialists';
 import OrderFlowChat from '@/components/OrderFlowChat';
+import AuthGuard from '@/components/AuthGuard';
 
 interface OrderPageProps {
   params: { 
@@ -14,8 +15,9 @@ interface OrderPageProps {
 
 async function OrderPage({ params, searchParams }: OrderPageProps) {
   // Get specialist data
+  const awaitedParams = await params;
   const specialists = await getAISpecialists();
-  const specialist = specialists.find(s => s.id === params.id);
+  const specialist = specialists.find(s => s.id === awaitedParams.id);
   
   if (!specialist) {
     return (
@@ -33,18 +35,19 @@ async function OrderPage({ params, searchParams }: OrderPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
-      <div className="container mx-auto px-4 py-8">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Заказать услуги {specialist.name}
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Упрощенный процесс заказа: обсуждение → выбор тарифа → оплата
-          </p>
-        </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+        <div className="container mx-auto px-4 py-8">
+          
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Заказать услуги {specialist.name}
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Упрощенный процесс заказа: обсуждение → выбор тарифа → оплата
+            </p>
+          </div>
 
         {/* Specialist Info Card */}
         <div className="max-w-4xl mx-auto mb-8">
@@ -141,6 +144,7 @@ async function OrderPage({ params, searchParams }: OrderPageProps) {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 } 
 

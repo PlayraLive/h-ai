@@ -69,7 +69,8 @@ export class OrderService {
         'orders',
         orderId,
         {
-          client_id: data.userId, // Исправлено: используем client_id вместо userId
+          userId: data.userId, // Исправлено: используем userId
+          client_id: data.userId, // Дублируем для совместимости со старыми схемами
           specialist_id: data.specialistId, // Добавляем для совместимости
           specialistId: data.specialistId,
           specialistName: data.specialistName,
@@ -80,7 +81,7 @@ export class OrderService {
           conversationId: data.conversationId,
           requirements: data.requirements,
           timeline: data.timeline || '7 дней',
-          status: 'pending', // Добавляем обязательный статус
+          status: 'pending', // Статус заказа
           createdAt: now,
           updatedAt: now
         }

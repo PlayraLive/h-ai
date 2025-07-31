@@ -76,6 +76,39 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
   const [paymentData, setPaymentData] = useState({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Проверяем авторизацию - если пользователь не авторизован, показываем уведомление
+  if (!user) {
+    return (
+      <div className={`max-w-4xl mx-auto ${className}`}>
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20 dark:border-gray-700/20 text-center">
+          <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Требуется авторизация
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Для общения с AI специалистом и оформления заказа необходимо войти в аккаунт
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Войти в аккаунт
+            </button>
+            <button
+              onClick={() => window.location.href = '/signup'}
+              className="px-6 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg font-medium transition-colors"
+            >
+              Зарегистрироваться
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
     initializeChat();
   }, []);
@@ -228,46 +261,65 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
       const selectedTariffPlan = TARIFF_PLANS.find(p => p.id === selectedTariff);
       if (!selectedTariffPlan) return;
 
-      // Создаем заказ
-      const order = await OrderService.createOrder({
-        userId: user?.$id || '',
-        specialistId: specialist.id,
-        specialistName: specialist.name,
-        specialistTitle: specialist.title,
-        tariffId: selectedTariff!,
-        tariffName: selectedTariffPlan.name,
-        amount: selectedTariffPlan.price,
-        conversationId: conversationId,
-        requirements: messages
-          .filter(m => m.role === 'user')
-          .map(m => m.content)
-          .join('\n'),
-        timeline: selectedTariffPlan.features.includes('Срочная') ? '2 дня' : '7 дней'
+      // Создаем заказ через API
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          userId: user?.$id || '',
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          specialistTitle: specialist.title,
+          tariffId: selectedTariff!,
+          tariffName: selectedTariffPlan.name,
+          amount: selectedTariffPlan.price,
+          conversationId: conversationId,
+          requirements: messages
+            .filter(m => m.role === 'user')
+            .map(m => m.content)
+            .join('\n'),
+          timeline: selectedTariffPlan.features.includes('Срочная') ? '2 дня' : '7 дней'
+        })
       });
 
-      // Создаем карточку заказа в сообщениях
-      const orderCard = await OrderService.createOrderCard({
-        orderId: order.$id,
-        userId: user?.$id || '',
-        receiverId: specialist.id, // Здесь должен быть реальный ID получателя
-        specialistId: specialist.id,
-        specialist: {
-          id: specialist.id,
-          name: specialist.name,
-          title: specialist.title,
-          avatar: specialist.avatar
-        },
-        tariff: {
-          name: selectedTariffPlan.name,
-          price: selectedTariffPlan.price,
-          features: selectedTariffPlan.features
-        },
-        requirements: messages
-          .filter(m => m.role === 'user')
-          .map(m => m.content)
-          .join('\n'),
-        conversationId: order.conversationId
+      const orderData = await orderResponse.json();
+      if (!orderData.success) {
+        throw new Error(orderData.error || 'Failed to create order');
+      }
+      const order = orderData.order;
+
+      // Создаем карточку заказа в сообщениях через API
+      const cardResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_card',
+          orderId: order.$id,
+          userId: user?.$id || '',
+          receiverId: specialist.id,
+          specialistId: specialist.id,
+          specialist: {
+            id: specialist.id,
+            name: specialist.name,
+            title: specialist.title,
+            avatar: specialist.avatar
+          },
+          tariff: {
+            name: selectedTariffPlan.name,
+            price: selectedTariffPlan.price,
+            features: selectedTariffPlan.features
+          },
+          requirements: messages
+            .filter(m => m.role === 'user')
+            .map(m => m.content)
+            .join('\n'),
+          conversationId: order.conversationId || conversationId
+        })
       });
+
+      const cardData = await cardResponse.json();
+      console.log('📱 Order card creation result:', cardData);
 
       // Показываем сообщение о подтверждении
       const confirmationMessage: Message = {

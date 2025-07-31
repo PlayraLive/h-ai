@@ -285,6 +285,7 @@ export class UnifiedOrderService {
         ID.unique(),
         {
           ...order,
+          userId: order.clientId, // Добавляем userId для совместимости
           milestones: JSON.stringify(order.milestones),
           payments: JSON.stringify(order.payments),
           timeline: JSON.stringify(order.timeline),

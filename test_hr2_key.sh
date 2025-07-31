@@ -1,0 +1,6 @@
+echo "⚠️  ВНИМАНИЕ: Скопируйте HR_2 ключ из platform.openai.com"
+echo "📝 Вставьте ключ вместо YOUR_HR2_KEY_HERE в следующей команде:"
+echo "curl -s -X POST https://api.openai.com/v1/chat/completions \"
+echo "  -H \"Authorization: Bearer YOUR_HR2_KEY_HERE\" \"
+echo "  -H \"Content-Type: application/json\" \"
+echo "  -d '{\"model\":\"gpt-3.5-turbo\",\"messages\":[{\"role\":\"user\",\"content\":\"Test from HR_2 key\"}],\"max_tokens\":20}' | head -5"

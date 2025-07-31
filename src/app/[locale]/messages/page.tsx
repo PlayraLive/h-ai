@@ -10,6 +10,7 @@ import {
 import { UnifiedOrderService, UnifiedOrder } from '@/lib/services/unified-order-service';
 import Navbar from '@/components/Navbar';
 import EnhancedOrderTimeline from '@/components/messaging/EnhancedOrderTimeline';
+import VideoAvatar from '@/components/VideoAvatar';
 import { cn } from '@/lib/utils';
 import {
   MessageSquare,
@@ -473,18 +474,82 @@ export default function EnhancedMessagesPage() {
           : conv
       );
       setConversations(updatedConversations);
-      // Simulate AI response for AI specialists
-      if (receiverId === 'alex-ai') {
+      // Generate AI response for AI specialists
+      if (receiverId === 'alex-ai' || receiverId === 'viktor-reels') {
         setTimeout(async () => {
           try {
+            let aiResponseContent = '';
+            let senderName = '';
+            let senderAvatar = '';
+            
+            // Call AI Chat Response API
+            try {
+              const response = await fetch('/api/ai-chat-response', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  message: newMessage.trim(),
+                  specialistId: receiverId,
+                  conversationId: selectedConversation,
+                  userId: user.$id
+                })
+              });
+
+              const data = await response.json();
+              
+              if (data.success && data.data) {
+                aiResponseContent = data.data.response;
+                
+                // Add video options if available (for Viktor Reels)
+                if (data.data.options && data.data.options.length > 0) {
+                  aiResponseContent += '\n\n🎬 **Варианты концепций:**\n\n' + 
+                    data.data.options.map((option: any, index: number) => 
+                      `**${index + 1}. ${option.title}** ${getEngagementEmoji(option.engagementPotential)}\n${option.concept}\n\n🔥 **Хуки:** ${option.hooks.join(' • ')}\n📈 **Прогноз:** ${option.estimatedViews}`
+                    ).join('\n\n---\n\n');
+                }
+                
+                // Add technical spec if available
+                if (data.data.technicalSpec) {
+                  aiResponseContent += '\n\n📋 **Техническое задание:**\n' + 
+                    data.data.technicalSpec.deliverables.map((item: string) => `• ${item}`).join('\n');
+                }
+              } else {
+                throw new Error(data.error || 'Failed to get AI response');
+              }
+              
+              // Set specialist info
+              if (receiverId === 'viktor-reels') {
+                senderName = 'Viktor Reels';
+                senderAvatar = '/images/specialists/viktor-reels.jpg';
+              } else if (receiverId === 'alex-ai') {
+                senderName = 'Алекс AI';
+                senderAvatar = '/images/specialists/alex-ai.jpg';
+              }
+              
+            } catch (error) {
+              console.error('Error calling AI Chat Response API:', error);
+              // Fallback response
+              if (receiverId === 'viktor-reels') {
+                aiResponseContent = 'Привет! Я Viktor Reels, специалист по Instagram видео. Расскажите о вашем проекте - создам крутое видео для вашего бренда! 🎬';
+                senderName = 'Viktor Reels';
+                senderAvatar = '/images/specialists/viktor-reels.jpg';
+              } else {
+                aiResponseContent = getAIResponse(newMessage.trim());
+                senderName = 'Алекс AI';
+                senderAvatar = '/images/specialists/alex-ai.jpg';
+              }
+            }
+            
             const aiResponse = await EnhancedMessagingService.sendMessage({
-              conversationId: selectedConversation,
-          senderId: 'alex-ai',
-          receiverId: user.$id,
-              content: getAIResponse(newMessage.trim()),
+          conversationId: selectedConversation,
+              senderId: receiverId,
+              receiverId: user.$id,
+              content: aiResponseContent,
               messageType: 'ai_response',
-              senderName: 'Алекс AI',
-              senderAvatar: '/images/specialists/alex-ai.jpg'
+              senderName,
+              senderAvatar
             });
         
         setMessages(prev => [...prev, aiResponse]);
@@ -564,6 +629,17 @@ export default function EnhancedMessagesPage() {
       'Работаю над этим. Покажу несколько вариантов на выбор ⚡',
     ];
     return responses[Math.floor(Math.random() * responses.length)];
+  };
+
+  // Get engagement emoji for video options
+  const getEngagementEmoji = (potential: string): string => {
+    switch (potential) {
+      case 'вирусный': return '🚀';
+      case 'высокий': return '🔥';
+      case 'средний': return '📈';
+      case 'низкий': return '📊';
+      default: return '💫';
+    }
   };
   // Format time
   const formatTime = (timestamp: string) => {
@@ -722,17 +798,18 @@ export default function EnhancedMessagesPage() {
                     >
                       <div className="flex items-start space-x-3">
                         <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                            {conversation.type === 'ai_specialist' ? (
-                              <Bot className="w-6 h-6" />
-                            ) : (
-                              conversation.title.charAt(0).toUpperCase()
-                            )}
-          </div>
+                          <VideoAvatar
+                            specialistId={conversation.type === 'ai_specialist' ? 'alex-ai' : 'default'}
+                            specialistName={conversation.title}
+                            specialistType={conversation.type === 'ai_specialist' ? 'ai_specialist' : 'freelancer'}
+                            size="md"
+                            autoPlay={true}
+                            showControls={false}
+                          />
                           {userUnreadCount > 0 && (
                             <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
                               {userUnreadCount}
-                            </div>
+          </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -924,9 +1001,14 @@ export default function EnhancedMessagesPage() {
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                      <Bot className="w-5 h-5" />
-                  </div>
+                    <VideoAvatar
+                      specialistId={currentConversation?.type === 'ai_specialist' ? 'alex-ai' : 'default'}
+                      specialistName={currentConversation?.title || 'Специалист'}
+                      specialistType={currentConversation?.type === 'ai_specialist' ? 'ai_specialist' : 'freelancer'}
+                      size="lg"
+                      autoPlay={true}
+                      showControls={false}
+                    />
                     <div>
                       <h2 className="font-semibold text-gray-900 dark:text-white">
                         {currentConversation?.title || 'Чат'}
@@ -934,8 +1016,8 @@ export default function EnhancedMessagesPage() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         В сети
                       </p>
-                </div>
                   </div>
+                </div>
                   <div className="flex items-center space-x-2">
                     {/* View Mode Toggle */}
                     {selectedOrder && (

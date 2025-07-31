@@ -78,7 +78,7 @@ export default function ProjectsPage() {
         createdAt: '2024-01-10',
         client: {
           name: 'Sarah Johnson',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
           company: 'TechFlow Solutions'
         },
         freelancer: {

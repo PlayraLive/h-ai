@@ -80,7 +80,7 @@ export default function FreelancerInviteModal({
           name: 'Maria Rodriguez',
           email: 'maria@example.com',
           userType: 'freelancer',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
           bio: 'Creative AI artist and prompt engineer. I help businesses create stunning AI-generated content.',
           skills: ['Midjourney', 'DALL-E', 'Stable Diffusion', 'Prompt Engineering'],
           hourlyRate: 65,
@@ -279,7 +279,7 @@ function FreelancerCard({ freelancer, isSelected, onSelect, jobSkills, matchScor
     >
       <div className="flex items-start space-x-3">
         <img
-          src={freelancer.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'}
+          src={freelancer.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
           alt={freelancer.name}
           className="w-12 h-12 rounded-lg object-cover"
         />

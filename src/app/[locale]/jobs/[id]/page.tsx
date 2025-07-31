@@ -157,7 +157,7 @@ export default function JobDetailsPage() {
           name: jobData.clientName,
           avatar:
             jobData.clientAvatar ||
-            "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
           rating: 4.8,
           jobsPosted: 12,
           totalSpent: 8500,
