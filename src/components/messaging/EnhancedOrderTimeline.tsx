@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { UnifiedOrder, OrderMilestone, OrderPayment } from '@/lib/services/unified-order-service';
+import { AITimelineResponder } from '@/lib/services/ai-timeline-responder';
+import { getAISpecialists } from '@/lib/data/ai-specialists';
 import { cn } from '@/lib/utils';
 import {
   Calendar,
@@ -93,12 +95,12 @@ export default function EnhancedOrderTimeline({
   const handleMilestoneAction = async (milestoneId: string, action: 'complete' | 'approve' | 'reject') => {
     if (!onUpdateOrder) return;
 
-    const updatedMilestones = order.milestones.map(milestone => {
+    const updatedMilestones = order.milestones.map((milestone, index) => {
       if (milestone.id === milestoneId) {
         if (action === 'complete' && isWorker) {
           return { ...milestone, status: 'completed' as const, completedAt: new Date().toISOString() };
         } else if (action === 'approve' && isClient) {
-          return { ...milestone, status: 'completed' as const };
+          return { ...milestone, status: 'completed' as const, approvedAt: new Date().toISOString(), approvedBy: user?.$id };
         } else if (action === 'reject' && isClient) {
           return { ...milestone, status: 'pending' as const, feedback: newFeedback };
         }
@@ -106,18 +108,84 @@ export default function EnhancedOrderTimeline({
       return milestone;
     });
 
-    onUpdateOrder(order.orderId, { milestones: updatedMilestones });
+    // 🚀 АВТОАКТИВАЦИЯ СЛЕДУЮЩЕГО MILESTONE при approve
+    if (action === 'approve' && isClient) {
+      const currentIndex = order.milestones.findIndex(m => m.id === milestoneId);
+      const nextMilestone = updatedMilestones[currentIndex + 1];
+      
+      if (nextMilestone && nextMilestone.status === 'pending') {
+        console.log('🎯 Activating next milestone:', nextMilestone.title);
+        updatedMilestones[currentIndex + 1] = {
+          ...nextMilestone,
+          status: 'in_progress' as const,
+          startedAt: new Date().toISOString()
+        };
+        
+        // Отправляем уведомление о новом этапе
+        if (onSendMessage) {
+          onSendMessage(
+            `🚀 **Новый этап активирован!**\n\n📋 ${nextMilestone.title}\n${nextMilestone.description}\n\n✨ Время приступить к работе!`,
+            'milestone'
+          );
+        }
+      }
+    }
+
+    // Пересчет прогресса
+    const completedCount = updatedMilestones.filter(m => m.status === 'completed').length;
+    const progressPercentage = Math.round((completedCount / updatedMilestones.length) * 100);
+
+    onUpdateOrder(order.orderId, { 
+      milestones: updatedMilestones,
+      progress: progressPercentage 
+    });
     
-    // Send notification message
+    // Send notification message and AI response
     if (onSendMessage) {
       const milestone = order.milestones.find(m => m.id === milestoneId);
       if (milestone) {
         if (action === 'complete') {
           onSendMessage(`✅ Milestone completed: "${milestone.title}"`, 'milestone');
+          
+          // AI response for completion
+          setTimeout(async () => {
+            const specialists = await getAISpecialists();
+            const specialist = specialists.find(s => s.id === order.workerId);
+            if (specialist) {
+              AITimelineResponder.sendAIResponse('completed', specialist, onSendMessage, {
+                milestoneName: milestone.title
+              });
+            }
+          }, 1500);
+          
         } else if (action === 'approve') {
           onSendMessage(`✅ Milestone approved: "${milestone.title}"`, 'milestone');
+          
+          // AI response for approval
+          setTimeout(async () => {
+            const specialists = await getAISpecialists();
+            const specialist = specialists.find(s => s.id === order.workerId);
+            if (specialist) {
+              AITimelineResponder.sendAIResponse('approved', specialist, onSendMessage, {
+                milestoneName: milestone.title
+              });
+            }
+          }, 2000);
+          
         } else if (action === 'reject') {
           onSendMessage(`❌ Milestone needs revision: "${milestone.title}"\n\nFeedback: ${newFeedback}`, 'milestone');
+          
+          // AI response for rejection
+          setTimeout(async () => {
+            const specialists = await getAISpecialists();
+            const specialist = specialists.find(s => s.id === order.workerId);
+            if (specialist) {
+              AITimelineResponder.sendAIResponse('rejected', specialist, onSendMessage, {
+                milestoneName: milestone.title,
+                feedback: newFeedback
+              });
+            }
+          }, 1000);
         }
       }
     }
@@ -136,6 +204,9 @@ export default function EnhancedOrderTimeline({
   // Handle file upload for deliverables
   const handleFileUpload = useCallback(async (milestoneId: string, files: FileList) => {
     if (!files.length || !onUpdateOrder) return;
+
+    try {
+      console.log('📎 Uploading files for milestone:', milestoneId);
     
     try {
       const uploadedDeliverables = [];
@@ -175,6 +246,18 @@ export default function EnhancedOrderTimeline({
           `📎 **Uploaded ${uploadedDeliverables.length} file(s)** for milestone: "${updatedMilestones[milestoneIndex].title}"`,
           'milestone'
         );
+
+        // AI response for file upload
+        setTimeout(async () => {
+          const specialists = await getAISpecialists();
+          const specialist = specialists.find(s => s.id === order.workerId);
+          if (specialist) {
+            AITimelineResponder.sendAIResponse('files_uploaded', specialist, onSendMessage, {
+              milestoneName: updatedMilestones[milestoneIndex].title,
+              fileCount: uploadedDeliverables.length
+            });
+          }
+        }, 2500);
       }
       
     } catch (error) {
@@ -570,12 +653,29 @@ export default function EnhancedOrderTimeline({
                   
                   <div className="flex items-center space-x-2">
                     {milestone.status === 'in_progress' && isWorker && (
-                      <button
-                        onClick={() => handleMilestoneAction(milestone.id, 'complete')}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-all"
-                      >
-                        Mark Complete
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <label className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-all cursor-pointer flex items-center space-x-1">
+                          <Upload className="w-3 h-3" />
+                          <span>Upload Files</span>
+                          <input
+                            type="file"
+                            multiple
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip,.ai,.psd"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                handleFileUpload(milestone.id, e.target.files);
+                              }
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => handleMilestoneAction(milestone.id, 'complete')}
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-all"
+                        >
+                          Mark Complete
+                        </button>
+                      </div>
                     )}
                     
                     {milestone.status === 'completed' && isClient && !milestone.feedback && (
