@@ -46,7 +46,7 @@ export default function AISpecialistsGrid({
   }, [limit]);
 
   const handleOrder = (specialist: AISpecialist) => {
-    router.push(`/ai-specialists/${specialist.id}/order?type=task`);
+    router.push(`/en/ai-specialists/${specialist.id}/order?type=task`);
   };
 
   if (loading) {

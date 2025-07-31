@@ -16,22 +16,44 @@ interface OrderPageProps {
 async function OrderPage({ params, searchParams }: OrderPageProps) {
   // Get specialist data
   const awaitedParams = await params;
+  
+  console.log('🔍 OrderPage: Loading specialist with ID:', awaitedParams.id);
+  
   const specialists = await getAISpecialists();
+  console.log('📋 OrderPage: Available specialists:', specialists.map(s => s.id));
+  
   const specialist = specialists.find(s => s.id === awaitedParams.id);
+  console.log('✅ OrderPage: Found specialist:', specialist ? specialist.name : 'NOT FOUND');
   
   if (!specialist) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            AI Специалист не найден
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Запрашиваемый специалист не существует или был удален.
-          </p>
+    console.error('❌ OrderPage: Specialist not found, redirecting to Alex AI as fallback');
+    // Fallback к Alex AI если специалист не найден
+    const fallbackSpecialist = specialists.find(s => s.id === 'alex-ai') || specialists[0];
+    
+    if (!fallbackSpecialist) {
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Данные специалистов недоступны
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Попробуйте перезагрузить страницу или обратитесь в поддержку.
+            </p>
+            <a 
+              href="/en" 
+              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Вернуться на главную
+            </a>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    
+    // Используем fallback специалиста
+    specialist = fallbackSpecialist;
+    console.log('🔄 OrderPage: Using fallback specialist:', specialist.name);
   }
 
   return (
