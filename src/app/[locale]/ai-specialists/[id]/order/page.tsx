@@ -22,7 +22,7 @@ async function OrderPage({ params, searchParams }: OrderPageProps) {
   const specialists = await getAISpecialists();
   console.log('📋 OrderPage: Available specialists:', specialists.map(s => s.id));
   
-  const specialist = specialists.find(s => s.id === awaitedParams.id);
+  let specialist = specialists.find(s => s.id === awaitedParams.id);
   console.log('✅ OrderPage: Found specialist:', specialist ? specialist.name : 'NOT FOUND');
   
   if (!specialist) {
