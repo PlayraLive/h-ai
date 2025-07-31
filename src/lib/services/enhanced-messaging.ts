@@ -63,7 +63,6 @@ export class EnhancedMessagingService {
         COLLECTIONS.CONVERSATIONS,
         [
           Query.equal('participants', sortedParticipants),
-          Query.equal('type', type),
           Query.limit(1)
         ]
       );
@@ -131,7 +130,7 @@ export class EnhancedMessagingService {
         content: data.content,
         messageType: data.messageType || 'text',
         timestamp: new Date().toISOString(),
-        read: false,
+        isRead: false,
         edited: false,
         attachments: JSON.stringify(data.attachments || []),
         status: 'sent',
@@ -248,14 +247,14 @@ export class EnhancedMessagingService {
     userId: string
   ): Promise<void> {
     try {
-      // Get unread messages
+      // Get unread messages  
       const unreadMessages = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.MESSAGES,
         [
           Query.equal('conversationId', conversationId),
           Query.equal('receiverId', userId),
-          Query.equal('read', false)
+          Query.equal('isRead', false)
         ]
       );
 
@@ -265,7 +264,7 @@ export class EnhancedMessagingService {
           DATABASE_ID,
           COLLECTIONS.MESSAGES,
           message.$id,
-          { read: true, status: 'read' }
+          { isRead: true, status: 'read' }
         )
       );
 

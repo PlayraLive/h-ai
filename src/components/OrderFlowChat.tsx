@@ -250,16 +250,19 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
     setCurrentStep('payment');
   };
 
-  const handlePayment = async (paymentInfo: any) => {
+  const handlePayment = async (paymentInfo: any = {}) => {
+    console.log('🔄 Creating order without payment requirement...');
     setPaymentData(paymentInfo);
     
     try {
-      // Импортируем службу заказов
-      const { OrderService } = await import('@/lib/services/order-service');
-      
       // Получаем выбранный тариф
       const selectedTariffPlan = TARIFF_PLANS.find(p => p.id === selectedTariff);
-      if (!selectedTariffPlan) return;
+      if (!selectedTariffPlan) {
+        console.error('❌ Selected tariff plan not found:', selectedTariff);
+        return;
+      }
+
+      console.log('📋 Selected tariff plan:', selectedTariffPlan);
 
       // Создаем заказ через API
       const orderResponse = await fetch('/api/orders', {
@@ -555,13 +558,24 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
                       </div>
                     </div>
                     
-                    <button
-                      onClick={() => handlePayment({ cardNumber: '****1234', amount: message.data?.price })}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
-                    >
-                      <Shield className="w-5 h-5" />
-                      <span>Оплатить ${message.data?.price}</span>
-                    </button>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => handlePayment({ cardNumber: '****1234', amount: message.data?.price })}
+                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span>Оплатить ${message.data?.price}</span>
+                      </button>
+                      
+                      {/* Временная кнопка для тестирования */}
+                      <button
+                        onClick={() => handlePayment({ test: true, skipPayment: true })}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                      >
+                        <Zap className="w-5 h-5" />
+                        <span>🧪 Создать заказ без оплаты (тест)</span>
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="mt-4 text-center">
