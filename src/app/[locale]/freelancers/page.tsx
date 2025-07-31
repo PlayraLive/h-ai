@@ -560,7 +560,7 @@ function FreelancerCard({
             <span
               className={cn(
                 "px-2 py-1 text-xs rounded-full backdrop-blur-sm border",
-                getAvailabilityStyles(freelancer.availability),
+                getAvailabilityColor(freelancer.availability),
               )}
             >
               {getAvailabilityText(freelancer.availability)}
@@ -612,6 +612,7 @@ function FreelancerCard({
             </button>
           </div>
         </div>
+      </div>
     </div>
   );
 }
