@@ -207,8 +207,7 @@ export default function EnhancedOrderTimeline({
 
     try {
       console.log('📎 Uploading files for milestone:', milestoneId);
-    
-    try {
+      
       const uploadedDeliverables = [];
       
       for (const file of Array.from(files)) {
