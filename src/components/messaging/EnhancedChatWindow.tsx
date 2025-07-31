@@ -57,6 +57,7 @@ import {
   Lock,
   Globe
 } from 'lucide-react';
+import PositiveSpecialistAvatar from '@/components/PositiveSpecialistAvatar';
 import { ConfirmationModal } from '@/components/Modal';
 import { 
   hapticFeedback, 
@@ -606,9 +607,26 @@ export default function EnhancedChatWindow({
           {/* Enhanced avatar with better mobile sizing */}
           {showAvatar && !isOwn && (
             <div className="flex-shrink-0 mr-2 sm:mr-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-lg ring-2 ring-white dark:ring-slate-800">
-                {message.senderName?.[0]?.toUpperCase() || 'U'}
-              </div>
+              {/* Проверяем если это AI специалист */}
+              {message.senderName?.includes('Viktor Reels') || 
+               message.senderName?.includes('Alex AI') || 
+               message.senderName?.includes('Luna Design') || 
+               message.senderName?.includes('Max Bot') ? (
+                <PositiveSpecialistAvatar 
+                  specialistId={
+                    message.senderName?.includes('Viktor Reels') ? 'viktor-reels' :
+                    message.senderName?.includes('Alex AI') ? 'alex-ai' :
+                    message.senderName?.includes('Luna Design') ? 'luna-design' : 'max-bot'
+                  }
+                  specialistName={message.senderName || ''}
+                  size="sm"
+                  showStatus={false}
+                />
+              ) : (
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-lg ring-2 ring-white dark:ring-slate-800">
+                  {message.senderName?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
             </div>
           )}
 

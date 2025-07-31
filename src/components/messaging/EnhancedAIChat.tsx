@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, CheckCircle, User, Bot, ThumbsUp, ThumbsDown, RotateCcw, BookOpen, Star } from 'lucide-react';
+import PositiveSpecialistAvatar from '@/components/PositiveSpecialistAvatar';
 import { AISpecialist } from '@/types';
 import { useAuthContext } from '@/contexts/AuthContext';
 import EnhancedOpenAIService from '@/lib/services/enhanced-openai';
@@ -340,14 +341,12 @@ export default function EnhancedAIChat({
       {/* Enhanced Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <img
-              src={specialist.avatar}
-              alt={specialist.name}
-              className="w-12 h-12 rounded-full border-2 border-purple-500"
-            />
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-          </div>
+          <PositiveSpecialistAvatar 
+            specialistId={specialist.id}
+            specialistName={specialist.name}
+            size="md"
+            showStatus={true}
+          />
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 dark:text-white">{specialist.name}</h3>
             <p className="text-sm text-purple-600 dark:text-purple-400">{specialist.title}</p>
