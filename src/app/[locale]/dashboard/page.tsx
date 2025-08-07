@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useUserType } from "@/contexts/UserTypeContext";
 import { UsersService } from "@/lib/appwrite/users";
 import { JobsService } from "@/lib/appwrite/jobs";
 import {
@@ -45,6 +46,8 @@ import {
   Bot,
   Sparkles,
   ArrowRight,
+  User,
+  Building2,
 } from "lucide-react";
 // Navbar removed - using Sidebar instead
 import { cn } from "@/lib/utils";
@@ -101,9 +104,8 @@ export default function DashboardPage() {
     }
   }, []);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [userType, setUserType] = useState<"freelancer" | "client">(
-    "freelancer",
-  );
+  const { userType, setUserType } = useUserType();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
   const [solutions, setSolutions] = useState<Reel[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
@@ -150,16 +152,45 @@ export default function DashboardPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const { recordView, awardXP } = useGamification();
 
-  // Проверка необходимости онбординга
+  // Загрузка профиля пользователя и проверка онбординга
   useEffect(() => {
     if (user) {
+      loadUserProfile();
       checkOnboardingStatus();
       recordView('dashboard', 'page'); // Записываем просмотр дашборда
     }
   }, [user, recordView]);
 
+  const loadUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Загружаем профиль пользователя
+      const response = await fetch(`/api/user-profile?userId=${user.$id}`);
+      const data = await response.json();
+
+      if (data.profile) {
+        setUserProfile(data.profile);
+        // Устанавливаем тип пользователя из профиля
+        if (data.profile.user_type) {
+          setUserType(data.profile.user_type);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
   const checkOnboardingStatus = async () => {
     if (!user) return;
+
+    // Проверяем localStorage - если онбординг уже завершен, не показываем сообщения
+    const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.$id}`);
+    if (onboardingCompleted === 'true') {
+      setNeedsOnboarding(false);
+      setShowOnboarding(false);
+      return;
+    }
 
     try {
       // Проверяем, завершен ли онбординг через основную коллекцию users
@@ -171,15 +202,36 @@ export default function DashboardPage() {
         return;
       }
 
-      // Простая проверка - если у пользователя нет базовой информации, нужен онбординг
-      const profileCompleted = userProfile.bio && userProfile.skills && userProfile.skills.length > 0;
+      // Проверяем профиль в зависимости от типа пользователя
+      const hasCompanyInfo = (userProfile as any).company_name && (userProfile as any).company_name.trim().length >= 2;
+      const hasBio = userProfile.bio && userProfile.bio.trim().length >= 10;
+      const hasSkills = userProfile.skills && userProfile.skills.length > 0;
+      const hasSpecializations = (userProfile as any).specializations && (userProfile as any).specializations.length > 0;
+      
+      // Проверяем в зависимости от текущего типа пользователя в дашборде
+      let profileCompleted = false;
+      
+      if (userType === 'client') {
+        // Для клиентов нужна информация о компании ИЛИ bio (более гибкая проверка)
+        profileCompleted = !!hasCompanyInfo || !!hasBio;
+      } else {
+        // Для фрилансеров нужны bio И (skills ИЛИ specializations)
+        profileCompleted = !!hasBio && (!!hasSkills || !!hasSpecializations);
+      }
 
-      if (!profileCompleted) {
+      // Если профиль заполнен, не показываем онбординг
+      if (profileCompleted) {
+        setNeedsOnboarding(false);
+        setShowOnboarding(false);
+        // Сохраняем в localStorage, что онбординг завершен
+        localStorage.setItem(`onboarding_completed_${user.$id}`, 'true');
+      } else {
         setNeedsOnboarding(true);
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);
       // При ошибке лучше не показывать онбординг, чтобы не мешать пользователю
+      setNeedsOnboarding(false);
     }
   };
 
@@ -193,7 +245,55 @@ export default function DashboardPage() {
     setNeedsOnboarding(false);
     // Refresh user data
     loadUserStats();
+    loadUserProfile(); // Перезагружаем профиль после онбординга
     awardXP(25, 'onboarding_completed'); // Bonus XP for completing onboarding
+    
+    // Сохраняем в localStorage, что онбординг завершен
+    if (user) {
+      localStorage.setItem(`onboarding_completed_${user.$id}`, 'true');
+    }
+  };
+
+  const handleUserTypeChange = async (newUserType: "freelancer" | "client") => {
+    setUserType(newUserType);
+    
+    // Сохраняем новый тип пользователя в профиле
+    if (user && userProfile) {
+      try {
+        const response = await fetch('/api/user-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.$id,
+            userType: newUserType,
+            // Сохраняем остальные данные профиля
+            avatarUrl: userProfile.avatar_url || '',
+            bio: userProfile.bio || '',
+            companyName: userProfile.company_name || '',
+            companySize: userProfile.company_size || '',
+            industry: userProfile.industry || '',
+            interests: userProfile.interests || [],
+            specializations: userProfile.specializations || [],
+            experienceYears: userProfile.experience_years || 0,
+            hourlyRateMin: userProfile.hourly_rate_min || 0,
+            hourlyRateMax: userProfile.hourly_rate_max || 0,
+            profileCompletion: userProfile.profile_completion || 0,
+          }),
+        });
+
+        if (response.ok) {
+          console.log('✅ User type saved successfully');
+          // Обновляем локальный профиль
+          setUserProfile((prev: any) => prev ? { ...prev, user_type: newUserType } : null);
+        } else {
+          console.error('❌ Failed to save user type');
+        }
+      } catch (error) {
+        console.error('Error saving user type:', error);
+      }
+    }
   };
 
   // Navigate to appropriate chat
@@ -479,12 +579,7 @@ export default function DashboardPage() {
     }
   }, [user, loadActiveJobs]);
 
-  // Set user type based on user data
-  useEffect(() => {
-    if (user && user.userType) {
-      setUserType(user.userType);
-    }
-  }, [user]);
+  // User type is now managed by UserTypeContext
 
   // Load solutions when user changes or tab becomes active
   useEffect(() => {
@@ -959,7 +1054,7 @@ export default function DashboardPage() {
                   {/* User Type Switcher */}
                   <div className="flex bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm">
                     <button
-                      onClick={() => setUserType("freelancer")}
+                      onClick={() => handleUserTypeChange("freelancer")}
                       className={cn(
                         "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                         userType === "freelancer"
@@ -970,7 +1065,7 @@ export default function DashboardPage() {
                       👨‍💻 Freelancer
                     </button>
                     <button
-                      onClick={() => setUserType("client")}
+                      onClick={() => handleUserTypeChange("client")}
                       className={cn(
                         "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                         userType === "client"
@@ -984,26 +1079,41 @@ export default function DashboardPage() {
 
                   {/* Action Button */}
                   {userType === "client" ? (
-                    <Link
-                      href="/en/jobs/create"
-                      onClick={() => {
-                        if (needsOnboarding) {
-                          triggerOnboarding('first_job');
-                        }
-                      }}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 hover:shadow-green-600/40"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Post New Job
-                    </Link>
+                    needsOnboarding ? (
+                      <button
+                        onClick={() => triggerOnboarding('first_job')}
+                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 hover:shadow-orange-600/40"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Complete Profile First
+                      </button>
+                    ) : (
+                      <Link
+                        href="/en/jobs/create"
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 hover:shadow-green-600/40"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Post New Job
+                      </Link>
+                    )
                   ) : (
-                    <Link
-                      href="/en/jobs"
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40"
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Find Jobs
-                    </Link>
+                    needsOnboarding ? (
+                      <button
+                        onClick={() => triggerOnboarding('first_application')}
+                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 hover:shadow-orange-600/40"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        Complete Profile First
+                      </button>
+                    ) : (
+                      <Link
+                        href="/en/jobs"
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        Find Jobs
+                      </Link>
+                    )
                   )}
                 </div>
               </div>
@@ -1500,6 +1610,34 @@ export default function DashboardPage() {
                           >
                             <Search className="w-4 h-4" />
                             Find Jobs
+                          </Link>
+                        )}
+                        
+                        {/* Profile Actions */}
+                        {userType === "freelancer" ? (
+                          <>
+                            <Link
+                              href="/en/profile"
+                              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 text-sm"
+                            >
+                              <User className="w-4 h-4" />
+                              Мой профиль фрилансера
+                            </Link>
+                            <Link
+                              href="/en/profile"
+                              className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Global Profile
+                            </Link>
+                          </>
+                        ) : (
+                          <Link
+                            href="/en/client-profile"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 text-sm"
+                          >
+                            <Building2 className="w-4 h-4" />
+                            Профиль компании
                           </Link>
                         )}
                       </div>

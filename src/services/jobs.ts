@@ -25,6 +25,13 @@ export class JobService {
         console.warn('Could not fetch client info, using defaults');
       }
 
+      // attachments теперь должен быть массивом строк
+      const attachmentsArray = Array.isArray(jobData.attachments)
+        ? jobData.attachments
+        : (typeof jobData.attachments === 'string' && jobData.attachments.length > 0
+            ? [jobData.attachments]
+            : []);
+
       const job = await databases.createDocument(
         DATABASE_ID,
         JOBS_COLLECTION_ID,
@@ -32,6 +39,7 @@ export class JobService {
         {
           ...jobData,
           clientId,
+          userId: clientId, // Добавляем userId для совместимости
           clientName,
           clientAvatar: clientAvatar || null,
           status: 'active',
@@ -43,7 +51,7 @@ export class JobService {
           location: 'Remote',
           budgetMin: parseFloat(jobData.budgetMin),
           budgetMax: parseFloat(jobData.budgetMax),
-          attachments: jobData.attachments || []
+          attachments: attachmentsArray
         }
       );
 

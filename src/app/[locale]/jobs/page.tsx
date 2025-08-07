@@ -16,6 +16,7 @@ import {
   ArrowRight,
   SlidersHorizontal,
   CheckCircle2,
+  XIcon,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { JobCardSkeleton } from "@/components/Loading";
@@ -47,6 +48,8 @@ interface Job {
   featured: boolean;
   urgent: boolean;
   hasApplied?: boolean; // Добавляем поле для статуса заявки
+  applicationStatus?: "pending" | "accepted" | "rejected"; // Добавляем статус заявки
+  isOwner?: boolean; // Добавляем поле для проверки создателя джоба
 }
 
 const mockJobs: Job[] = [
@@ -200,10 +203,15 @@ export default function JobsPage() {
 
       // Get user applications if user is a freelancer
       let userApplications: string[] = [];
+      let userApplicationStatuses: Record<string, "pending" | "accepted" | "rejected"> = {};
       if (user && user.userType === 'freelancer') {
         try {
           const applications = await ApplicationsService.getFreelancerApplications(user.$id);
           userApplications = applications.map(app => app.jobId);
+          // Create a map of jobId to application status
+          applications.forEach(app => {
+            userApplicationStatuses[app.jobId] = app.status as "pending" | "accepted" | "rejected";
+          });
         } catch (error) {
           console.warn('Could not load user applications:', error);
         }
@@ -237,6 +245,8 @@ export default function JobsPage() {
           featured: job.featured || false,
           urgent: job.urgent || false,
           hasApplied: userApplications.includes(job.$id!), // Проверяем подавал ли фрилансер заявку
+          applicationStatus: userApplicationStatuses[job.$id!], // Добавляем статус заявки
+          isOwner: user && job.clientId === user.$id, // Проверяем является ли пользователь создателем джоба
         }),
       );
 
@@ -673,28 +683,48 @@ function JobCard({
             <Eye className="w-4 h-4" />
             <span>View Details</span>
           </Link>
-          <button
-            onClick={onApply}
-            disabled={job.hasApplied}
-            className={cn(
-              "flex items-center space-x-2 transition-all",
-              job.hasApplied 
-                ? "bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
-                : "btn-primary"
-            )}
-          >
-            {job.hasApplied ? (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Application Submitted</span>
-              </>
-            ) : (
-              <>
-                <span>Apply Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          {!job.isOwner && (
+            <button
+              onClick={onApply}
+              disabled={job.hasApplied}
+              className={cn(
+                "flex items-center space-x-2 transition-all",
+                job.hasApplied 
+                  ? job.applicationStatus === "accepted"
+                    ? "bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                    : job.applicationStatus === "rejected"
+                    ? "bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                    : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                  : "btn-primary"
+              )}
+            >
+              {job.hasApplied ? (
+                <>
+                  {job.applicationStatus === "accepted" ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Принята</span>
+                    </>
+                  ) : job.applicationStatus === "rejected" ? (
+                    <>
+                      <XIcon className="w-4 h-4" />
+                      <span>Отклонена</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4" />
+                      <span>На рассмотрении</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span>Apply Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

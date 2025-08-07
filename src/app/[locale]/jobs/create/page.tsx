@@ -26,6 +26,8 @@ import {
 import { JobService } from '@/services/jobs';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { UsersService } from '@/lib/appwrite/users';
+import { useEffect } from 'react';
 
 // Success notification component
 const SuccessNotification = ({ show, message, onClose }: { show: boolean; message: string; onClose: () => void }) => {
@@ -84,6 +86,8 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
   const [showError, setShowError] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -100,6 +104,58 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     deadline: '',
     attachments: [] as File[]
   });
+
+  // Check onboarding status
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!user) {
+        setIsCheckingOnboarding(false);
+        return;
+      }
+
+      // Проверяем localStorage - если онбординг уже завершен, не показываем сообщения
+      const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.$id}`);
+      if (onboardingCompleted === 'true') {
+        setNeedsOnboarding(false);
+        setIsCheckingOnboarding(false);
+        return;
+      }
+
+      try {
+        const userProfile = await UsersService.getUserProfile(user.$id);
+        
+        if (!userProfile) {
+          setNeedsOnboarding(true);
+        } else {
+          // Check if profile is complete enough for posting jobs
+          // For clients, we need company information OR bio
+          const hasCompanyInfo = (userProfile as any).company_name && (userProfile as any).company_name.trim().length >= 2;
+          const hasBio = userProfile.bio && userProfile.bio.trim().length >= 10;
+          const hasSpecializations = (userProfile as any).specializations && (userProfile as any).specializations.length > 0;
+          const hasSkills = userProfile.skills && userProfile.skills.length > 0;
+          
+          // More flexible check: company info OR bio OR specializations
+          const profileCompleted = hasCompanyInfo || hasBio || hasSpecializations || hasSkills;
+          
+          if (!profileCompleted) {
+            setNeedsOnboarding(true);
+          } else {
+            setNeedsOnboarding(false);
+            // Сохраняем в localStorage, что онбординг завершен
+            localStorage.setItem(`onboarding_completed_${user.$id}`, 'true');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        // При ошибке лучше не блокировать создание джобов
+        setNeedsOnboarding(false);
+      } finally {
+        setIsCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user]);
 
   const [newSkill, setNewSkill] = useState('');
 
@@ -180,6 +236,13 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
       return;
     }
 
+    // Проверяем завершение онбординга
+    if (needsOnboarding) {
+      showErrorNotification('Завершите настройку профиля перед созданием заказа');
+      router.push('/en/dashboard');
+      return;
+    }
+
     // Валидация бюджета
     const budgetMin = parseFloat(formData.budgetMin);
     const budgetMax = parseFloat(formData.budgetMax);
@@ -209,6 +272,36 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
     setIsSubmitting(true);
 
     try {
+      // Загружаем файлы в Storage, если они есть
+      let uploadedFiles = [];
+      if (formData.attachments.length > 0) {
+        try {
+          const uploadFormData = new FormData();
+          formData.attachments.forEach(file => {
+            uploadFormData.append('files', file);
+          });
+          uploadFormData.append('userId', user.$id);
+
+          const uploadResponse = await fetch('/api/upload-job-files', {
+            method: 'POST',
+            body: uploadFormData
+          });
+
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json();
+            uploadedFiles = uploadResult.files;
+            console.log('✅ Files uploaded successfully:', uploadedFiles);
+          } else {
+            console.warn('⚠️ Failed to upload files, continuing without attachments');
+          }
+        } catch (uploadError) {
+          console.error('❌ Error uploading files:', uploadError);
+        }
+      }
+
+      // Преобразуем загруженные файлы в массив URL
+      const attachmentUrls = uploadedFiles.map((file: any) => file.fileUrl);
+
       // Prepare job data according to JobFormData interface
       const jobData = {
         title: formData.title,
@@ -220,9 +313,8 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
         budgetMax: formData.budgetMax,
         duration: formData.duration,
         experienceLevel: formData.experienceLevel as 'beginner' | 'intermediate' | 'expert',
-        attachments: formData.attachments,
+        attachments: attachmentUrls,
         // Добавляем обязательные поля
-        userId: user.$id, // Добавляем userId
         clientId: user.$id,
         location: 'Remote',
         currency: 'USD'
@@ -321,7 +413,40 @@ export default function CreateJobPage({ params }: { params: Promise<{ locale: st
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Onboarding Check */}
+          {isCheckingOnboarding && (
+            <div className="glass-card p-8 rounded-3xl border border-gray-700/50">
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-400">Проверяем профиль...</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {needsOnboarding && !isCheckingOnboarding && (
+            <div className="glass-card p-8 rounded-3xl border border-orange-500/50 bg-gradient-to-r from-orange-500/10 to-red-500/10">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Завершите настройку профиля</h3>
+                <p className="text-gray-300 mb-6">
+                  Для создания заказов необходимо заполнить информацию о компании в профиле.
+                </p>
+                <Link
+                  href="/en/dashboard"
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl font-medium transition-all duration-200"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Вернуться к настройке профиля</span>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8" style={{ display: needsOnboarding || isCheckingOnboarding ? 'none' : 'block' }}>
             {/* Basic Information */}
             <div className="glass-card p-8 rounded-3xl border border-gray-700/50">
               <h2 className="text-2xl font-bold text-white mb-8 flex items-center">

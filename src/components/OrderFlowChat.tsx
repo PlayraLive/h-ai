@@ -151,43 +151,72 @@ export default function OrderFlowChat({ specialist, onOrderComplete, className =
     setIsLoading(true);
 
     try {
-      // Call AI API
-      const response = await fetch('/api/enhanced-ai-chat', {
+      // Call AI API - use specialist-specific endpoint for Viktor Reels
+      const endpoint = specialist.id === 'viktor-reels' ? '/api/ai-chat-response' : '/api/enhanced-ai-chat';
+      const requestBody = specialist.id === 'viktor-reels' 
+        ? {
+            message: userMessage.content,
+            conversationId,
+            userId: user.$id,
+            specialistId: specialist.id
+          }
+        : {
+            message: userMessage.content,
+            conversationId,
+            userId: user.$id,
+            specialistId: specialist.id,
+            options: {
+              saveToDatabase: true,
+              learningEnabled: true,
+              contextualMemory: true
+            }
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMessage.content,
-          conversationId,
-          userId: user.$id,
-          specialistId: specialist.id,
-          options: {
-            saveToDatabase: true,
-            learningEnabled: true,
-            contextualMemory: true
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
       
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to get AI response');
+      // Handle different response formats
+      if (specialist.id === 'viktor-reels') {
+        // AI Chat Response format
+        if (data.error) {
+          throw new Error(data.error || 'Failed to get AI response');
+        }
+        
+        const assistantMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: data.aiResponseContent || 'Извините, не могу ответить в данный момент.',
+          timestamp: new Date(),
+          type: 'text'
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        // Enhanced AI Chat format
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to get AI response');
+        }
+
+        // Update conversation ID if new
+        if (!conversationId) {
+          setConversationId(data.conversationId);
+        }
+
+        const assistantMessage: Message = {
+          id: data.messageId,
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date(),
+          type: 'text'
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
       }
-
-      // Update conversation ID if new
-      if (!conversationId) {
-        setConversationId(data.conversationId);
-      }
-
-      const assistantMessage: Message = {
-        id: data.messageId,
-        role: 'assistant',
-        content: data.message,
-        timestamp: new Date(),
-        type: 'text'
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
 
       // Check if we should show tariff selection after sufficient discussion
       const userMessageCount = messages.filter(m => m.role === 'user').length + 1;

@@ -8,8 +8,11 @@ import {
   EnhancedConversation 
 } from '@/lib/services/enhanced-messaging';
 import { UnifiedOrderService, UnifiedOrder } from '@/lib/services/unified-order-service';
+import { JobsService } from '@/lib/appwrite/jobs';
 import Navbar from '@/components/Navbar';
 import EnhancedOrderTimeline from '@/components/messaging/EnhancedOrderTimeline';
+import JobTimeline from '@/components/messaging/JobTimeline';
+import FileUpload from '@/components/messaging/FileUpload';
 import VideoAvatar from '@/components/VideoAvatar';
 import { cn } from '@/lib/utils';
 import {
@@ -42,7 +45,8 @@ import {
   Clock,
   Check,
   CheckCheck,
-  DollarSign
+  DollarSign,
+  File
 } from 'lucide-react';
 // Order Card Interface
 interface OrderCard {
@@ -303,14 +307,18 @@ export default function EnhancedMessagesPage() {
   const [orderCards, setOrderCards] = useState<OrderCard[]>(demoOrderCards);
   const [unifiedOrders, setUnifiedOrders] = useState<UnifiedOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<UnifiedOrder | null>(null);
+  const [jobCards, setJobCards] = useState<any[]>([]);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   
   // UI State
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeView, setActiveView] = useState<'conversations' | 'orders'>('conversations');
+  const [activeView, setActiveView] = useState<'conversations' | 'orders' | 'jobs'>('conversations');
   const [viewMode, setViewMode] = useState<'chat' | 'order_timeline'>('chat');
   const [newMessage, setNewMessage] = useState('');
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   // Load initial data
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -330,6 +338,10 @@ export default function EnhancedMessagesPage() {
       const allOrders = [...clientOrders, ...workerOrders];
       setUnifiedOrders(allOrders);
       
+      // Load jobs
+      const userJobs = await JobsService.getJobsByClient(user.$id);
+      setJobCards(userJobs);
+      
       // Load demo order cards for now
       setOrderCards(demoOrderCards);
       setUnifiedOrders([demoUnifiedOrder]);
@@ -339,6 +351,7 @@ export default function EnhancedMessagesPage() {
       setConversations(demoConversations);
       setOrderCards(demoOrderCards);
       setUnifiedOrders([]);
+      setJobCards([]);
     } finally {
       setLoading(false);
     }
@@ -368,7 +381,7 @@ export default function EnhancedMessagesPage() {
           content: 'Привет! Как дела с проектом дизайна логотипа?',
           messageType: 'text',
           timestamp: new Date(Date.now() - 3600000).toISOString(),
-          read: true,
+          isRead: true,
           status: 'read',
           senderName: user.name || 'Вы',
           senderAvatar: user.avatar
@@ -381,7 +394,7 @@ export default function EnhancedMessagesPage() {
           content: 'Привет! Отлично работаю над концепцией. Уже готов первый вариант дизайна 🎨',
           messageType: 'text',
           timestamp: new Date(Date.now() - 3000000).toISOString(),
-          read: false,
+          isRead: false,
           status: 'delivered',
           senderName: 'Алекс AI',
           senderAvatar: '/images/specialists/alex-ai.jpg'
@@ -416,6 +429,21 @@ export default function EnhancedMessagesPage() {
     handleSelectConversation(orderConversationId);
     }
   }, [unifiedOrders, handleSelectConversation]);
+
+  // Handle job selection
+  const handleSelectJob = useCallback((jobId: string) => {
+    console.log('💼 Selecting job:', jobId);
+    
+    const job = jobCards.find(j => j.$id === jobId);
+    if (job) {
+      setSelectedJob(job);
+      setViewMode('order_timeline');
+      
+      // Create or get conversation for this job
+      const jobConversationId = `job-${jobId}`;
+      handleSelectConversation(jobConversationId);
+    }
+  }, [jobCards, handleSelectConversation]);
   // Handle order updates
   const handleUpdateOrder = useCallback(async (orderId: string, updates: Partial<UnifiedOrder>) => {
     try {
@@ -436,44 +464,115 @@ export default function EnhancedMessagesPage() {
       alert('Не удалось обновить заказ. Попробуйте еще раз.');
     }
   }, [user, selectedOrder]);
+  // Handle file upload
+  const handleFilesSelected = useCallback((files: File[]) => {
+    setAttachedFiles(prev => [...prev, ...files]);
+    setShowFileUpload(false);
+  }, []);
+
   // Send message
   const handleSendMessage = useCallback(async () => {
-    if (!newMessage.trim() || !selectedConversation || !user || sending) return;
+    if ((!newMessage.trim() && attachedFiles.length === 0) || !user || sending) return;
     setSending(true);
     try {
-      // Find conversation to get receiver
-      const conversation = conversations.find(c => c.$id === selectedConversation);
-      if (!conversation) {
-        throw new Error('Conversation not found');
+      let conversationId = selectedConversation;
+      let conversation = conversations.find(c => c.$id === selectedConversation);
+      
+      // If no conversation is selected, create one with AI specialist
+      if (!conversationId || !conversation) {
+        try {
+          const newConversation = await EnhancedMessagingService.getOrCreateConversation(
+            [user.$id, 'alex-ai'],
+            'Chat with AI Specialist',
+            'ai_specialist'
+          );
+          conversationId = newConversation.$id!;
+          conversation = newConversation;
+          setSelectedConversation(conversationId);
+          setConversations(prev => [newConversation, ...prev]);
+        } catch (error) {
+          console.error('Error creating conversation:', error);
+          // Instead of throwing error, create a mock conversation
+          const mockConversation: EnhancedConversation = {
+            $id: `mock-${Date.now()}`,
+            title: 'Chat with AI Specialist',
+            participants: [user.$id, 'alex-ai'],
+            lastMessage: '',
+            lastMessageTime: new Date().toISOString(),
+            unreadCount: {},
+            type: 'ai_specialist',
+            avatar: '',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            metadata: {}
+          };
+          conversationId = mockConversation.$id!;
+          conversation = mockConversation;
+          setSelectedConversation(conversationId);
+          setConversations(prev => [mockConversation, ...prev]);
+        }
       }
+      
       // Find receiver (other participant)
+      if (!conversation) {
+        throw new Error('No conversation available');
+      }
       const receiverId = conversation.participants.find(p => p !== user.$id) || 'alex-ai';
+      
+      // Upload files if any
+      let fileUrls: string[] = [];
+      if (attachedFiles.length > 0) {
+        try {
+          const formData = new FormData();
+          attachedFiles.forEach(file => {
+            formData.append('files', file);
+          });
+          
+          const uploadResponse = await fetch('/api/upload-files', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            fileUrls = uploadData.urls || [];
+          }
+        } catch (uploadError) {
+          console.error('Error uploading files:', uploadError);
+        }
+      }
       
       // Send message to database
       const sentMessage = await EnhancedMessagingService.sendMessage({
-        conversationId: selectedConversation,
+        conversationId: conversationId,
         senderId: user.$id,
         receiverId,
         content: newMessage.trim(),
-        messageType: 'text',
+        messageType: attachedFiles.length > 0 ? 'file' : 'text',
         senderName: user.name || 'Вы',
-        senderAvatar: user.avatar
+        senderAvatar: user.avatar,
+        attachments: fileUrls
       });
+      
       // Add message to state
       setMessages(prev => [...prev, sentMessage]);
       setNewMessage('');
+      setAttachedFiles([]);
+      
       // Update conversation in state
       const updatedConversations = conversations.map(conv => 
-        conv.$id === selectedConversation 
+        conv.$id === conversationId 
           ? {
               ...conv,
-              lastMessage: newMessage.trim(),
+              lastMessage: newMessage.trim() || `📎 ${attachedFiles.length} файл(ов)`,
               lastMessageTime: sentMessage.timestamp,
               updatedAt: sentMessage.timestamp
             }
           : conv
       );
       setConversations(updatedConversations);
+      
       // Generate AI response for AI specialists
       if (receiverId === 'alex-ai' || receiverId === 'viktor-reels') {
         setTimeout(async () => {
@@ -492,7 +591,7 @@ export default function EnhancedMessagesPage() {
                 body: JSON.stringify({
                   message: newMessage.trim(),
                   specialistId: receiverId,
-                  conversationId: selectedConversation,
+                  conversationId: conversationId,
                   userId: user.$id
                 })
               });
@@ -543,7 +642,7 @@ export default function EnhancedMessagesPage() {
             }
             
             const aiResponse = await EnhancedMessagingService.sendMessage({
-          conversationId: selectedConversation,
+          conversationId: conversationId,
               senderId: receiverId,
               receiverId: user.$id,
               content: aiResponseContent,
@@ -565,10 +664,10 @@ export default function EnhancedMessagesPage() {
     } finally {
       setSending(false);
     }
-  }, [newMessage, selectedConversation, user, sending, conversations]);
+  }, [newMessage, attachedFiles, selectedConversation, user, sending, conversations]);
   // Handle order timeline messages
-  const handleOrderTimelineMessage = useCallback(async (content: string, type: 'text' | 'milestone' | 'payment' = 'text') => {
-    if (!selectedOrder || !selectedConversation) return;
+  const handleOrderTimelineMessage = useCallback(async (content: string, type: 'text' | 'milestone' | 'payment' | 'status' | 'application' = 'text') => {
+    if (!selectedOrder && !selectedJob || !selectedConversation) return;
     
     // Set the message content and send
     setNewMessage(content);
@@ -580,7 +679,28 @@ export default function EnhancedMessagesPage() {
     } else if (type === 'payment') {
       // Add payment-specific styling or data
     }
-  }, [selectedOrder, selectedConversation, handleSendMessage]);
+  }, [selectedOrder, selectedJob, selectedConversation, handleSendMessage]);
+
+  // Handle job updates
+  const handleUpdateJob = useCallback(async (jobId: string, updates: any) => {
+    try {
+      const updatedJob = await JobsService.updateJob(jobId, updates);
+      
+      // Update in state
+      setJobCards(prev => prev.map(job => 
+        job.$id === jobId ? updatedJob : job
+      ));
+      
+      // Update selected job if it's the current one
+      if (selectedJob && selectedJob.$id === jobId) {
+        setSelectedJob(updatedJob);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error updating job:', error);
+      alert('Не удалось обновить джобс. Попробуйте еще раз.');
+    }
+  }, [selectedJob]);
   // Create new conversation
   const handleCreateNewConversation = useCallback(async (
     participantId: string,
@@ -751,21 +871,25 @@ export default function EnhancedMessagesPage() {
               </div>
             {/* Tabs */}
             <div className="flex space-x-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl p-1">
-              {['conversations', 'orders'].map((view) => (
+              {[
+                { key: 'conversations', label: 'Чаты' },
+                { key: 'orders', label: 'Заказы' },
+                { key: 'jobs', label: 'Джобсы' }
+              ].map((view) => (
                 <button
-                  key={view}
-                  onClick={() => setActiveView(view as any)}
+                  key={view.key}
+                  onClick={() => setActiveView(view.key as any)}
                   className={cn(
                     "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                    activeView === view
+                    activeView === view.key
                       ? "bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm"
                       : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   )}
                 >
-                  {view === 'conversations' ? 'Чаты' : 'Заказы'}
+                  {view.label}
                 </button>
-          ))}
-        </div>
+              ))}
+            </div>
             {/* Search */}
             <div className="relative mt-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -829,6 +953,101 @@ export default function EnhancedMessagesPage() {
         </div>
       );
                 })}
+              </div>
+            ) : activeView === 'jobs' ? (
+              <div className="p-4 space-y-3">
+                {/* Jobs */}
+                {jobCards.length > 0 ? (
+                  jobCards.map((job) => (
+                    <div
+                      key={job.$id}
+                      onClick={() => handleSelectJob(job.$id)}
+                      className="p-4 bg-white/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl border border-gray-200/30 dark:border-gray-700/30 cursor-pointer transition-all"
+                    >
+                      {/* Job Header */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                            <Briefcase className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+                              {job.title}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                              #{job.$id?.slice(-8)}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={cn(
+                          "px-2 py-1 rounded-lg text-xs font-medium",
+                          job.status === 'active' && "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400",
+                          job.status === 'pending' && "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+                          job.status === 'completed' && "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+                          job.status === 'cancelled' && "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                        )}>
+                          {job.status === 'active' && 'Активный'}
+                          {job.status === 'pending' && 'Ожидает'}
+                          {job.status === 'completed' && 'Завершен'}
+                          {job.status === 'cancelled' && 'Отменен'}
+                        </span>
+                      </div>
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {job.description}
+                      </p>
+                      {/* Stats */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500 mb-1">
+                          <span>Заявки</span>
+                          <span>{job.applicationsCount || 0}</span>
+                        </div>
+                        <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-1.5">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, ((job.applicationsCount || 0) / 10) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-3">
+                          <span>{job.category}</span>
+                          {job.deadline && (
+                            <span className="flex items-center space-x-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{new Date(job.deadline).toLocaleDateString()}</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <DollarSign className="w-3 h-3" />
+                          <span className="font-semibold">
+                            ${job.budgetMin?.toLocaleString()} - ${job.budgetMax?.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <Briefcase className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Нет джобсов
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Создайте свой первый джобс для поиска фрилансеров
+                    </p>
+                    <button
+                      onClick={() => router.push('/en/jobs/create')}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-all"
+                    >
+                      Создать джобс
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 space-y-3">
@@ -1011,16 +1230,16 @@ export default function EnhancedMessagesPage() {
                     />
                     <div>
                       <h2 className="font-semibold text-gray-900 dark:text-white">
-                        {currentConversation?.title || 'Чат'}
+                        {selectedJob ? selectedJob.title : currentConversation?.title || 'Чат'}
                       </h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        В сети
+                        {selectedJob ? 'Джобс' : 'В сети'}
                       </p>
                   </div>
                 </div>
                   <div className="flex items-center space-x-2">
                     {/* View Mode Toggle */}
-                    {selectedOrder && (
+                    {(selectedOrder || selectedJob) && (
                       <div className="flex items-center space-x-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg p-1">
                     <button
                           onClick={() => setViewMode('chat')}
@@ -1069,6 +1288,15 @@ export default function EnhancedMessagesPage() {
                     onSendMessage={handleOrderTimelineMessage}
                   />
                 </div>
+              ) : viewMode === 'order_timeline' && selectedJob ? (
+                // Job Timeline
+                <div className="flex-1 overflow-y-auto p-4">
+                  <JobTimeline 
+                    job={selectedJob}
+                    onUpdateJob={handleUpdateJob}
+                    onSendMessage={handleOrderTimelineMessage}
+                  />
+                </div>
               ) : (
                 <>
                   {/* Messages */}
@@ -1081,25 +1309,44 @@ export default function EnhancedMessagesPage() {
                           message.senderId === user?.$id ? "justify-end" : "justify-start"
                         )}
                       >
-                        <div className={cn(
-                          "max-w-xs lg:max-w-md xl:max-w-lg",
-                          message.senderId === user?.$id ? "order-2" : "order-1"
-                        )}>
-                          <div className={cn(
-                            "rounded-2xl px-4 py-3 break-words",
-                            message.senderId === user?.$id
-                              ? "bg-purple-600 text-white rounded-br-sm"
-                              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
+                                                  <div className={cn(
+                            "max-w-xs lg:max-w-md xl:max-w-lg",
+                            message.senderId === user?.$id ? "order-2" : "order-1"
                           )}>
-                            <p className="text-sm leading-relaxed">{message.content}</p>
-                          </div>
-                          <div className={cn(
-                            "flex items-center mt-1 space-x-1 text-xs text-gray-500 dark:text-gray-400",
-                            message.senderId === user?.$id ? "justify-end" : "justify-start"
-                          )}>
-                            <span>{formatTime(message.timestamp)}</span>
-                            {message.senderId === user?.$id && (
-                              <MessageStatusIcon status={message.status} />
+                            <div className={cn(
+                              "rounded-2xl px-4 py-3 break-words",
+                              message.senderId === user?.$id
+                                ? "bg-purple-600 text-white rounded-br-sm"
+                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
+                            )}>
+                              <p className="text-sm leading-relaxed">{message.content}</p>
+                              
+                              {/* Attachments */}
+                              {message.attachments && message.attachments.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  {message.attachments.map((attachment, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 bg-gray-100/50 dark:bg-gray-700/50 rounded-lg">
+                                      <File className="w-4 h-4 text-gray-500" />
+                                      <a 
+                                        href={attachment} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate"
+                                      >
+                                        {attachment.split('/').pop()}
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className={cn(
+                              "flex items-center mt-1 space-x-1 text-xs text-gray-500 dark:text-gray-400",
+                              message.senderId === user?.$id ? "justify-end" : "justify-start"
+                            )}>
+                              <span>{formatTime(message.timestamp)}</span>
+                              {message.senderId === user?.$id && (
+                                <MessageStatusIcon status={message.status} />
                 )}
               </div>
             </div>
@@ -1108,10 +1355,58 @@ export default function EnhancedMessagesPage() {
                   </div>
                   {/* Message Input */}
                   <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-4">
+                    {/* File Upload */}
+                    {showFileUpload && (
+                      <div className="mb-4">
+                        <FileUpload
+                          onFilesSelected={handleFilesSelected}
+                          maxFiles={5}
+                          maxSize={10}
+                          className="mb-3"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Attached Files Preview */}
+                    {attachedFiles.length > 0 && (
+                      <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            Прикрепленные файлы ({attachedFiles.length})
+                          </span>
+                          <button
+                            onClick={() => setAttachedFiles([])}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                          >
+                            Удалить все
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {attachedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center space-x-2 px-2 py-1 bg-white dark:bg-gray-700 rounded text-xs">
+                              <File className="w-3 h-3 text-gray-500" />
+                              <span className="text-gray-700 dark:text-gray-300 truncate max-w-20">
+                                {file.name}
+                              </span>
+                              <button
+                                onClick={() => setAttachedFiles(prev => prev.filter((_, i) => i !== index))}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-end space-x-3">
-                      <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
+                      <button 
+                        onClick={() => setShowFileUpload(!showFileUpload)}
+                        className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
+                      >
                         <Paperclip className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  </button>
+                      </button>
                       <div className="flex-1">
                         <textarea
                           value={newMessage}
@@ -1126,24 +1421,24 @@ export default function EnhancedMessagesPage() {
                           rows={1}
                           className="w-full px-4 py-3 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                         />
-                </div>
+                      </div>
                       <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
                         <Smile className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                       </button>
                       <button
                         onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || sending}
+                        disabled={(!newMessage.trim() && attachedFiles.length === 0) || sending}
                         className={cn(
                           "p-3 rounded-xl transition-all",
-                          newMessage.trim() && !sending
+                          (newMessage.trim() || attachedFiles.length > 0) && !sending
                             ? "bg-purple-600 hover:bg-purple-700 text-white"
                             : "bg-gray-200/50 dark:bg-gray-700/50 text-gray-400 cursor-not-allowed"
                         )}
                       >
                         <Send className="w-5 h-5" />
                       </button>
-              </div>
-              </div>
+                    </div>
+                  </div>
                 </>
               )}
             </>

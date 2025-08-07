@@ -15,6 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import ProfileEditModal from "@/components/ProfileEditModal";
 import { cn, formatCurrency } from "@/lib/utils";
 
 interface UserProfile {
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -71,6 +73,10 @@ export default function ProfilePage() {
     }
   };
 
+  const handleProfileUpdated = () => {
+    loadUserProfile(); // Перезагружаем профиль после обновления
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950">
@@ -79,11 +85,21 @@ export default function ProfilePage() {
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-400">Загрузка профиля...</p>
-          </div>
-        </div>
+                  </div>
       </div>
-    );
-  }
+
+      {/* Profile Edit Modal */}
+      {userProfile && (
+        <ProfileEditModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          userProfile={userProfile}
+          onProfileUpdated={handleProfileUpdated}
+        />
+      )}
+    </div>
+  );
+}
 
   if (!user) {
     return (
@@ -203,13 +219,13 @@ export default function ProfilePage() {
 
               {/* Actions */}
               <div className="flex space-x-3">
-                <Link
-                  href="/profile/edit"
+                <button
+                  onClick={() => setShowEditModal(true)}
                   className="btn-secondary flex items-center space-x-2"
                 >
                   <Edit className="w-4 h-4" />
                   <span>Редактировать</span>
-                </Link>
+                </button>
               </div>
             </div>
 

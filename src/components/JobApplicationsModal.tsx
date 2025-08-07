@@ -19,6 +19,7 @@ import {
 import { ApplicationsService } from "@/lib/appwrite/jobs";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Link from "next/link";
+import { parseAttachments } from "@/lib/utils";
 
 interface JobApplicationsModalProps {
   isOpen: boolean;
@@ -72,19 +73,39 @@ export default function JobApplicationsModal({
       const jobApplications = await ApplicationsService.getJobApplications(
         job.id,
       );
-      const typedApplications: Application[] = jobApplications.map((app) => ({
-        $id: app.$id!,
-        freelancerId: app.freelancerId,
-        freelancerName: app.freelancerName,
-        freelancerAvatar: app.freelancerAvatar || "",
-        freelancerRating: app.freelancerRating || 4.5,
-        coverLetter: app.coverLetter,
-        proposedBudget: app.proposedBudget || 0,
-        proposedDuration: app.proposedDuration || "",
-        status: app.status as "pending" | "accepted" | "rejected",
-        attachments: app.attachments || [],
-        $createdAt: app.$createdAt!,
-      }));
+      const typedApplications: Application[] = jobApplications.map((app) => {
+        try {
+          return {
+            $id: app.$id!,
+            freelancerId: app.freelancerId,
+            freelancerName: app.freelancerName,
+            freelancerAvatar: app.freelancerAvatar || "",
+            freelancerRating: app.freelancerRating || 4.5,
+            coverLetter: app.coverLetter,
+            proposedBudget: app.proposedBudget || 0,
+            proposedDuration: app.proposedDuration || "",
+            status: app.status as "pending" | "accepted" | "rejected",
+            attachments: parseAttachments(app.attachments),
+            $createdAt: app.$createdAt!,
+          };
+        } catch (parseError) {
+          console.error("Error parsing application:", parseError, app);
+          // Return a safe fallback
+          return {
+            $id: app.$id!,
+            freelancerId: app.freelancerId || "",
+            freelancerName: app.freelancerName || "Unknown",
+            freelancerAvatar: "",
+            freelancerRating: 4.5,
+            coverLetter: app.coverLetter || "",
+            proposedBudget: app.proposedBudget || 0,
+            proposedDuration: app.proposedDuration || "",
+            status: app.status as "pending" | "accepted" | "rejected",
+            attachments: [],
+            $createdAt: app.$createdAt!,
+          };
+        }
+      });
       setApplications(typedApplications);
     } catch (error) {
       console.error("Error loading applications:", error);

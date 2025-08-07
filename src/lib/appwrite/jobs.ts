@@ -4,6 +4,7 @@ import {
   COLLECTIONS, 
   JobDocument, 
   ApplicationDocument,
+  ApplicationStatus,
   createPublicReadPermissions,
   Query,
   ID
@@ -27,10 +28,29 @@ export class JobsService {
         createPublicReadPermissions(userId)
       );
 
-      return job as JobDocument;
+      // Create conversation for the job
+      try {
+        const { EnhancedMessagingService } = await import('@/lib/services/enhanced-messaging');
+        await EnhancedMessagingService.getOrCreateConversation(
+          [userId, `job-${job.$id}`],
+          `Джобс: ${jobData.title}`,
+          'project',
+          {
+            jobId: job.$id,
+            jobTitle: jobData.title,
+            jobCategory: jobData.category
+          }
+        );
+        console.log('✅ Created conversation for job:', job.$id);
+      } catch (conversationError) {
+        console.warn('Failed to create conversation for job:', conversationError);
+        // Don't fail the job creation if conversation creation fails
+      }
+
+      return job as unknown as JobDocument;
     } catch (error) {
       console.error('Error creating job:', error);
-      throw new Error('Failed to create job');
+      throw new Error(`Failed to create job: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -91,7 +111,7 @@ export class JobsService {
       );
 
       return {
-        jobs: response.documents as JobDocument[],
+        jobs: response.documents as unknown as JobDocument[],
         total: response.total
       };
     } catch (error) {
@@ -112,7 +132,7 @@ export class JobsService {
       // Increment view count
       await this.incrementViewCount(jobId);
 
-      return job as JobDocument;
+      return job as unknown as JobDocument;
     } catch (error) {
       console.error('Error fetching job:', error);
       throw new Error('Failed to fetch job');
@@ -131,7 +151,7 @@ export class JobsService {
         ]
       );
 
-      return response.documents as JobDocument[];
+      return response.documents as unknown as JobDocument[];
     } catch (error) {
       console.error('Error fetching client jobs:', error);
       throw new Error('Failed to fetch client jobs');
@@ -148,7 +168,7 @@ export class JobsService {
         updates
       );
 
-      return job as JobDocument;
+      return job as unknown as JobDocument;
     } catch (error) {
       console.error('Error updating job:', error);
       throw new Error('Failed to update job');
@@ -184,6 +204,21 @@ export class JobsService {
     }
   }
 
+  // Increment applications count
+  static async incrementApplicationsCount(jobId: string): Promise<void> {
+    try {
+      const job = await databases.getDocument(DATABASE_ID, COLLECTIONS.JOBS, jobId);
+      await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTIONS.JOBS,
+        jobId,
+        { applicationsCount: (job.applicationsCount || 0) + 1 }
+      );
+    } catch (error) {
+      console.error('Error incrementing applications count:', error);
+    }
+  }
+
   // Get featured jobs
   static async getFeaturedJobs(limit: number = 6): Promise<JobDocument[]> {
     try {
@@ -198,7 +233,7 @@ export class JobsService {
         ]
       );
 
-      return response.documents as JobDocument[];
+      return response.documents as unknown as JobDocument[];
     } catch (error) {
       console.error('Error fetching featured jobs:', error);
       return [];
@@ -218,7 +253,7 @@ export class JobsService {
         ]
       );
 
-      return response.documents as JobDocument[];
+      return response.documents as unknown as JobDocument[];
     } catch (error) {
       console.error('Error searching jobs:', error);
       return [];
@@ -275,20 +310,17 @@ export class ApplicationsService {
           try {
             const { NotificationService } = await import('@/lib/services/notifications');
             await NotificationService.createNotification({
-              userId: job.clientId,
+              user_id: job.clientId,
               title: '🎯 Новая заявка на ваш заказ!',
               message: `${applicationData.freelancerName} подал заявку на "${job.title}". Предложенный бюджет: $${applicationData.proposedBudget}`,
-              type: 'job_application',
-              channels: ['push', 'email'],
-              priority: 'high',
-              actionUrl: `/en/jobs/${applicationData.jobId}`,
-              actionText: 'Посмотреть заявку',
-              metadata: {
+              type: 'project',
+              action_url: `/en/jobs/${applicationData.jobId}`,
+              metadata: JSON.stringify({
                 applicationId: application.$id,
                 jobId: applicationData.jobId,
                 freelancerId: applicationData.freelancerId,
                 proposedBudget: applicationData.proposedBudget
-              }
+              })
             });
             console.log('✅ Notification sent to client successfully');
           } catch (notificationError) {
@@ -300,13 +332,13 @@ export class ApplicationsService {
         console.warn('Failed to get job details for notification:', jobError);
       }
 
-      return application as ApplicationDocument;
+      return application as unknown as ApplicationDocument;
     } catch (error) {
       console.error('Error submitting application:', error);
-      if (error.message?.includes('Collection with the requested ID could not be found')) {
+      if (error instanceof Error && error.message?.includes('Collection with the requested ID could not be found')) {
         throw new Error('Applications system is not properly configured. Please contact support.');
       }
-      throw new Error(`Failed to submit application: ${error.message || 'Unknown error'}`);
+      throw new Error(`Failed to submit application: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -322,7 +354,7 @@ export class ApplicationsService {
         ]
       );
 
-      return response.documents as ApplicationDocument[];
+      return response.documents as unknown as ApplicationDocument[];
     } catch (error) {
       console.error('Error fetching job applications:', error);
       throw new Error('Failed to fetch applications');
@@ -341,7 +373,7 @@ export class ApplicationsService {
         ]
       );
 
-      return response.documents as ApplicationDocument[];
+      return response.documents as unknown as ApplicationDocument[];
     } catch (error) {
       console.error('Error fetching freelancer applications:', error);
       throw new Error('Failed to fetch applications');
@@ -367,7 +399,7 @@ export class ApplicationsService {
         updates
       );
 
-      return application as ApplicationDocument;
+      return application as unknown as ApplicationDocument;
     } catch (error) {
       console.error('Error updating application status:', error);
       throw new Error('Failed to update application');

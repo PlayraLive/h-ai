@@ -218,7 +218,7 @@ PHASE (фаза проекта):
    * Перенаправление в контекст видео при off-topic вопросах
    */
   private async redirectToVideoContext(message: string, offTopicType?: string): Promise<string> {
-    if (!openai) {
+    if (!this.openai) {
       throw new Error('OpenAI not available on client side');
     }
 
@@ -238,7 +238,7 @@ PHASE (фаза проекта):
 Ответь как опытный видео-специалист:`;
 
     try {
-      const response = await openai.chat.completions.create({
+      const response = await this.openai.chat.completions.create({
         model: 'gpt-4',
         messages: [{ role: 'user', content: redirectPrompt }],
         temperature: 0.7,
@@ -260,7 +260,7 @@ PHASE (фаза проекта):
     needsMoreInfo: boolean;
     brief?: VideoProjectBrief;
   }> {
-    if (!openai) {
+    if (!this.openai) {
       throw new Error('OpenAI not available on client side');
     }
 
@@ -294,7 +294,7 @@ PHASE (фаза проекта):
 Говори как настоящий специалист, не как робот!`;
 
     try {
-      const response = await openai.chat.completions.create({
+      const response = await this.openai.chat.completions.create({
         model: 'gpt-4',
         messages: [{ role: 'user', content: briefPrompt }],
         temperature: 0.7,

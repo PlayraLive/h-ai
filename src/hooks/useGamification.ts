@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { databases, DATABASE_ID, ID, Query } from '@/lib/appwrite/database';
+import { databases, DATABASE_ID, COLLECTIONS, ID, Query } from '@/lib/appwrite/database';
 
 export const useGamification = () => {
   const { user } = useAuthContext();
@@ -15,7 +15,7 @@ export const useGamification = () => {
       // Проверяем, не добавлен ли уже в избранное
       const existing = await databases.listDocuments(
         DATABASE_ID,
-        'favorites',
+        COLLECTIONS.FAVORITES,
         [
           Query.equal('user_id', user.$id),
           Query.equal('item_id', itemId),
@@ -29,7 +29,7 @@ export const useGamification = () => {
 
       await databases.createDocument(
         DATABASE_ID,
-        'favorites',
+        COLLECTIONS.FAVORITES,
         ID.unique(),
         {
           user_id: user.$id,
@@ -60,7 +60,7 @@ export const useGamification = () => {
     try {
       const existing = await databases.listDocuments(
         DATABASE_ID,
-        'favorites',
+        COLLECTIONS.FAVORITES,
         [
           Query.equal('user_id', user.$id),
           Query.equal('item_id', itemId),
@@ -71,7 +71,7 @@ export const useGamification = () => {
       if (existing.documents.length > 0) {
         await databases.deleteDocument(
           DATABASE_ID,
-          'favorites',
+          COLLECTIONS.FAVORITES,
           existing.documents[0].$id
         );
       }
@@ -91,7 +91,7 @@ export const useGamification = () => {
     try {
       const existing = await databases.listDocuments(
         DATABASE_ID,
-        'favorites',
+        COLLECTIONS.FAVORITES,
         [
           Query.equal('user_id', user.$id),
           Query.equal('item_id', itemId),
@@ -115,7 +115,7 @@ export const useGamification = () => {
       // Проверяем, есть ли уже лайк
       const existing = await databases.listDocuments(
         DATABASE_ID,
-        'interactions',
+        COLLECTIONS.INTERACTIONS,
         [
           Query.equal('user_id', user.$id),
           Query.equal('target_id', targetId),
@@ -128,7 +128,7 @@ export const useGamification = () => {
         // Убираем лайк
         await databases.deleteDocument(
           DATABASE_ID,
-          'interactions',
+          COLLECTIONS.INTERACTIONS,
           existing.documents[0].$id
         );
         return { success: true, action: 'removed' };
@@ -136,7 +136,7 @@ export const useGamification = () => {
         // Ставим лайк
         await databases.createDocument(
           DATABASE_ID,
-          'interactions',
+          COLLECTIONS.INTERACTIONS,
           ID.unique(),
           {
             user_id: user.$id,
@@ -165,7 +165,7 @@ export const useGamification = () => {
     try {
       const likes = await databases.listDocuments(
         DATABASE_ID,
-        'interactions',
+        COLLECTIONS.INTERACTIONS,
         [
           Query.equal('target_id', targetId),
           Query.equal('target_type', targetType),
@@ -187,7 +187,7 @@ export const useGamification = () => {
     try {
       const like = await databases.listDocuments(
         DATABASE_ID,
-        'interactions',
+        COLLECTIONS.INTERACTIONS,
         [
           Query.equal('user_id', user.$id),
           Query.equal('target_id', targetId),
@@ -214,7 +214,7 @@ export const useGamification = () => {
 
       const recentViews = await databases.listDocuments(
         DATABASE_ID,
-        'interactions',
+        COLLECTIONS.INTERACTIONS,
         [
           Query.equal('user_id', user.$id),
           Query.equal('target_id', targetId),
@@ -227,7 +227,7 @@ export const useGamification = () => {
       if (recentViews.documents.length === 0) {
         await databases.createDocument(
           DATABASE_ID,
-          'interactions',
+          COLLECTIONS.INTERACTIONS,
           ID.unique(),
           {
             user_id: user.$id,

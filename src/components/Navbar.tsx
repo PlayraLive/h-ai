@@ -546,14 +546,7 @@ export default function Navbar() {
                   <Briefcase className="w-5 h-5" />
                   <span>Dashboard</span>
                 </Link>
-                <Link
-                  href={`/${locale}/profile`}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <User className="w-5 h-5" />
-                  <span>Profile</span>
-                </Link>
+
                 <Link
                   href={`/${locale}/messages`}
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"

@@ -34,6 +34,9 @@ import ApplyJobModal from "@/components/ApplyJobModal";
 import JobApplicationsModal from "@/components/JobApplicationsModal";
 import FreelancerInviteModal from "@/components/FreelancerInviteModal";
 import JobWorkflowTimeline from "@/components/JobWorkflowTimeline";
+import JobApplicationsSection from "@/components/JobApplicationsSection";
+import ApplicationsStats from "@/components/ApplicationsStats";
+import JobComments from "@/components/jobs/JobComments";
 import { InvitationsService } from "@/lib/appwrite/invitations";
 import { FreelancerMatchingService } from "@/services/freelancerMatchingService";
 import { projectService } from "@/services/project";
@@ -73,6 +76,7 @@ interface Job {
     totalSpent: number;
     memberSince: string;
     verified: boolean;
+    clientId?: string;
   };
 }
 
@@ -85,6 +89,7 @@ export default function JobDetailsPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<"pending" | "accepted" | "rejected" | "withdrawn" | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [jobInvitations, setJobInvitations] = useState<any[]>([]);
   const [jobApplications, setJobApplications] = useState<any[]>([]);
@@ -163,12 +168,13 @@ export default function JobDetailsPage() {
           totalSpent: 8500,
           memberSince: jobData.$createdAt!,
           verified: true,
+          clientId: jobData.clientId,
         },
       };
 
       setJob(convertedJob);
 
-      // Check if user has already applied
+      // Check if user has already applied and get application status
       if (user) {
         try {
           const applications = await ApplicationsService.getJobApplications(
@@ -178,6 +184,11 @@ export default function JobDetailsPage() {
             (app: any) => app.freelancerId === user.$id,
           );
           setHasApplied(!!userApplication);
+          
+          // Set application status if user has applied
+          if (userApplication) {
+            setApplicationStatus(userApplication.status);
+          }
         } catch (error) {
           console.log("No applications found");
         }
@@ -589,14 +600,30 @@ export default function JobDetailsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <button
-                      onClick={handleApply}
-                      className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                      disabled={!user}
-                    >
-                      <Briefcase className="w-4 h-4 mr-2 inline" />
-                      {!user ? "Login to Apply" : "Apply for this Job"}
-                    </button>
+                    {user && job && user.$id !== job.clientInfo.clientId && (
+                      <button
+                        onClick={handleApply}
+                        disabled={hasApplied}
+                        className={cn(
+                          "w-full px-6 py-3 rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+                          hasApplied 
+                            ? applicationStatus === "accepted"
+                              ? "bg-green-600/20 text-green-400 border border-green-500/30"
+                              : applicationStatus === "rejected"
+                              ? "bg-red-600/20 text-red-400 border border-red-500/30"
+                              : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30"
+                            : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                        )}
+                      >
+                        <Briefcase className="w-4 h-4 mr-2 inline" />
+                        {!user ? "Login to Apply" : 
+                         hasApplied ? 
+                           applicationStatus === "accepted" ? "Принята" :
+                           applicationStatus === "rejected" ? "Отклонена" :
+                           "На рассмотрении"
+                         : "Apply for this Job"}
+                      </button>
+                    )}
                     <Link
                       href={`/en/messages?job=${job.id}`}
                       className="inline-flex items-center justify-center w-full px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-xl transition-all duration-300 border border-gray-600/50 hover:border-gray-500/50"
@@ -823,166 +850,131 @@ export default function JobDetailsPage() {
                   </div>
                 )}
 
-              {/* Applications Section for Clients */}
+              {/* Quick Applications Summary for Clients */}
               {user && user.userType === "client" && (
                 <div className="p-4 md:p-6 border-t border-gray-700/50">
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-white flex items-center">
                       <div className="p-2 bg-blue-600/20 rounded-lg mr-3">
                         <Briefcase className="w-5 h-5 text-blue-400" />
                       </div>
-                      <span>Applications</span>
-                      <span className="ml-2 px-2 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full">
-                        {job?.proposals || 0}
-                      </span>
+                      <span>Quick Overview</span>
                     </h3>
-                    <button
-                      onClick={() => {
-                        loadJobApplications();
-                        setShowApplicationsModal(true);
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Applications
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <div className="px-3 py-1 bg-purple-600/20 text-purple-400 text-sm rounded-full border border-purple-600/30">
+                        {job?.proposals || 0} applications
                   </div>
-
-                  {/* Invited Freelancers Section */}
                   {jobInvitations.length > 0 && (
-                    <div className="mt-6 border-t border-gray-700/50 pt-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-md font-semibold text-white flex items-center">
-                          <Users className="w-4 h-4 mr-2 text-purple-400" />
-                          Invited Freelancers ({jobInvitations.length})
-                        </h4>
-                        <button
-                          onClick={() => setShowInviteModal(true)}
-                          className="text-purple-400 hover:text-purple-300 text-sm"
-                        >
-                          Invite More
-                        </button>
+                        <div className="px-3 py-1 bg-green-600/20 text-green-400 text-sm rounded-full border border-green-600/30">
+                          {jobInvitations.length} invited
                       </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {jobInvitations.map((invitation: any) => (
-                          <div
-                            key={invitation.$id}
-                            className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 hover:bg-gray-800/70 transition-all duration-200"
-                          >
-                            {/* Freelancer Info */}
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                                {invitation.freelancer_avatar ? (
-                                  <img
-                                    src={invitation.freelancer_avatar}
-                                    alt={invitation.freelancer_name}
-                                    className="w-full h-full rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-white text-sm font-semibold">
-                                    {invitation.freelancer_name?.charAt(0) || 'F'}
-                                  </span>
                                 )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm font-medium truncate">
-                                  {invitation.freelancer_name}
-                                </p>
-                                <div className="flex items-center space-x-2 text-xs text-gray-400">
-                                  {invitation.freelancer_rating > 0 && (
-                                    <div className="flex items-center space-x-1">
-                                      <Star className="w-3 h-3 fill-current text-yellow-400" />
-                                      <span>{invitation.freelancer_rating}</span>
                                     </div>
-                                  )}
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3 text-center">
+                      <div className="text-blue-400 text-sm font-medium">Total</div>
+                      <div className="text-white font-bold text-lg">{job?.proposals || 0}</div>
                                 </div>
+                    <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-3 text-center">
+                      <div className="text-yellow-400 text-sm font-medium">Pending</div>
+                      <div className="text-white font-bold text-lg">-</div>
                               </div>
+                    <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-3 text-center">
+                      <div className="text-green-400 text-sm font-medium">Accepted</div>
+                      <div className="text-white font-bold text-lg">-</div>
                             </div>
-
-                            {/* Status Badge */}
-                            <div className="flex items-center justify-between mb-3">
-                              <span
-                                className={cn(
-                                  "px-2 py-1 rounded-full text-xs font-medium",
-                                  invitation.status === 'pending'
-                                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                    : invitation.status === 'accepted'
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : invitation.status === 'declined'
-                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                    : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
-                                )}
-                              >
-                                {invitation.status === 'pending' && '⏳ Pending'}
-                                {invitation.status === 'accepted' && '✅ Accepted'}
-                                {invitation.status === 'declined' && '❌ Declined'}
-                                {invitation.status === 'viewed' && '👀 Viewed'}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(invitation.invited_at).toLocaleDateString()}
-                              </span>
+                    <div className="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3 text-center">
+                      <div className="text-purple-400 text-sm font-medium">Invited</div>
+                      <div className="text-white font-bold text-lg">{jobInvitations.length}</div>
                             </div>
-
-                            {/* Skills */}
-                            {invitation.freelancer_skills && invitation.freelancer_skills.length > 0 && (
-                              <div className="mb-3">
-                                <div className="flex flex-wrap gap-1">
-                                  {invitation.freelancer_skills.slice(0, 3).map((skill: string, index: number) => (
-                                    <span
-                                      key={index}
-                                      className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded"
-                                    >
-                                      {skill}
-                                    </span>
-                                  ))}
-                                  {invitation.freelancer_skills.length > 3 && (
-                                    <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">
-                                      +{invitation.freelancer_skills.length - 3}
-                                    </span>
-                                  )}
                                 </div>
-                              </div>
-                            )}
 
-                            {/* Response Message */}
-                            {invitation.response_message && (
-                              <div className="mb-3 p-2 bg-gray-700/50 rounded-lg">
-                                <p className="text-xs text-gray-300 italic">
-                                  "{invitation.response_message}"
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Actions */}
-                            <div className="flex space-x-2">
+                  {/* Quick Actions */}
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setShowInviteModal(true)}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Invite Freelancers</span>
+                    </button>
                               <Link
-                                href={`/en/freelancers/${invitation.freelancer_id}`}
-                                className="flex-1 px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-center text-xs font-medium transition-colors"
+                      href={`/en/messages?job=${job?.id}`}
+                      className="flex-1 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 border border-gray-600/50"
                               >
-                                View Profile
-                              </Link>
-                              <Link
-                                href={`/en/messages?freelancer=${invitation.freelancer_id}&job=${params.id}`}
-                                className="flex-1 px-3 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 rounded-lg text-center text-xs font-medium transition-colors"
-                              >
-                                Message
+                      <MessageCircle className="w-4 h-4" />
+                      <span>View Messages</span>
                               </Link>
                             </div>
                           </div>
-                        ))}
+              )}
                       </div>
                     </div>
-                  )}
+
+          {/* Applications Analytics - Show for clients */}
+          {user && job && user.userType === "client" && job.proposals > 0 && (
+            <div className="mt-8">
+              <ApplicationsStats
+                jobId={job.id}
+                jobBudget={job.budget}
+              />
                 </div>
               )}
+
+          {/* Applications Section - Show for clients or if there are applications */}
+          {user && job && (user.userType === "client" || job.proposals > 0) && (
+            <div className="mt-8">
+              <JobApplicationsSection
+                jobId={job.id}
+                jobTitle={job.title}
+                jobBudget={job.budget}
+                isClient={user.userType === "client"}
+                onApplicationAccepted={handleAcceptApplication}
+              />
             </div>
-          </div>
+          )}
 
           {/* Job Workflow - show for active jobs */}
           {job && (job.category === 'active' || job.type === 'contract') && (
             <div className="mt-8">
-              <JobWorkflowTimeline />
+              <JobWorkflowTimeline 
+                steps={[
+                  { 
+                    id: "job_posted", 
+                    title: "Job Posted", 
+                    description: "Job has been posted and is live",
+                    status: "completed",
+                    timestamp: job.postedAt
+                  },
+                  { 
+                    id: "applications_review", 
+                    title: "Applications Review", 
+                    description: "Reviewing received applications",
+                    status: "current"
+                  },
+                  { 
+                    id: "freelancer_selected", 
+                    title: "Freelancer Selected", 
+                    description: "Best candidate has been chosen",
+                    status: "pending"
+                  },
+                  { 
+                    id: "project_started", 
+                    title: "Project Started", 
+                    description: "Work has begun on the project",
+                    status: "pending"
+                  },
+                  { 
+                    id: "project_completed", 
+                    title: "Project Completed", 
+                    description: "Project has been successfully completed",
+                    status: "pending"
+                  }
+                ]}
+              />
             </div>
           )}
 
@@ -1004,6 +996,13 @@ export default function JobDetailsPage() {
                   <span>Открыть чат</span>
                 </Link>
               </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          {job && (
+            <div className="mt-8">
+              <JobComments jobId={job.id} />
             </div>
           )}
         </div>

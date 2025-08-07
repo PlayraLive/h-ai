@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { databases, DATABASE_ID, ID, storage, Query } from '@/lib/appwrite/database';
 import { 
   Upload, 
   Building2, 
@@ -180,20 +179,44 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
           showToast('error', 'Укажите название компании');
           return false;
         }
+        if (formData.companyName.trim().length < 2) {
+          errors.companyName = true;
+          showToast('error', 'Название компании должно содержать минимум 2 символа');
+          return false;
+        }
       } else {
         if (!formData.bio.trim() || formData.bio.length < 50) {
           errors.bio = true;
           showToast('error', 'Опишите свой опыт (минимум 50 символов)');
           return false;
         }
+        if (formData.bio.length > 500) {
+          errors.bio = true;
+          showToast('error', 'Описание не должно превышать 500 символов');
+          return false;
+        }
       }
     }
     
     if (step === 4) {
-      if (userType === 'freelancer' && formData.specializations.length === 0) {
+      if (userType === 'client') {
+        if (formData.interests.length === 0) {
+          showToast('warning', 'Рекомендуется выбрать области интересов для лучшего подбора фрилансеров');
+        }
+      } else {
+        if (formData.specializations.length === 0) {
         errors.specializations = true;
         showToast('error', 'Выберите хотя бы одну специализацию');
         return false;
+        }
+        if (formData.hourlyRateMin <= 0 || formData.hourlyRateMax <= 0) {
+          showToast('error', 'Укажите корректные расценки');
+          return false;
+        }
+        if (formData.hourlyRateMin > formData.hourlyRateMax) {
+          showToast('error', 'Минимальная ставка не может быть больше максимальной');
+          return false;
+        }
       }
     }
     
@@ -243,21 +266,45 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
       return;
     }
 
+    if (!user?.$id) {
+      showToast('error', 'Пользователь не авторизован');
+      return;
+    }
+
     setUploadingAvatar(true);
     try {
-      const response = await storage.createFile(
-        'avatars', // bucket ID
-        ID.unique(),
-        file
-      );
+      console.log('🔄 Starting file upload for user:', user.$id);
       
-      const fileUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/avatars/files/${response.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+      // Create FormData for file upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('userId', user.$id);
+
+      console.log('📡 Sending request to /api/upload-avatar-api-key');
+      
+      const response = await fetch('/api/upload-avatar-api-key', {
+        method: 'POST',
+        body: uploadFormData
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Upload API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to upload file');
+      }
+
+      const result = await response.json();
+      const fileUrl = result.fileUrl;
+      
+      console.log('✅ File uploaded successfully:', fileUrl);
       
       setFormData({ ...formData, avatarUrl: fileUrl, avatarFile: file });
       showToast('success', 'Фото успешно загружено!');
     } catch (error) {
       console.error('Error uploading file:', error);
-      showToast('error', 'Ошибка загрузки фото');
+      showToast('error', `Ошибка загрузки фото: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setUploadingAvatar(false);
     }
@@ -266,190 +313,198 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
   const handleComplete = async () => {
     if (!user) return;
     
+    // Final validation before completing
+    if (userType === 'client') {
+      if (!formData.companyName.trim()) {
+        showToast('error', 'Укажите название компании');
+        return;
+      }
+      if (formData.companyName.trim().length < 2) {
+        showToast('error', 'Название компании должно содержать минимум 2 символа');
+        return;
+      }
+    } else {
+      if (!formData.bio.trim() || formData.bio.length < 50) {
+        showToast('error', 'Опишите свой опыт (минимум 50 символов)');
+        return;
+      }
+      if (formData.specializations.length === 0) {
+        showToast('error', 'Выберите хотя бы одну специализацию');
+        return;
+      }
+      if (formData.hourlyRateMin <= 0 || formData.hourlyRateMax <= 0) {
+        showToast('error', 'Укажите корректные расценки');
+        return;
+      }
+      if (formData.hourlyRateMin > formData.hourlyRateMax) {
+        showToast('error', 'Минимальная ставка не может быть больше максимальной');
+        return;
+      }
+    }
+    
     setIsLoading(true);
+    let profileSaved = false;
+    
     try {
+      // Handle avatar upload first if there's a file
+      let finalAvatarUrl = formData.avatarUrl;
+      if (formData.avatarFile && !formData.avatarUrl) {
+        try {
+          // Upload avatar via API
+          const uploadFormData = new FormData();
+          uploadFormData.append('file', formData.avatarFile);
+          uploadFormData.append('userId', user.$id);
+
+          const uploadResponse = await fetch('/api/upload-avatar-api-key', {
+            method: 'POST',
+            body: uploadFormData
+          });
+
+          if (uploadResponse.ok) {
+            const result = await uploadResponse.json();
+            finalAvatarUrl = result.fileUrl;
+            console.log('✅ Avatar uploaded successfully');
+          } else {
+            showToast('warning', 'Фото не загружено, но профиль будет сохранен');
+          }
+        } catch (uploadError) {
+          console.error('Error uploading avatar:', uploadError);
+          showToast('warning', 'Фото не загружено, но профиль будет сохранен');
+        }
+      }
+
       // Update existing user profile or create if doesn't exist
       try {
-        // First try to get existing profile
-        const existingProfile = await databases.listDocuments(
-          DATABASE_ID,
-          'user_profiles',
-          [Query.equal('user_id', user.$id)]
-        );
-
-        const profileData = {
-          user_id: user.$id,
-          avatar_url: formData.avatarUrl || '',
+        console.log('🔄 Attempting to save profile for user:', user.$id);
+        
+        // Use API route to save profile data
+        const response = await fetch('/api/user-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.$id,
+            avatarUrl: finalAvatarUrl || '',
           bio: formData.bio || '',
-          company_name: formData.companyName || '',
-          company_size: formData.companySize || '',
+            companyName: formData.companyName || '',
+            companySize: formData.companySize || '',
           industry: formData.industry || '',
           interests: userType === 'client' ? formData.interests : [],
           specializations: userType === 'freelancer' ? formData.specializations : [],
-          experience_years: formData.experienceYears || 0,
-          hourly_rate_min: formData.hourlyRateMin || 0,
-          hourly_rate_max: formData.hourlyRateMax || 0,
-          onboarding_completed: true,
-          profile_completion: calculateCompletion()
-        };
+            experienceYears: formData.experienceYears || 0,
+            hourlyRateMin: formData.hourlyRateMin || 0,
+            hourlyRateMax: formData.hourlyRateMax || 0,
+            onboardingCompleted: true,
+            profileCompletion: calculateCompletion(),
+            userType: userType
+          })
+        });
 
-        if (existingProfile.documents.length > 0) {
-          // Update existing profile
-          await databases.updateDocument(
-            DATABASE_ID,
-            'user_profiles',
-            existingProfile.documents[0].$id,
-            profileData
-          );
-          console.log('✅ Updated existing user profile');
-        } else {
-          // Create new profile
-          await databases.createDocument(
-            DATABASE_ID,
-            'user_profiles',
-            ID.unique(),
-            profileData
-          );
-          console.log('✅ Created new user profile');
+        console.log('📡 API Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('❌ API Error:', errorData);
+          throw new Error(errorData.error || 'Failed to save profile');
         }
+
+        const result = await response.json();
+        console.log('✅ Profile saved successfully:', result);
+        profileSaved = true;
       } catch (profileError) {
         console.error('Error handling user profile:', profileError);
-        // Create new profile as fallback
-        await databases.createDocument(
-          DATABASE_ID,
-          'user_profiles',
-          ID.unique(),
-          {
-            user_id: user.$id,
-            avatar_url: formData.avatarUrl || '',
-            bio: formData.bio || '',
-            company_name: formData.companyName || '',
-            company_size: formData.companySize || '',
-            industry: formData.industry || '',
-            interests: userType === 'client' ? formData.interests : [],
-            specializations: userType === 'freelancer' ? formData.specializations : [],
-            experience_years: formData.experienceYears || 0,
-            hourly_rate_min: formData.hourlyRateMin || 0,
-            hourly_rate_max: formData.hourlyRateMax || 0,
-            onboarding_completed: true,
-            profile_completion: calculateCompletion()
-          }
-        );
+        throw new Error(`Failed to save profile: ${profileError}`);
       }
 
       // Update or create user progress
-      try {
-        const existingProgress = await databases.listDocuments(
-          DATABASE_ID,
-          'user_progress',
-          [Query.equal('user_id', user.$id)]
-        );
+      if (profileSaved) {
+        try {
+          const progressResponse = await fetch('/api/user-progress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.$id,
+              userType: userType
+            })
+          });
 
-        const progressData = {
-          user_id: user.$id,
-          current_level: 1,
-          current_xp: 50,
-          total_xp: 50,
-          next_level_xp: 100,
-          rank_title: userType === 'client' ? 'Новый клиент' : 'Начинающий фрилансер',
-          completed_jobs: 0,
-          success_rate: 0,
-          average_rating: 0,
-          total_earnings: 0,
-          streak_days: 1,
-          achievements_count: 1
-        };
-
-        if (existingProgress.documents.length > 0) {
-          // Update existing progress (only if not already higher)
-          const current = existingProgress.documents[0];
-          if (current.current_level <= 1) {
-            await databases.updateDocument(
-              DATABASE_ID,
-              'user_progress',
-              current.$id,
-              {
-                current_xp: Math.max(current.current_xp, 50),
-                total_xp: current.total_xp + 50,
-                rank_title: progressData.rank_title,
-                streak_days: Math.max(current.streak_days, 1),
-                achievements_count: current.achievements_count + 1
-              }
-            );
-          }
+          if (progressResponse.ok) {
+            console.log('✅ User progress updated');
         } else {
-          // Create new progress
-          await databases.createDocument(
-            DATABASE_ID,
-            'user_progress',
-            ID.unique(),
-            progressData
-          );
+            console.error('Error updating user progress');
         }
       } catch (progressError) {
         console.error('Error handling user progress:', progressError);
+          // Don't fail the entire process for progress errors
+        }
       }
 
-      // Create onboarding completion record
-      await databases.createDocument(
-        DATABASE_ID,
-        'onboarding_steps',
-        ID.unique(),
-        {
-          user_id: user.$id,
-          user_type: userType,
-          current_step: totalSteps,
-          total_steps: totalSteps,
-          completed_steps: Array.from({ length: totalSteps }, (_, i) => `step_${i + 1}`),
-          step_data: JSON.stringify(formData),
-          started_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-          trigger_type: trigger
-        }
-      );
+              // Create onboarding completion record and award achievement
+        if (profileSaved) {
+          try {
+            // Create onboarding record via API
+            const onboardingResponse = await fetch('/api/onboarding-complete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.$id,
+                userType: userType,
+                currentStep: totalSteps,
+                totalSteps: totalSteps,
+                completedSteps: Array.from({ length: totalSteps }, (_, i) => `step_${i + 1}`),
+                stepData: JSON.stringify(formData),
+                triggerType: trigger
+              })
+            });
 
-      // Award welcome achievement (check if not already exists)
-      try {
-        const existingAchievement = await databases.listDocuments(
-          DATABASE_ID,
-          'achievements',
-          [
-            Query.equal('user_id', user.$id),
-            Query.equal('achievement_id', 'welcome_onboard')
-          ]
-        );
-
-        if (existingAchievement.documents.length === 0) {
-          await databases.createDocument(
-            DATABASE_ID,
-            'achievements',
-            ID.unique(),
-            {
-              user_id: user.$id,
-              achievement_id: 'welcome_onboard',
-              achievement_name: userType === 'client' ? '🎉 Добро пожаловать!' : '🚀 Старт карьеры!',
-              achievement_description: userType === 'client' 
-                ? 'Первый шаг к поиску лучших фрилансеров' 
-                : 'Начало пути профессионального фрилансера',
-              achievement_icon: userType === 'client' ? '🎉' : '🚀',
-              achievement_category: 'onboarding',
-              xp_reward: 50,
-              rarity: 'common',
-              unlocked_at: new Date().toISOString(),
-              progress_current: 1,
-              progress_required: 1
+            if (onboardingResponse.ok) {
+              console.log('✅ Onboarding completion record created');
+            } else {
+              console.error('Error creating onboarding record');
             }
-          );
+          } catch (onboardingError) {
+            console.error('Error creating onboarding record:', onboardingError);
+            // Don't fail the entire process for onboarding record errors
+          }
+
+          // Award welcome achievement
+          try {
+            const achievementResponse = await fetch('/api/achievements', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.$id,
+                userType: userType
+              })
+            });
+
+            if (achievementResponse.ok) {
+              console.log('✅ Welcome achievement awarded');
+            } else {
+              console.error('Error awarding achievement');
         }
       } catch (achievementError) {
         console.error('Error handling achievement:', achievementError);
+            // Don't fail the entire process for achievement errors
+          }
       }
 
+      if (profileSaved) {
       showToast('success', 'Профиль успешно обновлен! Добро пожаловать! 🎉');
       setTimeout(() => onClose(), 1500);
+      } else {
+        showToast('error', 'Не удалось сохранить профиль. Попробуйте еще раз.');
+      }
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      showToast('error', 'Ошибка при обновлении профиля');
+      showToast('error', `Ошибка при обновлении профиля: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setIsLoading(false);
     }
@@ -485,6 +540,8 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
     setSkipConfirm(true);
   };
 
+
+
   if (!isOpen) return null;
 
   return (
@@ -517,23 +574,24 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
       {skipConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55] flex items-center justify-center p-4">
           <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Завершить настройку позже?</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Что вы хотите сделать?</h3>
             <p className="text-gray-400 mb-6">
-              Вы можете завершить настройку профиля позже в разделе "Настройки". 
+              Вы можете завершить настройку позже или начать заново. 
               Незавершенный профиль получает меньше внимания.
             </p>
-            <div className="flex space-x-3">
+            <div className="flex flex-col space-y-3">
               <button
                 onClick={() => setSkipConfirm(false)}
-                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors"
+                className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors"
               >
                 Продолжить настройку
               </button>
+
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors"
+                className="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors"
               >
-                Выйти
+                Выйти без сохранения
               </button>
             </div>
           </div>
@@ -931,6 +989,8 @@ const EnhancedOnboardingModal = ({ isOpen, onClose, userType, trigger }: Enhance
                   Пропустить
                 </button>
               )}
+
+
             </div>
 
             <button

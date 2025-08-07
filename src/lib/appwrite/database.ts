@@ -21,6 +21,9 @@ export const COLLECTIONS = {
   CONVERSATIONS: 'conversations',
   NOTIFICATIONS: 'notifications',
   INVITATIONS: 'invitations',
+  COMMENTS: 'comments',
+  FAVORITES: 'favorites',
+  INTERACTIONS: 'interactions',
   // AI Solutions & Reels Collections
   REELS: 'reels',
   SOLUTION_PACKAGES: 'solution_packages',

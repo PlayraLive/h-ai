@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { User, LogOut, Settings, Briefcase, Globe, MessageCircle, FileText } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useUserType } from "@/contexts/UserTypeContext";
 import { databases, DATABASE_ID, Query } from "@/lib/appwrite/database";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,7 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(true);
   const { user, logout } = useAuthContext();
+  const { userType } = useUserType();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
     if (user.$id === "mock-user-id") {
       return "Test User";
     }
-    return user.userType === 'client' ? 'Клиент' : 'Фрилансер';
+    return userType === 'client' ? 'Клиент' : 'Фрилансер';
   };
 
   const handleLogout = async () => {
@@ -202,14 +204,7 @@ export default function NavbarUserAvatar({ locale }: NavbarUserAvatarProps) {
 
               {/* Menu Items */}
               <div className="py-1">
-                <Link
-                  href={`/${locale}/profile`}
-                  className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <User className="w-4 h-4 mr-3" />
-                  Profile
-                </Link>
+
 
                 <Link
                   href={`/${locale}/dashboard`}

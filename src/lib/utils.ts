@@ -5,6 +5,33 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Helper function to parse attachments from different formats
+export function parseAttachments(attachments: any): string[] {
+  if (!attachments) return [];
+  
+  // If it's already an array
+  if (Array.isArray(attachments)) {
+    return attachments.filter(item => typeof item === 'string');
+  }
+  
+  // If it's a string, try to parse as JSON
+  if (typeof attachments === 'string') {
+    try {
+      const parsed = JSON.parse(attachments);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => typeof item === 'string');
+      }
+      return [attachments];
+    } catch (e) {
+      // If parsing fails, treat as single attachment
+      return [attachments];
+    }
+  }
+  
+  // If it's any other type, return empty array
+  return [];
+}
+
 // Мобильные утилиты
 export const isMobile = () => {
   if (typeof window === 'undefined') return false;

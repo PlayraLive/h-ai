@@ -10,7 +10,7 @@ export interface EnhancedMessage {
   content: string;
   messageType: 'text' | 'image' | 'file' | 'system' | 'order_card' | 'video' | 'voice' | 'job_card' | 'ai_response';
   timestamp: string;
-  read: boolean;
+  isRead: boolean;
   edited?: boolean;
   editedAt?: string;
   replyTo?: string;
@@ -28,14 +28,26 @@ export interface EnhancedConversation {
   title: string;
   participants: string[];
   lastMessage: string;
-  lastMessageTime: string;
+  lastMessageAt: string;
+  lastMessageBy: string;
   unreadCount: Record<string, number>; // userId -> unread count
   type: 'direct' | 'group' | 'ai_specialist' | 'project';
-  avatar?: string;
-  status: 'active' | 'archived' | 'muted';
+  conversation_type: string;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
-  metadata?: Record<string, any>;
+  last_activity: string;
+  projectId?: string | null;
+  contractId?: string | null;
+  ai_order_id?: string | null;
+  job_id?: string | null;
+  solution_id?: string | null;
+  buyer_id?: string | null;
+  seller_id?: string | null;
+  context_data?: any;
+  is_pinned: boolean;
+  tags?: any;
+  project_id?: string | null;
   $createdAt?: string;
   $updatedAt?: string;
 }
@@ -68,7 +80,7 @@ export class EnhancedMessagingService {
       );
 
       if (existingConversations.documents.length > 0) {
-        return existingConversations.documents[0] as EnhancedConversation;
+        return existingConversations.documents[0] as unknown as EnhancedConversation;
       }
 
       // Create new conversation
@@ -80,14 +92,29 @@ export class EnhancedMessagingService {
       const conversationData = {
         title,
         participants: sortedParticipants,
-        lastMessage: '',
-        lastMessageTime: new Date().toISOString(),
+        lastMessage: 'Новая беседа создана',
+        lastMessageAt: new Date().toISOString(),
+        lastMessageBy: participants[0],
         unreadCount: JSON.stringify(unreadCount),
-        type,
-        avatar: metadata?.avatar || '',
-        status: 'active',
+        isArchived: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        last_activity: new Date().toISOString(),
+        conversation_type: type,
+        projectId: null,
+        contractId: null,
+        ai_order_id: null,
+        job_id: null,
+        solution_id: null,
+        buyer_id: null,
+        seller_id: null,
+        context_data: null,
+        is_pinned: false,
+        tags: null,
+        project_id: null,
+        // Add any other required fields that might be missing
+        status: 'active',
+        avatar: '',
         metadata: JSON.stringify(metadata || {})
       };
 
@@ -102,10 +129,14 @@ export class EnhancedMessagingService {
         ...conversation,
         unreadCount: JSON.parse(conversation.unreadCount || '{}'),
         metadata: JSON.parse(conversation.metadata || '{}')
-      } as EnhancedConversation;
+      } as unknown as EnhancedConversation;
 
     } catch (error) {
       console.error('Error creating/getting conversation:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        throw new Error(`Failed to create conversation: ${error.message}`);
+      }
       throw new Error('Failed to create conversation');
     }
   }
@@ -157,20 +188,16 @@ export class EnhancedMessagingService {
       // Send notification
       try {
         await NotificationService.createNotification({
-          userId: data.receiverId,
+          user_id: data.receiverId,
           title: `💬 Новое сообщение от ${data.senderName || 'пользователя'}`,
           message: data.content.length > 50 
             ? data.content.substring(0, 50) + '...' 
             : data.content,
           type: 'message',
-          channels: ['push'],
-          priority: 'normal',
-          actionUrl: `/messages?conversation=${data.conversationId}`,
-          actionText: 'Ответить',
-          metadata: {
+          metadata: JSON.stringify({
             conversationId: data.conversationId,
             senderId: data.senderId
-          }
+          })
         });
       } catch (notificationError) {
         console.warn('Failed to send notification:', notificationError);
@@ -179,7 +206,7 @@ export class EnhancedMessagingService {
       return {
         ...message,
         attachments: JSON.parse(message.attachments || '[]')
-      } as EnhancedMessage;
+      } as unknown as EnhancedMessage;
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -208,7 +235,7 @@ export class EnhancedMessagingService {
       return response.documents.map(doc => ({
         ...doc,
         attachments: JSON.parse(doc.attachments || '[]')
-      })) as EnhancedMessage[];
+      })) as unknown as EnhancedMessage[];
 
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -233,7 +260,7 @@ export class EnhancedMessagingService {
         ...doc,
         unreadCount: JSON.parse(doc.unreadCount || '{}'),
         metadata: JSON.parse(doc.metadata || '{}')
-      })) as EnhancedConversation[];
+      })) as unknown as EnhancedConversation[];
 
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -320,9 +347,11 @@ export class EnhancedMessagingService {
           lastMessage: lastMessage.length > 100 
             ? lastMessage.substring(0, 100) + '...' 
             : lastMessage,
-          lastMessageTime: new Date().toISOString(),
+          lastMessageAt: new Date().toISOString(),
+          lastMessageBy: receiverId,
           unreadCount: JSON.stringify(unreadCount),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          last_activity: new Date().toISOString()
         }
       );
 
@@ -366,7 +395,7 @@ export class EnhancedMessagingService {
       return {
         ...message,
         attachments: JSON.parse(message.attachments || '[]')
-      } as EnhancedMessage;
+      } as unknown as EnhancedMessage;
 
     } catch (error) {
       console.error('Error editing message:', error);
@@ -402,7 +431,7 @@ export class EnhancedMessagingService {
       return response.documents.map(doc => ({
         ...doc,
         attachments: JSON.parse(doc.attachments || '[]')
-      })) as EnhancedMessage[];
+      })) as unknown as EnhancedMessage[];
 
     } catch (error) {
       console.error('Error searching messages:', error);
