@@ -48,6 +48,7 @@ import {
   ArrowRight,
   User,
   Building2,
+  Bookmark,
 } from "lucide-react";
 // Navbar removed - using Sidebar instead
 import { cn } from "@/lib/utils";
@@ -968,6 +969,7 @@ export default function DashboardPage() {
           { id: "portfolio", label: "Portfolio" },
           { id: "solutions", label: "Solutions" },
           { id: "ai_orders", label: "AI Orders" },
+          { id: "bookmarks", label: "Bookmarks" },
           { id: "achievements", label: "Achievements" },
           { id: "earnings", label: "Earnings" },
         ]
@@ -978,6 +980,7 @@ export default function DashboardPage() {
           { id: "solutions", label: "Solutions" },
           { id: "ai_orders", label: "AI Orders" },
           { id: "jobs", label: "Jobs" },
+          { id: "bookmarks", label: "Bookmarks" },
           { id: "earnings", label: "Earnings" },
         ];
 
@@ -2413,6 +2416,40 @@ export default function DashboardPage() {
                   <p className="text-gray-400">
                     Advanced analytics coming soon...
                   </p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "bookmarks" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">
+                    My Bookmarks
+                  </h2>
+                  <Link
+                    href="/en/jobs"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    <span>Browse Jobs</span>
+                  </Link>
+                </div>
+
+                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-8 text-center">
+                  <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bookmark className="w-8 h-8 text-yellow-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Bookmarks Feature</h3>
+                  <p className="text-gray-400 mb-6">
+                    Save interesting jobs to your bookmarks for easy access later.
+                  </p>
+                  <Link
+                    href="/en/dashboard/bookmarks"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <Bookmark className="w-5 h-5" />
+                    <span>View All Bookmarks</span>
+                  </Link>
                 </div>
               </div>
             )}

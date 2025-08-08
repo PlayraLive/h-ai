@@ -9,16 +9,17 @@ import {
 // GET - получить комментарии для джобса
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
-    console.log('Fetching comments for jobId:', params.jobId);
+    const { jobId } = await params;
+    console.log('Fetching comments for jobId:', jobId);
     
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const result = await getCommentsByJobId(params.jobId, limit, offset);
+    const result = await getCommentsByJobId(jobId, limit, offset);
 
     if (result.success) {
       console.log('Comments fetched successfully:', result.comments.length);
@@ -52,9 +53,10 @@ export async function GET(
 // POST - создать новый комментарий
 export async function POST(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
+    const { jobId } = await params;
     const body = await request.json();
     const { userId, userName, userAvatar, content, type, parentId } = body;
 
@@ -66,7 +68,7 @@ export async function POST(
     }
 
     const result = await createComment({
-      job_id: params.jobId,
+      job_id: jobId,
       user_id: userId,
       user_name: userName,
       user_avatar: userAvatar,
@@ -107,7 +109,7 @@ export async function POST(
 // DELETE - удалить комментарий
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);

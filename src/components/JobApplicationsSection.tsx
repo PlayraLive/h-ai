@@ -61,6 +61,7 @@ export default function JobApplicationsSection({
   isClient,
   onApplicationAccepted,
 }: JobApplicationsSectionProps) {
+
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -76,9 +77,10 @@ export default function JobApplicationsSection({
     setLoading(true);
     try {
       const jobApplications = await ApplicationsService.getJobApplications(jobId);
+      
       const typedApplications: Application[] = jobApplications.map((app) => {
         try {
-          return {
+          const application = {
             $id: app.$id!,
             freelancerId: app.freelancerId,
             freelancerName: app.freelancerName,
@@ -92,6 +94,7 @@ export default function JobApplicationsSection({
             $createdAt: app.$createdAt!,
             clientResponse: app.clientResponse,
           };
+          return application;
         } catch (parseError) {
           console.error("Error parsing application:", parseError, app);
           // Return a safe fallback
@@ -532,6 +535,8 @@ export default function JobApplicationsSection({
                     </Link>
                   </div>
 
+
+                  
                   {isClient && application.status === "pending" && (
                     <div className="flex space-x-2">
                       <button

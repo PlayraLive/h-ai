@@ -10,8 +10,6 @@ import {
   DollarSign,
   Star,
   Eye,
-  Bookmark,
-  BookmarkCheck,
   Users,
   ArrowRight,
   SlidersHorizontal,
@@ -26,90 +24,96 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import ApplyJobModal from "@/components/ApplyJobModal";
 import InteractionButtons from "@/components/shared/InteractionButtons";
+import BookmarkButton from "@/components/BookmarkButton";
 interface Job {
-  id: string;
+  $id: string;
   title: string;
   description: string;
-  company: string;
-  companyLogo: string;
+  clientName: string;
+  clientAvatar?: string;
   location: string;
   type: "full-time" | "part-time" | "contract" | "freelance";
-  budget: {
-    min: number;
-    max: number;
-    currency: string;
-  };
+  budgetMin: number;
+  budgetMax: number;
+  currency: string;
   skills: string[];
-  postedAt: string;
-  deadline: string;
-  proposals: number;
-  rating: number;
+  $createdAt: string;
+  deadline?: string;
+  applicationsCount: number;
+  rating?: number;
   category: string;
   featured: boolean;
   urgent: boolean;
-  hasApplied?: boolean; // Добавляем поле для статуса заявки
-  applicationStatus?: "pending" | "accepted" | "rejected"; // Добавляем статус заявки
-  isOwner?: boolean; // Добавляем поле для проверки создателя джоба
+  hasApplied?: boolean;
+  applicationStatus?: "pending" | "accepted" | "rejected";
+  isOwner?: boolean;
+  clientId?: string;
 }
 
 const mockJobs: Job[] = [
   {
-    id: "1",
+    $id: "1",
     title: "AI-Powered Logo Design for Tech Startup",
     description:
       "We need a creative AI designer to create a modern, minimalist logo for our AI startup. The logo should convey innovation, trust, and cutting-edge technology.",
-    company: "TechFlow AI",
-    companyLogo: "/api/placeholder/40/40",
+    clientName: "TechFlow AI",
+    clientAvatar: "/api/placeholder/40/40",
     location: "Remote",
     type: "freelance",
-    budget: { min: 500, max: 1500, currency: "USD" },
+    budgetMin: 500,
+    budgetMax: 1500,
+    currency: "USD",
     skills: ["AI Design", "Logo Design", "Branding", "Figma"],
-    postedAt: "2024-01-15",
+    $createdAt: "2024-01-15T00:00:00.000Z",
     deadline: "2024-01-30",
-    proposals: 12,
+    applicationsCount: 12,
     rating: 4.8,
     category: "ai_design",
     featured: true,
     urgent: false,
   },
   {
-    id: "2",
+    $id: "2",
     title: "Machine Learning Model Development",
     description:
       "Looking for an experienced ML engineer to develop a recommendation system for our e-commerce platform. Must have experience with Python, TensorFlow, and large datasets.",
-    company: "ShopSmart Inc",
-    companyLogo: "/api/placeholder/40/40",
+    clientName: "ShopSmart Inc",
+    clientAvatar: "/api/placeholder/40/40",
     location: "New York, NY",
     type: "contract",
-    budget: { min: 5000, max: 15000, currency: "USD" },
+    budgetMin: 5000,
+    budgetMax: 15000,
+    currency: "USD",
     skills: ["Machine Learning", "Python", "TensorFlow", "Data Science"],
-    postedAt: "2024-01-14",
+    $createdAt: "2024-01-14T00:00:00.000Z",
     deadline: "2024-02-15",
-    proposals: 8,
+    applicationsCount: 8,
     rating: 4.9,
     category: "ai_development",
     featured: false,
     urgent: true,
   },
   {
-    id: "3",
+    $id: "3",
     title: "AI Video Editing for YouTube Channel",
     description:
       "Need an AI video editor to create engaging content for our tech YouTube channel. Experience with AI-powered editing tools required.",
-    company: "TechTalks Media",
-    companyLogo: "/api/placeholder/40/40",
+    clientName: "TechTalks Media",
+    clientAvatar: "/api/placeholder/40/40",
     location: "Remote",
     type: "part-time",
-    budget: { min: 1000, max: 3000, currency: "USD" },
+    budgetMin: 1000,
+    budgetMax: 3000,
+    currency: "USD",
     skills: [
       "AI Video Editing",
       "After Effects",
       "Premiere Pro",
       "Motion Graphics",
     ],
-    postedAt: "2024-01-13",
+    $createdAt: "2024-01-13T00:00:00.000Z",
     deadline: "2024-01-25",
-    proposals: 15,
+    applicationsCount: 15,
     rating: 4.7,
     category: "ai_video",
     featured: false,
@@ -220,28 +224,26 @@ export default function JobsPage() {
       // Convert Appwrite documents to Job interface
       const convertedJobs: Job[] = loadedJobs.jobs.map(
         (job: Record<string, any>) => ({
-          id: job.$id!,
+          $id: job.$id!,
           title: job.title,
           description: job.description,
-          company: job.clientCompany || job.clientName,
-          companyLogo:
+          clientName: job.clientName || job.clientCompany || "Anonymous Client",
+          clientAvatar:
             job.clientAvatar ||
             "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40",
           location: job.location || "Remote",
-          type: job.budgetType,
-          budget: {
-            min: job.budgetMin,
-            max: job.budgetMax,
-            currency: job.currency || "USD",
-          },
+          type: job.budgetType || "freelance",
+          budgetMin: job.budgetMin || 0,
+          budgetMax: job.budgetMax || 0,
+          currency: job.currency || "USD",
           skills: job.skills || [],
-          postedAt: job.$createdAt!,
+          $createdAt: job.$createdAt!,
           deadline:
             job.deadline ||
             new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          proposals: job.applicationsCount || 0,
-          rating: 4.5, // Default rating
-          category: job.category,
+          applicationsCount: job.applicationsCount || 0,
+          rating: job.rating || 4.5,
+          category: job.category || "ai_development",
           featured: job.featured || false,
           urgent: job.urgent || false,
           hasApplied: userApplications.includes(job.$id!), // Проверяем подавал ли фрилансер заявку
@@ -306,7 +308,7 @@ export default function JobsPage() {
     // Redirect to the specific job page to show application status
     if (selectedJob) {
       setTimeout(() => {
-        router.push(`/en/jobs/${selectedJob.id}`);
+        router.push(`/en/jobs/${selectedJob.$id}`);
       }, 2000);
     }
   };
@@ -323,7 +325,7 @@ export default function JobsPage() {
       selectedCategory === "all" || job.category === selectedCategory;
     const matchesType = selectedType === "all" || job.type === selectedType;
     const matchesBudget =
-      job.budget.min >= budgetRange[0] && job.budget.max <= budgetRange[1];
+      job.budgetMin >= budgetRange[0] && job.budgetMax <= budgetRange[1];
 
     return matchesSearch && matchesCategory && matchesType && matchesBudget;
   });
@@ -331,13 +333,13 @@ export default function JobsPage() {
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     switch (sortBy) {
       case "newest":
-        return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+        return new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime();
       case "budget_high":
-        return b.budget.max - a.budget.max;
+        return b.budgetMax - a.budgetMax;
       case "budget_low":
-        return a.budget.min - b.budget.min;
+        return a.budgetMin - b.budgetMin;
       case "proposals":
-        return a.proposals - b.proposals;
+        return b.applicationsCount - a.applicationsCount;
       default:
         return 0;
     }
@@ -480,10 +482,10 @@ export default function JobsPage() {
             ) : sortedJobs.length > 0 ? (
               sortedJobs.map((job) => (
                 <JobCard
-                  key={job.id}
+                  key={job.$id}
                   job={job}
-                  isSaved={savedJobs.has(job.id)}
-                  onSave={() => handleSaveJob(job.id)}
+                  isSaved={savedJobs.has(job.$id)}
+                  onSave={() => handleSaveJob(job.$id)}
                   onApply={() => handleApplyToJob(job)}
                 />
               ))
@@ -514,10 +516,10 @@ export default function JobsPage() {
             isOpen={showApplyModal}
             onClose={handleCloseApplyModal}
             job={{
-              id: selectedJob.id,
+              id: selectedJob.$id,
               title: selectedJob.title,
-              budget: selectedJob.budget,
-              company: selectedJob.company,
+              budget: { min: selectedJob.budgetMin, max: selectedJob.budgetMax, currency: selectedJob.currency },
+              company: selectedJob.clientName,
               skills: selectedJob.skills,
             }}
             onSuccess={handleApplicationSuccess}
@@ -571,21 +573,21 @@ function JobCard({
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center overflow-hidden">
-            <img
-              src={job.companyLogo}
-              alt={job.company}
-              className="w-full h-full object-cover"
-            />
+                  <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center overflow-hidden">
+              <img
+                src={job.clientAvatar}
+                alt={job.clientName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">
+                {job.title}
+              </h3>
+              <p className="text-gray-400">{job.clientName}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">
-              {job.title}
-            </h3>
-            <p className="text-gray-400">{job.company}</p>
-          </div>
-        </div>
 
         <div className="flex items-center space-x-2">
           {job.featured && (
@@ -641,35 +643,35 @@ function JobCard({
         <div className="flex items-center space-x-2 text-gray-400">
           <DollarSign className="w-4 h-4" />
           <span>
-            ${job.budget.min.toLocaleString()} - $
-            {job.budget.max.toLocaleString()}
+            ${job.budgetMin.toLocaleString()} - $
+            {job.budgetMax.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
           <Users className="w-4 h-4" />
-          <span>{job.proposals} proposals</span>
+          <span>{job.applicationsCount} proposals</span>
         </div>
       </div>
 
       {/* Interaction Buttons */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4 text-sm text-gray-400">
-          <span>Posted {formatDate(job.postedAt)}</span>
+          <span>Posted {formatDate(job.$createdAt)}</span>
           <span>•</span>
-          <span>Deadline {formatDate(job.deadline)}</span>
+          <span>Deadline {formatDate(job.deadline || '')}</span>
           <div className="flex items-center space-x-1">
             <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span>{job.rating}</span>
+            <span>{job.rating || 4.5}</span>
           </div>
         </div>
 
-        <InteractionButtons 
-          targetId={job.id}
-          targetType="job"
-          showLike={true}
-          showFavorite={true}
-          showViews={false}
-          showShare={false}
+        <BookmarkButton
+          jobId={job.$id}
+          jobTitle={job.title}
+          jobBudget={`$${job.budgetMin.toLocaleString()} - $${job.budgetMax.toLocaleString()}`}
+          jobCategory={job.category}
+          clientName={job.clientName}
+          clientAvatar={job.clientAvatar}
         />
       </div>
 
@@ -677,7 +679,7 @@ function JobCard({
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
         <div className="flex items-center space-x-2">
           <Link
-            href={`/en/jobs/${job.id}`}
+            href={`/en/jobs/${job.$id}`}
             className="btn-secondary flex items-center space-x-2"
           >
             <Eye className="w-4 h-4" />

@@ -4,7 +4,7 @@ import { Client, Databases, ID, Query } from 'node-appwrite';
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-  .setKey(process.env.APPWRITE_API_KEY!);
+  .setKey('standard_795030ac0f195560203a1f5c28de7d52fd1adfa9b865f7be95ba0e4539ec8c398b59bd918403fbbf2b263a2b19d0d3085e1f2ff2aee7aff5124022b96027fca66eb3801848e971750804e99036a7022af2a181dd81be8f1485009203142bc0a7083b134a94623176659b14bde95e214470ea4f3d4b95ae9418752617d8da70f4');
 
 const databases = new Databases(client);
 
@@ -50,7 +50,7 @@ export async function createCommentsCollection() {
         'data',
         2000,
         true,
-        false
+        'required'
       );
       console.log('Created attribute: data');
     } catch (attrError: any) {

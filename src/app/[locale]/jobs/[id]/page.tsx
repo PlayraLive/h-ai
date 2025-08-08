@@ -927,6 +927,8 @@ export default function JobDetailsPage() {
           {/* Applications Section - Show for clients or if there are applications */}
           {user && job && (user.userType === "client" || job.proposals > 0) && (
             <div className="mt-8">
+
+              
               <JobApplicationsSection
                 jobId={job.id}
                 jobTitle={job.title}

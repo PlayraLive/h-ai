@@ -28,7 +28,7 @@ export class JobService {
       // attachments теперь должен быть массивом строк
       const attachmentsArray = Array.isArray(jobData.attachments)
         ? jobData.attachments
-        : (typeof jobData.attachments === 'string' && jobData.attachments.length > 0
+        : (typeof jobData.attachments === 'string' && (jobData.attachments as string).length > 0
             ? [jobData.attachments]
             : []);
 
@@ -104,7 +104,7 @@ export class JobService {
         // Не останавливаем создание job из-за ошибки обновления пользователя
       }
 
-      return { success: true, job: job as Job };
+      return { success: true, job: job as unknown as Job };
     } catch (error: any) {
       console.error('Error creating job:', error);
       return { success: false, error: error.message };
@@ -119,7 +119,7 @@ export class JobService {
         JOBS_COLLECTION_ID,
         jobId
       );
-      return { success: true, job: job as Job };
+      return { success: true, job: job as unknown as Job };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -179,7 +179,7 @@ export class JobService {
 
       return {
         success: true,
-        jobs: jobs.documents as Job[],
+        jobs: jobs.documents as unknown as Job[],
         total: jobs.total
       };
     } catch (error: any) {
@@ -199,7 +199,7 @@ export class JobService {
         ]
       );
 
-      return { success: true, jobs: jobs.documents as Job[] };
+      return { success: true, jobs: jobs.documents as unknown as Job[] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -214,7 +214,7 @@ export class JobService {
         jobId,
         data
       );
-      return { success: true, job: job as Job };
+      return { success: true, job: job as unknown as Job };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -263,7 +263,7 @@ export class JobService {
         });
       }
 
-      return { success: true, proposal: proposal as Proposal };
+      return { success: true, proposal: proposal as unknown as Proposal };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -281,7 +281,7 @@ export class JobService {
         ]
       );
 
-      return { success: true, proposals: proposals.documents as Proposal[] };
+      return { success: true, proposals: proposals.documents as unknown as Proposal[] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -299,7 +299,7 @@ export class JobService {
         ]
       );
 
-      return { success: true, proposals: proposals.documents as Proposal[] };
+      return { success: true, proposals: proposals.documents as unknown as Proposal[] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -396,7 +396,7 @@ export class JobService {
         ]
       );
 
-      return { success: true, jobs: jobs.documents as Job[] };
+      return { success: true, jobs: jobs.documents as unknown as Job[] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -420,7 +420,7 @@ export class JobService {
         queries
       );
 
-      return { success: true, jobs: jobs.documents as Job[] };
+      return { success: true, jobs: jobs.documents as unknown as Job[] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -499,7 +499,7 @@ export class JobService {
               userId: freelancerId,
               title: '🎯 Новое приглашение на работу!',
               message: `Вас пригласили на проект "${job.job.title}". Бюджет: $${job.job.budgetMin} - $${job.job.budgetMax}`,
-              type: 'job_invitation',
+              type: 'job',
               channels: ['push', 'email'],
               priority: 'high',
               actionUrl: `/jobs/${jobId}`,
@@ -550,14 +550,12 @@ export class JobService {
               // Отправляем карточку job через сервис сообщений
               try {
                 const messagesService = new (await import('@/lib/messages-service')).MessagesService();
-                await messagesService.sendMessage({
-                  conversationId: conversation.$id,
-                  senderId: clientId,
-                  receiverId: freelancerId,
-                  content: `Приглашение на работу: ${job.job.title}`,
-                  messageType: 'job_card',
-                  jobCardData: jobCardData
-                });
+                await messagesService.sendMessage(
+                  conversation.$id,
+                  clientId,
+                  `Приглашение на работу: ${job.job.title}`,
+                  'job_card'
+                );
                 
                 console.log(`✅ Создана карточка job в сообщениях для ${freelancerId}`);
               } catch (cardError) {

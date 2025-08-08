@@ -1309,17 +1309,17 @@ export default function EnhancedMessagesPage() {
                           message.senderId === user?.$id ? "justify-end" : "justify-start"
                         )}
                       >
-                                                  <div className={cn(
-                            "max-w-xs lg:max-w-md xl:max-w-lg",
-                            message.senderId === user?.$id ? "order-2" : "order-1"
+                        <div className={cn(
+                          "max-w-xs lg:max-w-md xl:max-w-lg",
+                          message.senderId === user?.$id ? "order-2" : "order-1"
+                        )}>
+                          <div className={cn(
+                            "rounded-2xl px-4 py-3 break-words",
+                            message.senderId === user?.$id
+                              ? "bg-purple-600 text-white rounded-br-sm"
+                              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
                           )}>
-                            <div className={cn(
-                              "rounded-2xl px-4 py-3 break-words",
-                              message.senderId === user?.$id
-                                ? "bg-purple-600 text-white rounded-br-sm"
-                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
-                            )}>
-                              <p className="text-sm leading-relaxed">{message.content}</p>
+                            <p className="text-sm leading-relaxed">{message.content}</p>
                               
                               {/* Attachments */}
                               {message.attachments && message.attachments.length > 0 && (
@@ -1339,14 +1339,14 @@ export default function EnhancedMessagesPage() {
                                   ))}
                                 </div>
                               )}
-                            </div>
-                            <div className={cn(
-                              "flex items-center mt-1 space-x-1 text-xs text-gray-500 dark:text-gray-400",
-                              message.senderId === user?.$id ? "justify-end" : "justify-start"
-                            )}>
-                              <span>{formatTime(message.timestamp)}</span>
-                              {message.senderId === user?.$id && (
-                                <MessageStatusIcon status={message.status} />
+                          </div>
+                          <div className={cn(
+                            "flex items-center mt-1 space-x-1 text-xs text-gray-500 dark:text-gray-400",
+                            message.senderId === user?.$id ? "justify-end" : "justify-start"
+                          )}>
+                            <span>{formatTime(message.timestamp)}</span>
+                            {message.senderId === user?.$id && (
+                              <MessageStatusIcon status={message.status} />
                 )}
               </div>
             </div>
@@ -1406,7 +1406,7 @@ export default function EnhancedMessagesPage() {
                         className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
                       >
                         <Paperclip className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </button>
+                  </button>
                       <div className="flex-1">
                         <textarea
                           value={newMessage}
@@ -1421,7 +1421,7 @@ export default function EnhancedMessagesPage() {
                           rows={1}
                           className="w-full px-4 py-3 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                         />
-                      </div>
+                </div>
                       <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
                         <Smile className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                       </button>
@@ -1437,8 +1437,8 @@ export default function EnhancedMessagesPage() {
                       >
                         <Send className="w-5 h-5" />
                       </button>
-                    </div>
-                  </div>
+              </div>
+              </div>
                 </>
               )}
             </>

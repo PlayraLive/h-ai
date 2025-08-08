@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
   Filter,
@@ -28,6 +28,8 @@ import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 import UserJobsModal from "@/components/UserJobsModal";
 import FullScreenVideoAvatar from "@/components/FullScreenVideoAvatar";
+import { UsersService } from "@/lib/appwrite/users";
+import { UserProfileService } from "@/lib/user-profile-service";
 
 interface Freelancer {
   id: string;
@@ -48,6 +50,8 @@ interface Freelancer {
   topRated: boolean;
   category: string;
   portfolio: string[];
+  bio?: string;
+  userType: string;
 }
 
 export default function FreelancersPage({
@@ -95,6 +99,7 @@ export default function FreelancersPage({
       topRated: true,
       category: "ai_design",
       portfolio: ["/api/placeholder/300/200", "/api/placeholder/300/200"],
+      userType: "freelancer",
     },
     {
       id: "freelancer-sarah-002",
@@ -127,6 +132,7 @@ export default function FreelancersPage({
         "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=300",
         "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300",
       ],
+      userType: "freelancer",
     },
     {
       id: "freelancer-mike-003",
@@ -159,16 +165,77 @@ export default function FreelancersPage({
         "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300",
         "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300",
       ],
+      userType: "freelancer",
     },
   ];
 
   useEffect(() => {
-    // Симуляция загрузки данных
+    const loadFreelancers = async () => {
     setLoading(true);
-    setTimeout(() => {
+      try {
+        // Загружаем реальных фрилансеров из базы данных
+        const response = await UsersService.getFreelancers({
+          limit: 50,
+          search: searchQuery,
+        });
+
+        console.log("UsersService response:", response); // Debug
+        console.log("All users from response:", response.freelancers); // Debug
+
+        // Преобразуем данные в формат Freelancer
+        const realFreelancers: Freelancer[] = response.freelancers
+          .filter((user) => {
+            console.log("Checking user:", user); // Debug
+            return user.$id && user.userType === "freelancer";
+          })
+          .map((user) => {
+            console.log("Processing freelancer:", user); // Debug
+            return {
+              id: user.$id!,
+              name: user.name || user.email?.split('@')[0] || 'User',
+              title: user.bio || "AI Specialist",
+              avatar: user.avatar || "",
+              rating: user.rating || 4.5, // Используем реальный рейтинг или дефолтный
+              reviewCount: user.reviewsCount || 0, // Используем реальное количество отзывов или дефолтное
+              hourlyRate: user.hourlyRate || 50, // Используем реальную почасовую ставку или дефолтную
+              completedJobs: user.jobsCompleted || 0, // Используем реальное количество проектов или дефолтное
+              responseTime: "24 hours", // Дефолтное значение
+              location: user.location || "Remote",
+              skills: user.skills || [],
+              description: user.bio || "",
+              languages: Array.isArray(user.languages) && user.languages.every(lang => typeof lang === 'string') 
+                ? user.languages as string[] 
+                : ["English"],
+              availability: (user.availability as "available" | "busy" | "offline") || "available", // Используем реальный статус или дефолтный
+              verified: user.verified || false, // Используем реальный статус верификации или дефолтный
+              topRated: user.topRated || false, // Используем реальный статус топ-рейтинга или дефолтный
+              category: "ai_development", // Дефолтное значение
+              portfolio: [],
+              bio: user.bio,
+              userType: user.userType || "freelancer",
+            };
+          });
+
+        console.log("Real freelancers found:", realFreelancers.length); // Debug
+
+        // Если нет реальных фрилансеров, используем mock данные
+        if (realFreelancers.length === 0) {
+          console.log("No real freelancers found, using mock data");
+          setFreelancers(mockFreelancers);
+        } else {
+          console.log("Using real freelancers:", realFreelancers); // Debug
+          setFreelancers(realFreelancers);
+        }
+      } catch (error) {
+        console.error("Error loading freelancers:", error);
+        // Fallback к mock данным
       setFreelancers(mockFreelancers);
+      } finally {
       setLoading(false);
-    }, 1500);
+      }
+    };
+
+    loadFreelancers();
 
     // Получение параметров из URL
     const category = searchParams.get("category");
@@ -180,7 +247,7 @@ export default function FreelancersPage({
     if (search) {
       setSearchQuery(search);
     }
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
   const handleFavoriteFreelancer = (freelancerId: string) => {
     const newFavorites = new Set(favoriteFreelancers);
@@ -439,6 +506,7 @@ function FreelancerCard({
   onHire: (freelancer: Freelancer) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
@@ -466,6 +534,13 @@ function FreelancerCard({
     }
   };
 
+  const handleCardClick = () => {
+    // Получаем текущую локаль из URL
+    const currentLocale = window.location.pathname.split('/')[1] || 'en';
+
+    router.push(`/${currentLocale}/profile/${freelancer.id}`);
+  };
+
   return (
     <div
       className={cn(
@@ -475,6 +550,7 @@ function FreelancerCard({
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       {/* Video Avatar Background */}
       <div className="absolute inset-0">
@@ -591,10 +667,20 @@ function FreelancerCard({
       </div>
 
           {/* Actions */}
-          <div className="flex space-x-3">
+          <div className="flex space-x-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
+              className="flex-1 bg-purple-500/80 backdrop-blur-sm hover:bg-purple-500 text-white px-3 py-2 rounded-lg transition-all border border-purple-400/30 text-center flex items-center justify-center space-x-2 text-sm"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Profile</span>
+            </button>
             <Link
               href={`/en/messages?freelancer=${freelancer.id}`}
-              className="flex-1 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all border border-white/20 text-center flex items-center justify-center space-x-2"
+              className="flex-1 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-3 py-2 rounded-lg transition-all border border-white/20 text-center flex items-center justify-center space-x-2 text-sm"
               onClick={(e) => e.stopPropagation()}
             >
               <MessageCircle className="w-4 h-4" />
@@ -605,7 +691,7 @@ function FreelancerCard({
                 e.stopPropagation();
                 onHire(freelancer);
               }}
-              className="flex-1 bg-green-500/80 backdrop-blur-sm hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-all border border-green-400/30 text-center flex items-center justify-center space-x-2"
+              className="flex-1 bg-green-500/80 backdrop-blur-sm hover:bg-green-500 text-white px-3 py-2 rounded-lg transition-all border border-green-400/30 text-center flex items-center justify-center space-x-2 text-sm"
             >
               <Briefcase className="w-4 h-4" />
               <span>Hire</span>

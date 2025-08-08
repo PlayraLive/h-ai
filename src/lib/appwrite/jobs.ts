@@ -387,16 +387,28 @@ export class ApplicationsService {
     clientResponse?: string
   ): Promise<ApplicationDocument> {
     try {
-      const updates: any = { status };
-      if (clientResponse) {
-        updates.clientResponse = clientResponse;
+      const response = await fetch(`/api/applications/${applicationId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          clientResponse,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update application status');
       }
 
-      const application = await databases.updateDocument(
+      const result = await response.json();
+      
+      // Get updated application
+      const application = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.APPLICATIONS,
-        applicationId,
-        updates
+        applicationId
       );
 
       return application as unknown as ApplicationDocument;

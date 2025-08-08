@@ -94,10 +94,16 @@ export class UsersService {
     offset?: number;
   }): Promise<{ freelancers: UserDocument[]; total: number }> {
     try {
+      console.log("Getting freelancers with filters:", filters); // Debug
+      
       const queries = [
         Query.equal("userType", "freelancer"),
-        Query.orderDesc("rating"),
       ];
+      
+      console.log("Queries:", queries); // Debug
+      
+      // Remove rating query for now to avoid schema issues
+      // Query.orderDesc("rating"),
 
       // Add filters
       if (filters?.skills && filters.skills.length > 0) {
@@ -138,11 +144,18 @@ export class UsersService {
         queries.push(Query.offset(filters.offset));
       }
 
+      console.log('Executing query with filters:', filters);
+      console.log('Query array:', queries);
+      
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.USERS,
         queries,
       );
+
+      console.log('Response from Appwrite:', response);
+      console.log('Total documents found:', response.total);
+      console.log('Documents:', response.documents);
 
       return {
         freelancers: response.documents as UserDocument[],
