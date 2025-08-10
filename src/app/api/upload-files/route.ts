@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client, Storage, ID, InputFile } from 'node-appwrite';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,30 +14,38 @@ export async function POST(request: NextRequest) {
 
     const uploadedUrls: string[] = [];
 
-    // Initialize node-appwrite client with API key (server-side)
     const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
     const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!;
     const apiKey = process.env.APPWRITE_API_KEY || process.env.NEXT_APPWRITE_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Server storage is not configured (missing APPWRITE_API_KEY)' }, { status: 500 });
+    if (!endpoint || !projectId || !apiKey) {
+      return NextResponse.json({ error: 'Appwrite env is not configured' }, { status: 500 });
     }
-    const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey);
-    const storage = new Storage(client);
     const bucketId = 'documents';
 
     for (const file of files) {
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const inputFile = InputFile.fromBuffer(buffer, file.name);
-        const created = await storage.createFile(bucketId, ID.unique(), inputFile);
-        // Build a public view URL (assumes bucket/file has read permissions)
-        const url = new URL(`${endpoint}/storage/buckets/${bucketId}/files/${created.$id}/view`);
-        url.searchParams.set('project', projectId);
-        uploadedUrls.push(url.toString());
+        const form = new FormData();
+        form.append('fileId', 'unique()');
+        form.append('file', file, file.name);
+
+        const res = await fetch(`${endpoint}/storage/buckets/${bucketId}/files`, {
+          method: 'POST',
+          headers: {
+            'X-Appwrite-Project': projectId,
+            'X-Appwrite-Key': apiKey
+          },
+          body: form
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || 'Upload failed');
+        }
+        const created = await res.json();
+        const url = `${endpoint}/storage/buckets/${bucketId}/files/${created.$id}/view?project=${projectId}`;
+        uploadedUrls.push(url);
       } catch (uploadError) {
         console.error('Error uploading file:', uploadError);
-        // Continue with other files even if one fails
       }
     }
 

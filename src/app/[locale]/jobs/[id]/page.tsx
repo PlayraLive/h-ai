@@ -478,22 +478,18 @@ export default function JobDetailsPage() {
                 </button>
                 <ShareButton
                   data={{
-                    url:
-                      typeof window !== "undefined" ? window.location.href : "",
-                    title: `${job.title} - Job Opening`,
-                    description: `Check out this job opportunity: ${job.title} at ${job.company}`,
+                    url: typeof window !== 'undefined' ? window.location.href : '',
+                    title: `${job.title} - ${job.company}`,
+                    description: job.description?.slice(0, 140) || undefined,
+                    hashtags: ['jobs','freelance', job.category || 'work']
                   }}
-                  platforms={["twitter", "linkedin"]}
+                  platforms={["twitter","linkedin"]}
                   size="small"
                   showLabels={false}
+                  dropdown
                   className="p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl transition-all duration-300 backdrop-blur-sm border border-gray-700/30"
                 />
-                <button
-                  className="p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl transition-all duration-300 backdrop-blur-sm border border-gray-700/30 group"
-                  title="Report job"
-                >
-                  <Flag className="w-5 h-5 text-gray-300 group-hover:text-red-400" />
-                </button>
+                {/* Removed flag and extra icons as requested */}
               </div>
             </div>
           </div>

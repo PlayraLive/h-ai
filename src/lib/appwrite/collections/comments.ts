@@ -31,6 +31,8 @@ export interface CommentDocument {
   dislikes: number;
   created_at: string;
   updated_at: string;
+  // JSON string array of URLs
+  attachments?: string;
 }
 
 // Создание коллекции комментариев
@@ -74,6 +76,7 @@ export async function createCommentsCollection() {
     await createInteger('dislikes', true, 0);
     await createString('created_at', 64, true);
     await createString('updated_at', 64, true);
+    await createString('attachments', 4096, false);
 
     console.log('Comments collection and attributes ensured');
     return true;

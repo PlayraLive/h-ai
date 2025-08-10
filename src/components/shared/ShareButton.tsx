@@ -119,7 +119,9 @@ export default function ShareButton({
   showLabels = true,
   showCopyLink = true,
   onShare,
-  className = ''
+  className = '',
+  // Force dropdown popup regardless of platforms count
+  dropdown = false
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -188,7 +190,7 @@ export default function ShareButton({
   };
 
   // Single share button that opens dropdown
-  if (layout === 'horizontal' && selectedPlatforms.length > 3) {
+  if (dropdown || (layout === 'horizontal' && selectedPlatforms.length > 3)) {
     return (
       <div className={`relative ${className}`}>
         <button
