@@ -320,6 +320,20 @@ export default function JobTimeline({
                 Завершить контракт
               </button>
             )}
+
+            {isClient && job.status === 'in_progress' && (
+              <button
+                onClick={() => {
+                  if (onSendMessage) {
+                    const amount = job.budgetMax || job.budget || 0;
+                    onSendMessage(`🧾 Счет к оплате: ${formatCurrency(amount)}. Пожалуйста, подтвердите оплату для продолжения работ.`, 'payment');
+                  }
+                }}
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700"
+              >
+                Оплатить
+              </button>
+            )}
           </div>
         </div>
 

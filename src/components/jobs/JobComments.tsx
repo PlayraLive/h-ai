@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { UsersService } from '@/lib/appwrite/users';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import {
@@ -13,7 +14,8 @@ import {
   Reply,
   MoreVertical,
   Edit,
-  Trash2
+  Trash2,
+  Star
 } from 'lucide-react';
 
 interface Comment {
@@ -22,6 +24,7 @@ interface Comment {
   userId: string;
   userName: string;
   userAvatar?: string;
+  userRating?: number;
   content: string;
   type: 'suggestion' | 'comment' | 'feedback';
   parentId?: string;
@@ -45,6 +48,8 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [deletingComment, setDeletingComment] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
 
   // Load comments
   useEffect(() => {
@@ -58,7 +63,20 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
       const data = await response.json();
       
       if (data.success) {
-        setComments(data.comments);
+        const base: Comment[] = data.comments;
+        // Enrich with user rating
+        const uniqueUserIds = Array.from(new Set(base.map((c: Comment) => c.userId)));
+        const idToRating: Record<string, number> = {};
+        await Promise.all(uniqueUserIds.map(async (uid) => {
+          try {
+            const profile = await UsersService.getUserProfile(uid);
+            if (profile && typeof profile.rating === 'number') {
+              idToRating[uid] = profile.rating;
+            }
+          } catch {}
+        }));
+        const enriched = base.map((c) => ({ ...c, userRating: idToRating[c.userId] }));
+        setComments(enriched);
       } else {
         // Fallback to mock data if API fails
         setComments([
@@ -210,6 +228,28 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
     }
   };
 
+  const handleEditComment = async (commentId: string) => {
+    if (!user || !editingContent.trim()) return;
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/comments?commentId=${commentId}&userId=${user.$id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editingContent.trim() })
+      });
+      const result = await response.json();
+      if (result.success) {
+        setComments(prev => prev.map(c => c.$id === commentId ? { ...c, content: editingContent, $updatedAt: new Date().toISOString() } : c));
+        setEditingCommentId(null);
+        setEditingContent('');
+      } else {
+        throw new Error(result.error || 'Failed to update comment');
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      alert('Не удалось обновить комментарий. Попробуйте еще раз.');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
       day: 'numeric',
@@ -243,13 +283,19 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
                   </span>
                 )}
               </div>
-              <div>
+                <div>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {comment.userName}
                 </p>
                 <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                   <Clock className="w-3 h-3" />
                   <span>{formatDate(comment.$createdAt)}</span>
+                    {typeof comment.userRating === 'number' && (
+                      <span className="flex items-center space-x-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span>{comment.userRating.toFixed(1)}</span>
+                      </span>
+                    )}
                   {comment.type === 'suggestion' && (
                     <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-xs">
                       Предложение
@@ -265,6 +311,13 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
                 </button>
                 <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                   <button
+                    onClick={() => { setEditingCommentId(comment.$id); setEditingContent(comment.content); }}
+                    className="flex items-center space-x-2 w-full px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span>Редактировать</span>
+                  </button>
+                  <button
                     onClick={() => handleDeleteComment(comment.$id)}
                     disabled={deletingComment === comment.$id}
                     className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -279,9 +332,24 @@ export default function JobComments({ jobId, className = '' }: JobCommentsProps)
             )}
           </div>
           
-          <p className="text-gray-900 dark:text-white text-sm leading-relaxed">
-            {comment.content}
-          </p>
+          {editingCommentId === comment.$id ? (
+            <div className="space-y-2">
+              <textarea
+                value={editingContent}
+                onChange={(e) => setEditingContent(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 bg-gray-100/50 dark:bg-gray-700/50 border border-gray-200/50 dark:border-gray-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+              />
+              <div className="flex items-center justify-end space-x-2">
+                <button onClick={() => { setEditingCommentId(null); setEditingContent(''); }} className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Отмена</button>
+                <button onClick={() => handleEditComment(comment.$id)} disabled={!editingContent.trim()} className={cn("px-3 py-1 text-sm rounded-lg transition-all", editingContent.trim() ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-gray-200/50 dark:bg-gray-700/50 text-gray-400 cursor-not-allowed")}>Сохранить</button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-900 dark:text-white text-sm leading-relaxed">
+              {comment.content}
+            </p>
+          )}
           
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30">
             <div className="flex items-center space-x-4">

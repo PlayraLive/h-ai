@@ -1,12 +1,16 @@
 import { Client, Databases, ID, Query } from 'node-appwrite';
 
-// Инициализация Appwrite клиента для серверной части
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-  .setKey('standard_795030ac0f195560203a1f5c28de7d52fd1adfa9b865f7be95ba0e4539ec8c398b59bd918403fbbf2b263a2b19d0d3085e1f2ff2aee7aff5124022b96027fca66eb3801848e971750804e99036a7022af2a181dd81be8f1485009203142bc0a7083b134a94623176659b14bde95e214470ea4f3d4b95ae9418752617d8da70f4');
-
-const databases = new Databases(client);
+// Инициализация Appwrite клиента для серверной части (через API Key)
+function getServerDatabases() {
+  const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
+  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!;
+  const apiKey = process.env.APPWRITE_API_KEY || process.env.NEXT_APPWRITE_API_KEY;
+  if (!endpoint || !projectId || !apiKey) {
+    throw new Error('Appwrite server credentials are not configured');
+  }
+  const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey);
+  return new Databases(client);
+}
 
 export const COMMENTS_COLLECTION_ID = 'comments';
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
@@ -32,42 +36,48 @@ export interface CommentDocument {
 // Создание коллекции комментариев
 export async function createCommentsCollection() {
   try {
-    // Создаем коллекцию
-    await databases.createCollection(
-      DATABASE_ID,
-      COMMENTS_COLLECTION_ID,
-      'Comments'
-    );
-
-    // Ждем немного перед созданием атрибута
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Создаем один атрибут
+    const databases = getServerDatabases();
+    // Создаем коллекцию (идемпотентно)
     try {
-      await databases.createStringAttribute(
-        DATABASE_ID,
-        COMMENTS_COLLECTION_ID,
-        'data',
-        2000,
-        true,
-        'required'
-      );
-      console.log('Created attribute: data');
-    } catch (attrError: any) {
-      if (attrError.code === 409) {
-        console.log('Attribute data already exists');
-      } else {
-        console.error('Error creating attribute data:', attrError);
-      }
+      await databases.createCollection(DATABASE_ID, COMMENTS_COLLECTION_ID, 'Comments');
+    } catch (e: any) {
+      if (e.code !== 409) throw e;
     }
 
-    console.log('Comments collection created successfully');
+    // Ждем немного перед созданием атрибутов
+    await new Promise((r) => setTimeout(r, 1000));
+
+    // Создание необходимых атрибутов (идемпотентно)
+    const createString = async (key: string, size = 255, required = false) => {
+      try {
+        await databases.createStringAttribute(DATABASE_ID, COMMENTS_COLLECTION_ID, key, size, required);
+      } catch (e: any) {
+        if (e.code !== 409) throw e;
+      }
+    };
+    const createInteger = async (key: string, required = false, min?: number, max?: number) => {
+      try {
+        await databases.createIntegerAttribute(DATABASE_ID, COMMENTS_COLLECTION_ID, key, required, min, max);
+      } catch (e: any) {
+        if (e.code !== 409) throw e;
+      }
+    };
+
+    await createString('job_id', 128, true);
+    await createString('user_id', 128, true);
+    await createString('user_name', 150, true);
+    await createString('user_avatar', 512, false);
+    await createString('content', 2000, true);
+    await createString('type', 20, true);
+    await createString('parent_id', 128, false);
+    await createInteger('likes', true, 0);
+    await createInteger('dislikes', true, 0);
+    await createString('created_at', 64, true);
+    await createString('updated_at', 64, true);
+
+    console.log('Comments collection and attributes ensured');
     return true;
   } catch (error: any) {
-    if (error.code === 409) {
-      console.log('Comments collection already exists');
-      return true;
-    }
     console.error('Error creating comments collection:', error);
     return false;
   }
@@ -76,26 +86,17 @@ export async function createCommentsCollection() {
 // Получить комментарии для джобса
 export async function getCommentsByJobId(jobId: string, limit: number = 50, offset: number = 0) {
   try {
-    // Сначала получаем все комментарии без фильтрации
+    const databases = getServerDatabases();
     const response = await databases.listDocuments(
       DATABASE_ID,
       COMMENTS_COLLECTION_ID,
-      [
-        Query.orderDesc('$createdAt'),
-        Query.limit(limit),
-        Query.offset(offset)
-      ]
-    );
-
-    // Фильтруем на стороне сервера
-    const filteredComments = response.documents.filter((comment: any) => 
-      comment.job_id === jobId
+      [Query.equal('job_id', jobId), Query.orderDesc('$createdAt'), Query.limit(limit), Query.offset(offset)]
     );
 
     return {
       success: true,
-      comments: filteredComments,
-      total: filteredComments.length
+      comments: response.documents,
+      total: response.total
     };
   } catch (error: any) {
     console.error('Error fetching comments:', error);
@@ -111,20 +112,19 @@ export async function getCommentsByJobId(jobId: string, limit: number = 50, offs
 // Создать новый комментарий
 export async function createComment(commentData: Omit<CommentDocument, '$id' | '$createdAt' | '$updatedAt'>) {
   try {
-    // Создаем документ с данными в JSON формате
+    const databases = getServerDatabases();
+    const now = new Date().toISOString();
+    const payload: CommentDocument = {
+      ...commentData,
+      created_at: now,
+      updated_at: now,
+    } as CommentDocument;
+
     const comment = await databases.createDocument(
       DATABASE_ID,
       COMMENTS_COLLECTION_ID,
       ID.unique(),
-      {
-        data: JSON.stringify({
-          content: commentData.content,
-          author: commentData.user_name,
-          type: commentData.type,
-          jobId: commentData.job_id,
-          timestamp: new Date().toISOString()
-        })
-      }
+      payload
     );
 
     return {
@@ -143,6 +143,7 @@ export async function createComment(commentData: Omit<CommentDocument, '$id' | '
 // Удалить комментарий
 export async function deleteComment(commentId: string, userId: string) {
   try {
+    const databases = getServerDatabases();
     // Получаем комментарий для проверки владельца
     const comment = await databases.getDocument(
       DATABASE_ID,
@@ -175,5 +176,30 @@ export async function deleteComment(commentId: string, userId: string) {
       success: false,
       error: error.message
     };
+  }
+}
+
+// Обновить комментарий (редактирование)
+export async function updateComment(
+  commentId: string,
+  userId: string,
+  content: string
+) {
+  try {
+    const databases = getServerDatabases();
+    const existing = await databases.getDocument(DATABASE_ID, COMMENTS_COLLECTION_ID, commentId);
+    if (existing.user_id !== userId) {
+      return { success: false, error: 'Unauthorized to edit this comment' };
+    }
+    const updated = await databases.updateDocument(
+      DATABASE_ID,
+      COMMENTS_COLLECTION_ID,
+      commentId,
+      { content, updated_at: new Date().toISOString() }
+    );
+    return { success: true, comment: updated };
+  } catch (error: any) {
+    console.error('Error updating comment:', error);
+    return { success: false, error: error.message };
   }
 }
