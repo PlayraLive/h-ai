@@ -312,7 +312,21 @@ export default function JobTimeline({
                     setSelectedFreelancer(accepted);
                     setShowCompletionModal(true);
                   } else {
-                    alert('Нет принятого исполнителя. Вы можете закрыть джобс без завершения контракта (отмена).');
+                    // Быстрое завершение без найма
+                    if (confirm('Завершить проект без найма исполнителя?')) {
+                      fetch(`/api/jobs/${job.$id}/quick-complete`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ clientId: user?.$id, title: job.title })
+                      }).then(async (res) => {
+                        if (res.ok) {
+                          onUpdateJob?.(job.$id, { status: 'completed' });
+                          onSendMessage?.('✅ Проект завершён без найма.', 'status');
+                        } else {
+                          alert('Не удалось завершить проект');
+                        }
+                      }).catch(() => alert('Ошибка завершения'));
+                    }
                   }
                 }}
                 className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700"
