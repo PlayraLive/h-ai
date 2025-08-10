@@ -1620,14 +1620,14 @@ export default function DashboardPage() {
                         {userType === "freelancer" ? (
                           <>
                             <Link
-                              href="/en/profile"
+                              href={`/${window.location.pathname.split('/')[1] || 'en'}/profile/${user?.$id || ''}`}
                               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 text-sm"
                             >
                               <User className="w-4 h-4" />
                               Мой профиль фрилансера
                             </Link>
                             <Link
-                              href="/en/profile"
+                              href={`/${window.location.pathname.split('/')[1] || 'en'}/profile/${user?.$id || ''}`}
                               className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 text-sm"
                             >
                               <Eye className="w-4 h-4" />
@@ -1636,7 +1636,7 @@ export default function DashboardPage() {
                           </>
                         ) : (
                           <Link
-                            href="/en/client-profile"
+                            href={`/${window.location.pathname.split('/')[1] || 'en'}/client-profile`}
                             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 text-sm"
                           >
                             <Building2 className="w-4 h-4" />

@@ -311,6 +311,7 @@ export default function EnhancedMessagesPage() {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [openMenuMessageId, setOpenMenuMessageId] = useState<string | null>(null);
   
   // UI State
   const [searchQuery, setSearchQuery] = useState('');
@@ -319,12 +320,56 @@ export default function EnhancedMessagesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   // Load initial data
   useEffect(() => {
     if (isAuthenticated && user) {
       loadInitialData();
     }
   }, [isAuthenticated, user]);
+
+  // Preselect by query params (?conversation=..., ?job=...)
+  useEffect(() => {
+    // conversation param takes priority
+    const convId = searchParams.get('conversation');
+    const jobIdParam = searchParams.get('job');
+    if (convId) {
+      // open existing conversation directly
+      setSelectedConversation(convId);
+      loadConversationMessages(convId);
+      setActiveView('conversations');
+      return;
+    }
+
+    if (jobIdParam) {
+      // ensure jobs are loaded or fetch specific job and open its timeline
+      const openJobTimeline = async () => {
+        try {
+          let job = jobCards.find(j => j.$id === jobIdParam);
+          if (!job) {
+            const jobDoc = await JobsService.getJob(jobIdParam);
+            if (jobDoc) {
+              // Normalize minimal shape used by list
+              setJobCards(prev => {
+                const exists = prev.some(j => j.$id === jobDoc.$id);
+                return exists ? prev : [jobDoc, ...prev];
+              });
+              job = jobDoc as any;
+            }
+          }
+          if (job) {
+            setActiveView('jobs');
+            handleSelectJob(jobIdParam);
+            setViewMode('order_timeline');
+          }
+        } catch (e) {
+          // ignore; user may not have access
+        }
+      };
+      openJobTimeline();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, jobCards.length]);
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -468,6 +513,36 @@ export default function EnhancedMessagesPage() {
   const handleFilesSelected = useCallback((files: File[]) => {
     setAttachedFiles(prev => [...prev, ...files]);
     setShowFileUpload(false);
+  }, []);
+
+  // Message actions: edit/delete
+  const handleEditMessage = useCallback(async (messageId: string) => {
+    try {
+      const target = messages.find(m => m.$id === messageId);
+      if (!target) return;
+      const input = window.prompt('Редактировать сообщение', target.content || '');
+      if (input == null) return;
+      const newContent = input.trim();
+      if (!newContent || newContent === target.content) return;
+      const updated = await EnhancedMessagingService.editMessage(messageId, newContent);
+      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: updated.content, status: 'sent' } : m));
+    } catch (e) {
+      console.error('❌ Error editing message:', e);
+    } finally {
+      setOpenMenuMessageId(null);
+    }
+  }, [messages]);
+
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    try {
+      if (!window.confirm('Удалить сообщение?')) return;
+      await EnhancedMessagingService.deleteMessage(messageId);
+      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: 'Сообщение удалено', status: 'sent' } : m));
+    } catch (e) {
+      console.error('❌ Error deleting message:', e);
+    } finally {
+      setOpenMenuMessageId(null);
+    }
   }, []);
 
   // Send message
@@ -1305,7 +1380,7 @@ export default function EnhancedMessagesPage() {
                       <div
                         key={message.$id}
                         className={cn(
-                          "flex",
+                          "flex group relative",
                           message.senderId === user?.$id ? "justify-end" : "justify-start"
                         )}
                       >
@@ -1319,6 +1394,48 @@ export default function EnhancedMessagesPage() {
                               ? "bg-purple-600 text-white rounded-br-sm"
                               : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 rounded-bl-sm"
                           )}>
+                            {message.senderId === user?.$id && (
+                              <>
+                                <button
+                                  onClick={() => setOpenMenuMessageId(prev => prev === message.$id ? null : message.$id)}
+                                  className={cn(
+                                    "absolute",
+                                    message.senderId === user?.$id ? "right-2 top-2" : "left-2 top-2",
+                                    "p-1 rounded-md bg-black/5 dark:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  )}
+                                  aria-label="Message actions"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                                {openMenuMessageId === message.$id && (
+                                  <div
+                                    className={cn(
+                                      "absolute z-10 mt-1 rounded-lg shadow-md border",
+                                      "bg-white text-gray-800 border-gray-200",
+                                      "dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700",
+                                      message.senderId === user?.$id ? "right-2 top-8" : "left-2 top-8"
+                                    )}
+                                  >
+                                    <div className="flex">
+                                      <button
+                                        onClick={() => handleEditMessage(message.$id!)}
+                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg"
+                                        title="Редактировать"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteMessage(message.$id!)}
+                                        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-r-lg"
+                                        title="Удалить"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
                             <p className="text-sm leading-relaxed">{message.content}</p>
                               
                               {/* Attachments */}
@@ -1422,9 +1539,30 @@ export default function EnhancedMessagesPage() {
                           className="w-full px-4 py-3 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                         />
                 </div>
-                      <button className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all">
-                        <Smile className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowEmojiPicker(prev => !prev)}
+                          className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
+                        >
+                          <Smile className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                        </button>
+                        {showEmojiPicker && (
+                          <div className="absolute bottom-12 right-0 z-20 w-56 p-2 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-gray-800">
+                            <div className="grid grid-cols-8 gap-2 text-xl">
+                              {['😀','😁','😂','🤣','😊','😍','😎','🤝','👍','🔥','🚀','✨','💡','🎉','✅','🙏','💼','💬','📎','🕒','📈','🧠','🤖','🎯','🛠️','📝','💬','📦','📣','⚠️','📅','🔗'].map((emoji, idx) => (
+                                <button
+                                  key={`${emoji}-${idx}`}
+                                  onClick={() => { setNewMessage(prev => (prev || '') + emoji); setShowEmojiPicker(false); }}
+                                  className="hover:scale-110 transition-transform"
+                                  aria-label={`emoji ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={handleSendMessage}
                         disabled={(!newMessage.trim() && attachedFiles.length === 0) || sending}

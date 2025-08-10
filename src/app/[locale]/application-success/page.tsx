@@ -40,7 +40,9 @@ export default function ApplicationSuccessPage() {
   useEffect(() => {
     // Auto redirect after 5 seconds
     const timer = setTimeout(() => {
-      router.push('/en/dashboard');
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/dashboard`);
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -105,7 +107,7 @@ export default function ApplicationSuccessPage() {
         {/* Action Buttons */}
         <div className="space-y-4">
           <Link
-            href="/en/dashboard"
+            href={`/${window.location.pathname.split('/')[1] || 'en'}/dashboard`}
             className="w-full btn-primary flex items-center justify-center space-x-2"
           >
             <BriefcaseIcon className="w-5 h-5" />
@@ -113,7 +115,7 @@ export default function ApplicationSuccessPage() {
           </Link>
           
           <Link
-            href="/en/jobs"
+            href={`/${window.location.pathname.split('/')[1] || 'en'}/jobs`}
             className="w-full btn-secondary flex items-center justify-center space-x-2"
           >
             <span>Browse More Jobs</span>

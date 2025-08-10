@@ -5,6 +5,7 @@ import { Star, X, Send, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { databases, DATABASE_ID, ID } from '@/lib/appwrite/database';
 import { useGamification } from '@/hooks/useGamification';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const RatingModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { awardXP, unlockAchievement } = useGamification();
+  const { user } = useAuthContext();
 
   const predefinedPros = isClient ? [
     'Высокое качество работы',
@@ -110,25 +112,23 @@ const RatingModal = ({
       // Create review in database
       await databases.createDocument(
         DATABASE_ID,
-        'ratings_reviews',
+        'reviews',
         ID.unique(),
         {
-          reviewer_id: 'current_user_id', // Replace with actual user ID
-          reviewed_id: reviewedId,
-          job_id: jobId || '',
-          order_id: orderId || '',
-          solution_id: solutionId || '',
-          review_type: reviewType,
-          overall_rating: ratings.overall,
-          communication_rating: ratings.communication || 0,
-          quality_rating: ratings.quality || 0,
-          timeliness_rating: ratings.timeliness || 0,
-          review_text: reviewText,
-          pros: pros,
-          cons: cons,
-          would_recommend: wouldRecommend,
-          is_public: true,
-          helpful_votes: 0
+          jobId: jobId || '',
+          clientId: isClient ? user?.$id || '' : reviewedId,
+          freelancerId: isClient ? reviewedId : user?.$id || '',
+          rating: ratings.overall,
+          comment: reviewText,
+          skills: [],
+          skillRatings: '',
+          communication: ratings.communication || 0,
+          quality: ratings.quality || 0,
+          timeliness: ratings.timeliness || 0,
+          wouldRecommend: wouldRecommend || false,
+          createdAt: new Date().toISOString(),
+          contractId: '',
+          projectId: jobId || ''
         }
       );
 

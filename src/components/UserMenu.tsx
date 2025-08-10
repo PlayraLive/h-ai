@@ -109,7 +109,7 @@ export default function UserMenu({ locale }: UserMenuProps) {
               </Link>
 
               <Link
-                href={`/${locale}/profile`}
+                href={`/${locale}/profile/${user?.$id || ''}`}
                 className="flex items-center px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
                 onClick={() => setShowUserMenu(false)}
               >

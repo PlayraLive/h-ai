@@ -32,7 +32,7 @@ interface Job {
   clientName: string;
   clientAvatar?: string;
   location: string;
-  type: "full-time" | "part-time" | "contract" | "freelance";
+  type: "fixed" | "hourly" | "full-time" | "part-time" | "contract" | "freelance";
   budgetMin: number;
   budgetMax: number;
   currency: string;
@@ -48,6 +48,7 @@ interface Job {
   applicationStatus?: "pending" | "accepted" | "rejected";
   isOwner?: boolean;
   clientId?: string;
+  status?: 'active' | 'in_progress' | 'completed' | 'cancelled' | 'pending';
 }
 
 const mockJobs: Job[] = [
@@ -157,51 +158,16 @@ export default function JobsPage() {
   const loadJobs = useCallback(async () => {
     setLoading(true);
     try {
-      // Проверяем наличие переменных окружения
-      if (
-        !process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
-        !process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
-        !process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-      ) {
-        console.warn("Appwrite not configured, using mock data");
-        setJobs(mockJobs);
-        return;
-      }
-
-      const filters: Record<string, any> = {};
-
-      if (selectedCategory && selectedCategory !== "all") {
-        filters.category = selectedCategory;
-      }
-
-      if (selectedLocation && selectedLocation !== "all") {
-        filters.location = selectedLocation;
-      }
-
-      if (budgetRange[0] > 0) {
-        filters.budgetMin = budgetRange[0];
-      }
-
-      if (budgetRange[1] < 10000) {
-        filters.budgetMax = budgetRange[1];
-      }
-
-      if (experienceLevel && experienceLevel !== "all") {
-        filters.experienceLevel = experienceLevel;
-      }
-
-      if (searchQuery) {
-        filters.search = searchQuery;
-      }
-
-      console.log("Loading jobs from Appwrite...");
+      console.log("🚀 Loading jobs from Appwrite...");
+      
+      // Always try to load from Appwrite first
       const loadedJobs = await JobsService.getJobs();
-      console.log("Loaded jobs:", loadedJobs);
+      console.log("📊 Loaded jobs from Appwrite:", loadedJobs);
 
-      // Если нет джобов из БД, используем mock данные
+      // If no jobs from database, show empty state instead of mock data
       if (!loadedJobs || !loadedJobs.jobs || loadedJobs.jobs.length === 0) {
-        console.log("No jobs found in database, using mock data");
-        setJobs(mockJobs);
+        console.log("⚠️ No jobs found in database, showing empty state");
+        setJobs([]);
         return;
       }
 
@@ -216,47 +182,71 @@ export default function JobsPage() {
           applications.forEach(app => {
             userApplicationStatuses[app.jobId] = app.status as "pending" | "accepted" | "rejected";
           });
+          console.log('👤 Freelancer applications loaded:', userApplications, userApplicationStatuses);
         } catch (error) {
           console.warn('Could not load user applications:', error);
         }
       }
 
+      // Get job applications if user is a client (job owner)
+      if (user && user.userType === 'client') {
+        try {
+          // For each job owned by the client, get applications to determine if any are pending
+          for (const job of loadedJobs.jobs) {
+            if (job.clientId === user.$id) {
+              const jobApplications = await ApplicationsService.getJobApplications(job.$id);
+              // Check if there are any pending applications
+              const hasPendingApplications = jobApplications.some(app => app.status === 'pending');
+              if (hasPendingApplications) {
+                userApplications.push(job.$id);
+                userApplicationStatuses[job.$id] = 'pending';
+              }
+            }
+          }
+          console.log('👔 Client job applications loaded:', userApplications, userApplicationStatuses);
+        } catch (error) {
+          console.warn('Could not load job applications for client:', error);
+        }
+      }
+
       // Convert Appwrite documents to Job interface
       const convertedJobs: Job[] = loadedJobs.jobs.map(
-        (job: Record<string, any>) => ({
-          $id: job.$id!,
-          title: job.title,
-          description: job.description,
-          clientName: job.clientName || job.clientCompany || "Anonymous Client",
-          clientAvatar:
-            job.clientAvatar ||
-            "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40",
-          location: job.location || "Remote",
-          type: job.budgetType || "freelance",
-          budgetMin: job.budgetMin || 0,
-          budgetMax: job.budgetMax || 0,
-          currency: job.currency || "USD",
-          skills: job.skills || [],
-          $createdAt: job.$createdAt!,
-          deadline:
-            job.deadline ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          applicationsCount: job.applicationsCount || 0,
-          rating: job.rating || 4.5,
-          category: job.category || "ai_development",
-          featured: job.featured || false,
-          urgent: job.urgent || false,
-          hasApplied: userApplications.includes(job.$id!), // Проверяем подавал ли фрилансер заявку
-          applicationStatus: userApplicationStatuses[job.$id!], // Добавляем статус заявки
-          isOwner: user && job.clientId === user.$id, // Проверяем является ли пользователь создателем джоба
-        }),
+        (job: Record<string, any>) => {
+          console.log("🔄 Converting job:", job.title, job);
+          
+          return {
+            $id: job.$id!,
+            title: job.title || "Untitled Job",
+            description: job.description || "No description provided",
+            clientName: job.clientName || job.clientCompany || "Anonymous Client",
+            clientAvatar: job.clientAvatar || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40",
+            location: job.location || "Remote",
+            type: job.budgetType || "freelance",
+            budgetMin: job.budgetMin || 0,
+            budgetMax: job.budgetMax || 0,
+            currency: job.currency || "USD",
+            skills: job.skills || [],
+            $createdAt: job.$createdAt!,
+            deadline: job.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            applicationsCount: job.applicationsCount || 0,
+            rating: job.rating || 4.5,
+            category: job.category || "ai_development",
+            featured: job.featured || false,
+            urgent: job.urgent || false,
+            hasApplied: userApplications.includes(job.$id!),
+            applicationStatus: userApplicationStatuses[job.$id!],
+            isOwner: user && job.clientId === user.$id,
+            clientId: job.clientId,
+            status: job.status || 'active',
+          };
+        }
       );
 
       setJobs(convertedJobs);
     } catch (error) {
-      console.error("Error loading jobs:", error);
-      // Fallback to mock data if real data fails
-      setJobs(mockJobs);
+      console.error("❌ Error loading jobs:", error);
+      // Show empty state instead of mock data
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -310,6 +300,61 @@ export default function JobsPage() {
       setTimeout(() => {
         router.push(`/en/jobs/${selectedJob.$id}`);
       }, 2000);
+    }
+  };
+
+  // Function to update application status locally
+  const updateApplicationStatus = async (jobId: string, status: "pending" | "accepted" | "rejected") => {
+    try {
+      console.log(`🔄 Updating application status for job ${jobId} to ${status}`);
+      
+      // Update local state immediately for better UX
+      setJobs(prevJobs => {
+        const updatedJobs = prevJobs.map(job => 
+          job.$id === jobId 
+            ? { ...job, hasApplied: true, applicationStatus: status }
+            : job
+        );
+        console.log('✅ Local state updated:', updatedJobs.find(job => job.$id === jobId));
+        return updatedJobs;
+      });
+
+      // Call API to update status in database
+      const response = await fetch(`/api/applications/${jobId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: status,
+          clientResponse: status === 'accepted' ? 'Application accepted' : 'Application rejected'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update application status');
+      }
+      
+      console.log('✅ API call successful');
+      success(
+        `Status updated to ${status}`,
+        `Application status has been successfully updated.`
+      );
+    } catch (error: any) {
+      console.error('❌ Error updating application status:', error);
+      error(
+        'Update failed',
+        'Failed to update application status. Please try again.'
+      );
+      
+      // Revert local state on error
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.$id === jobId 
+            ? { ...job, hasApplied: true, applicationStatus: "pending" }
+            : job
+        )
+      );
     }
   };
 
@@ -487,6 +532,7 @@ export default function JobsPage() {
                   isSaved={savedJobs.has(job.$id)}
                   onSave={() => handleSaveJob(job.$id)}
                   onApply={() => handleApplyToJob(job)}
+                  onStatusUpdate={updateApplicationStatus}
                 />
               ))
             ) : (
@@ -535,12 +581,21 @@ function JobCard({
   isSaved,
   onSave,
   onApply,
+  onStatusUpdate,
 }: {
   job: Job;
   isSaved: boolean;
   onSave: () => void;
   onApply: () => void;
+  onStatusUpdate: (jobId: string, status: "pending" | "accepted" | "rejected") => void;
 }) {
+  // Debug logging
+  console.log(`🔍 JobCard render for job ${job.$id}:`, {
+    hasApplied: job.hasApplied,
+    applicationStatus: job.applicationStatus,
+    isOwner: job.isOwner
+  });
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
@@ -550,6 +605,10 @@ function JobCard({
 
   const getTypeColor = (type: string) => {
     switch (type) {
+      case "fixed":
+        return "bg-purple-500/20 text-purple-400";
+      case "hourly":
+        return "bg-blue-500/20 text-blue-400";
       case "full-time":
         return "bg-green-500/20 text-green-400";
       case "part-time":
@@ -637,7 +696,7 @@ function JobCard({
               getTypeColor(job.type),
             )}
           >
-            {job.type}
+            {job.type === 'fixed' ? 'Fixed' : job.type === 'hourly' ? 'Hourly' : job.type}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-400">
@@ -686,46 +745,90 @@ function JobCard({
             <span>View Details</span>
           </Link>
           {!job.isOwner && (
-            <button
-              onClick={onApply}
-              disabled={job.hasApplied}
-              className={cn(
-                "flex items-center space-x-2 transition-all",
-                job.hasApplied 
-                  ? job.applicationStatus === "accepted"
-                    ? "bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
-                    : job.applicationStatus === "rejected"
-                    ? "bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
-                    : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
-                  : "btn-primary"
+            <>
+              <button
+                onClick={onApply}
+                disabled={job.hasApplied}
+                className={cn(
+                  "flex items-center space-x-2 transition-all",
+                  job.hasApplied 
+                    ? job.applicationStatus === "accepted"
+                      ? "bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                      : job.applicationStatus === "rejected"
+                      ? "bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                      : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-lg px-4 py-2 cursor-not-allowed"
+                    : "btn-primary"
+                )}
+              >
+                {job.hasApplied ? (
+                  <>
+                    {job.applicationStatus === "accepted" ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Принята</span>
+                      </>
+                    ) : job.applicationStatus === "rejected" ? (
+                      <>
+                        <XIcon className="w-4 h-4" />
+                        <span>Отклонена</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-4 h-4" />
+                        <span>На рассмотрении</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span>Apply Now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+              
+              {/* Contract status badge for owners and applicants */}
+              {job.status && (
+                <span className={cn(
+                  "ml-2 px-3 py-1 rounded-lg text-xs font-medium border",
+                  job.status === 'in_progress' && "bg-blue-600/20 text-blue-400 border-blue-600/30",
+                  job.status === 'completed' && "bg-green-600/20 text-green-400 border-green-600/30",
+                  job.status === 'pending' && "bg-amber-600/20 text-amber-400 border-amber-600/30",
+                  job.status === 'cancelled' && "bg-red-600/20 text-red-400 border-red-600/30",
+                  job.status === 'active' && "bg-gray-600/20 text-gray-300 border-gray-600/30"
+                )}>
+                  {job.status === 'in_progress' && 'Активный контракт'}
+                  {job.status === 'completed' && 'Контракт завершен'}
+                  {job.status === 'pending' && 'Ожидает'}
+                  {job.status === 'cancelled' && 'Отменен'}
+                  {job.status === 'active' && 'Джобс активен'}
+                </span>
               )}
-            >
-              {job.hasApplied ? (
-                <>
-                  {job.applicationStatus === "accepted" ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Принята</span>
-                    </>
-                  ) : job.applicationStatus === "rejected" ? (
-                    <>
-                      <XIcon className="w-4 h-4" />
-                      <span>Отклонена</span>
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="w-4 h-4" />
-                      <span>На рассмотрении</span>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span>Apply Now</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+
+              {/* Status Update Buttons for Job Owner */}
+              {job.isOwner && job.hasApplied && job.applicationStatus === "pending" && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      console.log(`🎯 Accept button clicked for job ${job.$id}`);
+                      onStatusUpdate(job.$id, "accepted");
+                    }}
+                    className="px-3 py-1 bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg text-sm hover:bg-green-600/30 transition-colors"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log(`🎯 Reject button clicked for job ${job.$id}`);
+                      onStatusUpdate(job.$id, "rejected");
+                    }}
+                    className="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg text-sm hover:bg-red-600/30 transition-colors"
+                  >
+                    Reject
+                  </button>
+                </div>
               )}
-            </button>
+            </>
           )}
         </div>
       </div>

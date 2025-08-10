@@ -32,12 +32,16 @@ export default function UserProfileDropdown({ className = '' }: UserProfileDropd
     try {
       await account.deleteSession('current');
       logout();
-      router.push('/en/login');
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/login`);
     } catch (error) {
       console.error('Logout error:', error);
       // Принудительный logout даже если есть ошибка
       logout();
-      router.push('/en/login');
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/login`);
     }
   };
 
@@ -46,7 +50,9 @@ export default function UserProfileDropdown({ className = '' }: UserProfileDropd
       icon: User,
       label: 'View Profile',
       action: () => {
-        router.push('/en/profile');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/profile/${user.$id}`);
         setIsOpen(false);
       }
     },
@@ -54,7 +60,9 @@ export default function UserProfileDropdown({ className = '' }: UserProfileDropd
       icon: Settings,
       label: 'Settings',
       action: () => {
-        router.push('/en/settings');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/settings`);
         setIsOpen(false);
       }
     },
@@ -62,7 +70,9 @@ export default function UserProfileDropdown({ className = '' }: UserProfileDropd
       icon: MessageCircle,
       label: 'Messages',
       action: () => {
-        router.push('/en/messages');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/messages`);
         setIsOpen(false);
       }
     },
@@ -70,7 +80,9 @@ export default function UserProfileDropdown({ className = '' }: UserProfileDropd
       icon: Briefcase,
       label: user?.userType === 'freelancer' ? 'My Projects' : 'Posted Jobs',
       action: () => {
-        router.push(user?.userType === 'freelancer' ? '/en/projects' : '/en/jobs');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(user?.userType === 'freelancer' ? `/${currentLocale}/projects` : `/${currentLocale}/jobs`);
         setIsOpen(false);
       }
     }

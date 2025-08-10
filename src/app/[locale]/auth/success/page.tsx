@@ -69,7 +69,9 @@ export default function AuthSuccessPage() {
         // Редирект на dashboard через 2 секунды
         setTimeout(() => {
           addLog('Redirecting to dashboard...');
-          router.push('/en/dashboard');
+          // Получаем текущую локаль из URL
+          const currentLocale = window.location.pathname.split('/')[1] || 'en';
+          router.push(`/${currentLocale}/dashboard`);
         }, 2000);
         
       } catch (error: any) {
@@ -171,7 +173,9 @@ export default function AuthSuccessPage() {
                     await MockAuthManager.loginMockUser();
                     addLog('✅ Test user login successful');
                     setTimeout(() => {
-                      router.push('/en/dashboard');
+                      // Получаем текущую локаль из URL
+                      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+                      router.push(`/${currentLocale}/dashboard`);
                     }, 1000);
                   } catch (error) {
                     addLog('❌ Test user login failed');

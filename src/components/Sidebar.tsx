@@ -132,7 +132,7 @@ export default function Sidebar({ className }: SidebarProps) {
       {/* User Profile */}
       {!isCollapsed && user && (
         <div className="p-4 border-b border-gray-700">
-          <Link href="/en/profile" className="flex items-center space-x-3 hover:bg-gray-700 rounded-lg p-2 transition-colors">
+          <Link href={`/${window.location.pathname.split('/')[1] || 'en'}/profile/${user?.$id || ''}`} className="flex items-center space-x-3 hover:bg-gray-700 rounded-lg p-2 transition-colors">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
@@ -212,7 +212,7 @@ export default function Sidebar({ className }: SidebarProps) {
       <div className="p-4 border-t border-gray-700">
         <div className="space-y-1">
           <Link
-            href="/en/settings"
+            href={`/${window.location.pathname.split('/')[1] || 'en'}/settings`}
             className={cn(
               'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               pathname.startsWith('/en/settings')

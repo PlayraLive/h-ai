@@ -123,8 +123,8 @@ export class AppwriteAuth {
     try {
       console.log('Starting Google OAuth...');
       const currentUrl = window.location.origin;
-      const successUrl = `${currentUrl}/en/auth/success`;
-      const failureUrl = `${currentUrl}/en/auth/error`;
+      const successUrl = `${currentUrl}/en/dashboard`;
+      const failureUrl = `${currentUrl}/en/login`;
 
       console.log('OAuth URLs:', { successUrl, failureUrl });
       console.log('OAuthProvider.Google:', OAuthProvider.Google);
@@ -136,8 +136,7 @@ export class AppwriteAuth {
       account.createOAuth2Session(
         OAuthProvider.Google,
         successUrl,
-        failureUrl,
-        ['openid', 'email', 'profile'] // Добавляем необходимые scopes
+        failureUrl
       );
 
       console.log('OAuth redirect initiated');

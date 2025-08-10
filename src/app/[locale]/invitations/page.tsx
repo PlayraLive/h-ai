@@ -43,7 +43,9 @@ export default function InvitationsPage() {
     if (isAuthenticated && user) {
       loadInvitations();
     } else if (!initializing && !isAuthenticated) {
-      router.push('/en/login?redirect=/invitations');
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/login?redirect=/invitations`);
     }
   }, [isAuthenticated, initializing, user, activeTab]);
 
@@ -70,11 +72,15 @@ export default function InvitationsPage() {
   };
 
   const handleViewJob = (jobId: string) => {
-    router.push(`/en/jobs/${jobId}`);
+    // Получаем текущую локаль из URL
+    const currentLocale = window.location.pathname.split('/')[1] || 'en';
+    router.push(`/${currentLocale}/jobs/${jobId}`);
   };
 
   const handleViewClient = (clientId: string) => {
-    router.push(`/en/profile/${clientId}`);
+    // Получаем текущую локаль из URL
+    const currentLocale = window.location.pathname.split('/')[1] || 'en';
+    router.push(`/${currentLocale}/profile/${clientId}`);
   };
 
   const handleOpenResponseModal = (invitation: InvitationDocument) => {
@@ -268,7 +274,11 @@ export default function InvitationsPage() {
                       : `You have no ${activeTab} invitations`}
                   </p>
                   <button
-                    onClick={() => router.push('/en/jobs')}
+                    onClick={() => {
+                      // Получаем текущую локаль из URL
+                      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+                      router.push(`/${currentLocale}/jobs`);
+                    }}
                     className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
                   >
                     Browse Available Jobs

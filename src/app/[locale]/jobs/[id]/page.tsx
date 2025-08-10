@@ -28,6 +28,8 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { JobsService, ApplicationsService } from "@/lib/appwrite/jobs";
+import { UsersService } from "@/lib/appwrite/users";
+import { UserProfileService } from "@/lib/user-profile-service";
 import { JobService } from "@/services/jobs";
 import { useAuth } from "@/hooks/useAuth";
 import ApplyJobModal from "@/components/ApplyJobModal";
@@ -107,16 +109,47 @@ export default function JobDetailsPage() {
     try {
       const jobData = await JobsService.getJob(params.id as string);
 
+      // Load real client profile and stats in parallel
+      let clientProfile: any = null;
+      let clientJobsCount = 0;
+      let clientTotalSpent = 0;
+      let clientComputedRating: number | null = null;
+      try {
+        const [profile, clientJobs] = await Promise.all([
+          jobData?.clientId ? UsersService.getUserProfile(jobData.clientId) : Promise.resolve(null),
+          jobData?.clientId ? JobsService.getJobsByClient(jobData.clientId).catch(() => []) : Promise.resolve([]),
+        ]);
+        clientProfile = profile;
+        clientJobsCount = Array.isArray(clientJobs) ? clientJobs.length : 0;
+        // Try compute stats (total spent, etc.) without requiring profile
+        if (jobData?.clientId) {
+          try {
+            const statsService = new UserProfileService();
+            const stats = await statsService.getClientStats(jobData.clientId);
+            clientTotalSpent = stats.totalSpent || 0;
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('Could not enrich client info:', e);
+      }
+      
+      // Fallbacks when profile is missing
+      const safeRating = typeof clientProfile?.rating === 'number' ? clientProfile.rating : 4.5;
+      const safeTotalSpent = typeof clientProfile?.totalEarned === 'number' ? clientProfile.totalEarned : clientTotalSpent;
+      const safeMemberSince = clientProfile?.$createdAt || jobData.$createdAt!;
+      const safeAvatar = (clientProfile?.avatar as string) || jobData.clientAvatar ||
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150";
+      const safeName = clientProfile?.name || jobData.clientName || 'Anonymous Client';
+
       // Convert Appwrite document to Job interface
       const convertedJob: Job = {
         id: jobData.$id!,
         title: jobData.title,
         description: jobData.description,
-        company: jobData.clientCompany || jobData.clientName,
+        company: jobData.clientCompany || safeName,
         companyLogo:
-          jobData.clientAvatar ||
-          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=150",
-        companyDescription: `${jobData.clientCompany || jobData.clientName} is looking for talented freelancers.`,
+          safeAvatar,
+        companyDescription: `${jobData.clientCompany || safeName} is looking for talented freelancers.`,
         location: jobData.location || "Remote",
         type: jobData.budgetType as
           | "full-time"
@@ -134,7 +167,7 @@ export default function JobDetailsPage() {
           jobData.deadline ||
           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         proposals: jobData.applicationsCount || 0,
-        rating: 4.5,
+        rating: safeRating,
         category: jobData.category,
         featured: jobData.featured || false,
         urgent: jobData.urgent || false,
@@ -159,15 +192,13 @@ export default function JobDetailsPage() {
           | "intermediate"
           | "expert",
         clientInfo: {
-          name: jobData.clientName,
-          avatar:
-            jobData.clientAvatar ||
-            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
-          rating: 4.8,
-          jobsPosted: 12,
-          totalSpent: 8500,
-          memberSince: jobData.$createdAt!,
-          verified: true,
+          name: safeName,
+          avatar: safeAvatar,
+          rating: safeRating,
+          jobsPosted: clientJobsCount || 0,
+          totalSpent: safeTotalSpent,
+          memberSince: safeMemberSince,
+          verified: !!clientProfile?.verified,
           clientId: jobData.clientId,
         },
       };

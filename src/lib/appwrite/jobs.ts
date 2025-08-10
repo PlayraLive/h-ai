@@ -21,6 +21,11 @@ export class JobsService {
         ID.unique(),
         {
           ...jobData,
+          // Ensure required ownership fields exist in the document
+          // Some deployments require `userId` as a mandatory attribute in jobs collection
+          userId: userId,
+          // Keep clientId for downstream logic; fall back to userId if not provided
+          clientId: (jobData as any)?.clientId ?? userId,
           applicationsCount: 0,
           viewsCount: 0,
           status: 'active'

@@ -57,7 +57,9 @@ export default function InvitationDetailPage() {
 
       if (!invitationData) {
         showError('Invitation not found');
-        router.push('/en/invitations');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/invitations`);
         return;
       }
 
@@ -66,7 +68,9 @@ export default function InvitationDetailPage() {
       // Check if the invitation belongs to the current user
       if (user && invitationData.freelancerId !== user.$id) {
         showError('You do not have permission to view this invitation');
-        router.push('/en/invitations');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/invitations`);
         return;
       }
 
@@ -143,13 +147,17 @@ export default function InvitationDetailPage() {
 
   const handleViewJob = () => {
     if (invitation) {
-      router.push(`/en/jobs/${invitation.jobId}`);
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/jobs/${invitation.jobId}`);
     }
   };
 
   const handleViewClient = () => {
     if (invitation) {
-      router.push(`/en/profile/${invitation.clientId}`);
+      // Получаем текущую локаль из URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      router.push(`/${currentLocale}/profile/${invitation.clientId}`);
     }
   };
 
@@ -225,7 +233,11 @@ export default function InvitationDetailPage() {
             <h2 className="text-xl font-bold text-white mb-2">Invitation Not Found</h2>
             <p className="text-gray-400 mb-6">This invitation may have been deleted or you don't have permission to view it.</p>
             <button
-              onClick={() => router.push('/en/invitations')}
+              onClick={() => {
+                // Получаем текущую локаль из URL
+                const currentLocale = window.location.pathname.split('/')[1] || 'en';
+                router.push(`/${currentLocale}/invitations`);
+              }}
               className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
             >
               Back to Invitations
@@ -245,7 +257,11 @@ export default function InvitationDetailPage() {
             {/* Header with back button */}
             <div className="flex items-center mb-8">
               <button
-                onClick={() => router.push('/en/invitations')}
+                onClick={() => {
+                  // Получаем текущую локаль из URL
+                  const currentLocale = window.location.pathname.split('/')[1] || 'en';
+                  router.push(`/${currentLocale}/invitations`);
+                }}
                 className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />

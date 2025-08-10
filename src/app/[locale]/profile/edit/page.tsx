@@ -111,7 +111,7 @@ export default function EditProfilePage({ params: { locale } }: { params: { loca
           {/* Header */}
           <div className="mb-8">
             <Link 
-              href={`/${locale}/profile`}
+              href={`/${locale}/profile/${user?.$id || ''}`}
               className="inline-flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors mb-4"
             >
               <ArrowLeft className="w-4 h-4" />

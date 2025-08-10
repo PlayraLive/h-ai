@@ -43,7 +43,9 @@ export default function SignupPage() {
       if (result.success) {
         console.log('Registration successful, redirecting to dashboard...');
         // Redirect to dashboard after successful registration
-        router.push('/en/dashboard');
+        // Получаем текущую локаль из URL
+        const currentLocale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${currentLocale}/dashboard`);
       } else {
         console.error('Registration failed:', result.error);
         alert('Registration failed: ' + result.error);
@@ -71,7 +73,7 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link href="/en" className="inline-flex items-center space-x-2 mb-8">
+          <Link href={`/${window.location.pathname.split('/')[1] || 'en'}`} className="inline-flex items-center space-x-2 mb-8">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
             </div>

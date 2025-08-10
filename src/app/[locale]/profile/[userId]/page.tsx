@@ -1,480 +1,341 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/useToast";
-import Navbar from "@/components/Navbar";
-import { cn } from "@/lib/utils";
+import { databases, DATABASE_ID, Query, COLLECTIONS } from "@/lib/appwrite/database";
+import Link from "next/link";
 import {
-  Share2, 
-  Linkedin, 
-  Twitter, 
-  MapPin, 
-  Calendar, 
+  Edit,
   Star,
-  DollarSign,
-  Briefcase,
+  MapPin,
+  Clock,
+  Verified,
   Award,
-  Users,
-  MessageCircle,
-  ExternalLink
+  Eye,
+  DollarSign,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import ProfileEditModal from "@/components/ProfileEditModal";
+import { cn, formatCurrency } from "@/lib/utils";
 
 interface UserProfile {
   $id: string;
-  name: string;
-  email: string;
-  userType: "freelancer" | "client";
-  avatar?: string;
+  user_id: string;
+  avatar_url?: string;
   bio?: string;
-  location?: string;
-  skills?: string[];
-  hourlyRate?: number;
-  rating?: number;
-  totalEarnings?: number;
-  completedProjects?: number;
-  joinedAt?: string;
-  socialLinks?: {
-    linkedin?: string;
-    twitter?: string;
-    website?: string;
-  };
-}
-
-interface PortfolioItem {
-  $id: string;
-  title: string;
-  description: string;
-  image?: string;
-  category: string;
-  budget: number;
-  completedAt: string;
-  clientName: string;
-  rating?: number;
-  review?: string;
-}
-
-interface Solution {
-  $id: string;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  image?: string;
-  createdAt: string;
-  downloads: number;
-  rating: number;
+  company_name?: string;
+  company_size?: string;
+  industry?: string;
+  interests?: string[];
+  specializations?: string[];
+  experience_years?: number;
+  hourly_rate_min?: number;
+  hourly_rate_max?: number;
+  onboarding_completed?: boolean;
+  profile_completion?: number;
+  $createdAt: string;
 }
 
 export default function UserProfilePage() {
   const params = useParams();
+  const locale = params.locale as string;
   const userId = params.userId as string;
-  const { user } = useAuthContext();
-  const { success, error } = useToast();
-
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [solutions, setSolutions] = useState<Solution[]>([]);
+  const { user: currentUser } = useAuthContext();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "portfolio" | "solutions">("overview");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
-    loadProfile();
-  }, [userId]);
+    loadUserProfile();
+  }, [userId, currentUser]);
 
-    const loadProfile = async () => {
-    try {
-      setLoading(true);
-      
-      // Load user profile
-      const response = await fetch(`/api/users/${userId}`);
-      if (response.ok) {
-        const userData = await response.json();
-        setProfile(userData);
-      }
-
-      // Load portfolio items
-      const portfolioResponse = await fetch(`/api/portfolio/${userId}`);
-      if (portfolioResponse.ok) {
-        const portfolioData = await portfolioResponse.json();
-        setPortfolio(portfolioData.portfolio || []);
-        
-        // Update profile with stats from portfolio
-        if (portfolioData.stats) {
-          setProfile(prev => prev ? {
-            ...prev,
-            totalEarnings: portfolioData.stats.totalEarnings,
-            completedProjects: portfolioData.stats.completedProjects,
-            rating: parseFloat(portfolioData.stats.averageRating),
-          } : prev);
-        }
-      }
-
-      // Load solutions
-      const solutionsResponse = await fetch(`/api/solutions/user/${userId}`);
-      if (solutionsResponse.ok) {
-        const solutionsData = await solutionsResponse.json();
-        setSolutions(solutionsData);
-        }
-      } catch (err) {
-      console.error("Error loading profile:", err);
-      error("Failed to load profile", "Please try again later");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  const handleShare = async (platform: "linkedin" | "twitter") => {
-    const url = window.location.href;
-    const text = `${profile?.name} - ${profile?.userType === "freelancer" ? "Freelancer" : "Client"} on H-Ai`;
-    
-    let shareUrl = "";
-    if (platform === "linkedin") {
-      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-    } else if (platform === "twitter") {
-      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  const loadUserProfile = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
     }
 
-    window.open(shareUrl, "_blank");
+    try {
+      // Проверяем, является ли это профилем текущего пользователя
+      setIsOwnProfile(currentUser?.$id === userId);
+
+      // Сначала пытаемся загрузить профиль из коллекции user_profiles
+      let profileResponse = await databases.listDocuments(
+        DATABASE_ID,
+        'user_profiles',
+        [Query.equal('user_id', userId)]
+      );
+
+      if (profileResponse.documents.length > 0) {
+        setUserProfile(profileResponse.documents[0] as any);
+        return;
+      }
+
+      // Если профиль не найден в user_profiles, загружаем из коллекции USERS
+      try {
+        const userResponse = await databases.getDocument(
+          DATABASE_ID,
+          COLLECTIONS.USERS,
+          userId
+        );
+        
+        if (userResponse) {
+          // Преобразуем данные пользователя в формат UserProfile
+          const userProfileData: UserProfile = {
+            $id: userResponse.$id,
+            user_id: userResponse.$id,
+            avatar_url: userResponse.avatar,
+            bio: userResponse.bio,
+            company_name: userResponse.name,
+            company_size: userResponse.companySize,
+            industry: userResponse.industry,
+            interests: userResponse.interests,
+            specializations: userResponse.skills,
+            experience_years: userResponse.experienceYears,
+            hourly_rate_min: userResponse.hourlyRate,
+            hourly_rate_max: userResponse.hourlyRate,
+            onboarding_completed: userResponse.onboardingCompleted,
+            profile_completion: userResponse.profileCompletion,
+            $createdAt: userResponse.$createdAt,
+          };
+          
+          setUserProfile(userProfileData);
+        }
+      } catch (userError) {
+        console.error('Ошибка загрузки пользователя:', userError);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки профиля:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const copyProfileLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      success("Link copied!", "Profile link has been copied to clipboard");
-    } catch (err) {
-      error("Failed to copy link", "Please try again");
-    }
+  const handleProfileUpdated = () => {
+    loadUserProfile(); // Перезагружаем профиль после обновления
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950">
         <Navbar />
-        <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-32 bg-gray-800 rounded-2xl mb-8"></div>
-              <div className="h-64 bg-gray-800 rounded-2xl"></div>
-            </div>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Загрузка профиля...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!profile) {
+  if (!userProfile) {
     return (
       <div className="min-h-screen bg-gray-950">
         <Navbar />
-        <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Profile Not Found</h1>
-            <p className="text-gray-400">This user profile could not be found.</p>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <p className="text-gray-400">Профиль не найден</p>
           </div>
         </div>
       </div>
     );
   }
-
-  const isOwnProfile = user?.$id === userId;
 
   return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
-
-      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+      
+      <div className="pt-20 pb-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Profile Header */}
-          <div className="glass-card p-8 rounded-2xl mb-8">
-            <div className="flex flex-col md:flex-row items-start gap-6">
-              {/* Avatar */}
-              <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                  {profile.avatar ? (
+          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl p-8 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-6">
+                <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-3xl font-bold text-white">
+                  {userProfile.avatar_url ? (
                     <img 
-                      src={profile.avatar} 
-                      alt={profile.name}
-                      className="w-full h-full rounded-2xl object-cover"
+                      src={userProfile.avatar_url} 
+                      alt="Avatar" 
+                      className="w-full h-full rounded-3xl object-cover"
                     />
                   ) : (
-                    profile.name.charAt(0).toUpperCase()
+                    "U"
                   )}
                 </div>
-                {profile.userType === "freelancer" && profile.rating && (
-                  <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-current" />
-                    {profile.rating.toFixed(1)}
-                  </div>
-                )}
-              </div>
-
-              {/* Profile Info */}
-              <div className="flex-1">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                  <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">{profile.name}</h1>
-                    <div className="flex items-center gap-4 text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Briefcase className="w-4 h-4" />
-                        {profile.userType === "freelancer" ? "Freelancer" : "Client"}
-                      </span>
-                      {profile.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {profile.location}
-                        </span>
-                      )}
-                      {profile.joinedAt && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Joined {new Date(profile.joinedAt).toLocaleDateString()}
-                        </span>
-                      )}
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    {userProfile.company_name || "Пользователь"}
+                  </h1>
+                  <p className="text-white/80 text-lg">
+                    {userProfile.specializations?.join(", ") || "Специалист"}
+                  </p>
+                  <div className="flex items-center space-x-4 mt-3">
+                    <div className="flex items-center space-x-2 text-white/80">
+                      <MapPin className="w-4 h-4" />
+                      <span>Удаленная работа</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-white/80">
+                      <Clock className="w-4 h-4" />
+                      <span>Отвечает за 1 час</span>
                     </div>
                   </div>
-
-                  {/* Share Buttons */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={copyProfileLink}
-                      className="btn-secondary flex items-center gap-2"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </button>
+                </div>
+              </div>
+              
+              {isOwnProfile && (
                 <button
-                      onClick={() => handleShare("linkedin")}
-                      className="btn-secondary"
-                      title="Share on LinkedIn"
+                  onClick={() => setShowEditModal(true)}
+                  className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 backdrop-blur-md"
                 >
-                      <Linkedin className="w-4 h-4" />
+                  <Edit className="w-5 h-5" />
+                  <span>Редактировать</span>
                 </button>
-                    <button
-                      onClick={() => handleShare("twitter")}
-                      className="btn-secondary"
-                      title="Share on Twitter"
-                    >
-                      <Twitter className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {profile.bio && (
-                  <p className="text-gray-300 mb-4">{profile.bio}</p>
-                )}
-
-                {/* Stats */}
-                {profile.userType === "freelancer" && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{profile.completedProjects || 0}</div>
-                      <div className="text-sm text-gray-400">Projects</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">${profile.totalEarnings?.toLocaleString() || 0}</div>
-                      <div className="text-sm text-gray-400">Earnings</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{profile.hourlyRate || 0}</div>
-                      <div className="text-sm text-gray-400">$/hr</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{profile.rating?.toFixed(1) || "N/A"}</div>
-                      <div className="text-sm text-gray-400">Rating</div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-              </div>
+          </div>
 
-              {/* Tabs */}
-          <div className="glass-card p-6 rounded-2xl mb-8">
-            <div className="flex gap-4 mb-6">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className={cn(
-                  "px-4 py-2 rounded-xl font-medium transition-all",
-                  activeTab === "overview"
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                    : "text-gray-400 hover:text-white"
-                )}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab("portfolio")}
-                className={cn(
-                  "px-4 py-2 rounded-xl font-medium transition-all",
-                  activeTab === "portfolio"
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                    : "text-gray-400 hover:text-white"
-                )}
-              >
-                Portfolio ({portfolio.length})
-              </button>
-              {profile.userType === "freelancer" && (
-                      <button
-                  onClick={() => setActiveTab("solutions")}
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 text-center">
+              <div className="flex items-center justify-center mb-3">
+                <Star className="w-8 h-8 text-yellow-400 fill-current" />
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">4.5</div>
+              <div className="text-sm text-gray-400">(0 отзывов)</div>
+            </div>
+            
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 text-center">
+              <div className="flex items-center justify-center mb-3">
+                <DollarSign className="w-8 h-8 text-green-400" />
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">
+                {userProfile.hourly_rate_min ? `${userProfile.hourly_rate_min} $/час` : "Почасовая ставка"}
+              </div>
+              <div className="text-sm text-gray-400">Почасовая ставка</div>
+            </div>
+            
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 text-center">
+              <div className="flex items-center justify-center mb-3">
+                <Award className="w-8 h-8 text-blue-400" />
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">0</div>
+              <div className="text-sm text-gray-400">Выполнено работ</div>
+            </div>
+            
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 text-center">
+              <div className="flex items-center justify-center mb-3">
+                <Verified className="w-8 h-8 text-purple-400" />
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">100%</div>
+              <div className="text-sm text-gray-400">Успешность</div>
+            </div>
+          </div>
+
+          {/* Profile Content */}
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-3xl p-8">
+            {/* Navigation Tabs */}
+            <div className="flex space-x-1 mb-8 bg-gray-800/50 rounded-2xl p-1">
+              {[
+                { id: "overview", label: "Обзор" },
+                { id: "portfolio", label: "Портфолио (0)" },
+                { id: "solutions", label: "Решения (3)" }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "px-4 py-2 rounded-xl font-medium transition-all",
-                    activeTab === "solutions"
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                      : "text-gray-400 hover:text-white"
+                    "flex-1 py-3 px-6 rounded-xl text-sm font-medium transition-all duration-300",
+                    activeTab === tab.id
+                      ? "bg-purple-500 text-white shadow-lg"
+                      : "text-gray-400 hover:text-white hover:bg-gray-700/50"
                   )}
                 >
-                  Solutions ({solutions.length})
-                      </button>
-              )}
-              </div>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-              {/* Tab Content */}
+            {/* Tab Content */}
             {activeTab === "overview" && (
-              <div className="space-y-6">
-                    {/* Skills */}
-                {profile.skills && profile.skills.length > 0 && (
+              <div className="space-y-8">
+                {/* Bio */}
+                {userProfile.bio && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-4">Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                          {profile.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                          className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <h3 className="text-xl font-semibold text-white mb-4">О себе</h3>
+                    <p className="text-gray-300 leading-relaxed">{userProfile.bio}</p>
+                  </div>
+                )}
 
-                {/* Social Links */}
-                {profile.socialLinks && (
+                {/* Skills */}
+                {userProfile.specializations && userProfile.specializations.length > 0 && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-4">Connect</h3>
-                    <div className="flex gap-4">
-                      {profile.socialLinks.linkedin && (
-                        <a
-                          href={profile.socialLinks.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                    <h3 className="text-xl font-semibold text-white mb-4">Навыки</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {userProfile.specializations.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-500/30"
                         >
-                          <Linkedin className="w-5 h-5" />
-                          LinkedIn
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      {profile.socialLinks.twitter && (
-                        <a
-                          href={profile.socialLinks.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          <Twitter className="w-5 h-5" />
-                          Twitter
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      {profile.socialLinks.website && (
-                        <a
-                          href={profile.socialLinks.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          <ExternalLink className="w-5 h-5" />
-                          Website
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
+                          {skill}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 )}
-                            </div>
-                          )}
+
+                {/* Experience */}
+                {userProfile.experience_years && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4">Опыт</h3>
+                    <div className="flex items-center space-x-2 text-gray-300">
+                      <Clock className="w-5 h-5" />
+                      <span>{userProfile.experience_years} лет опыта</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Industry */}
+                {userProfile.industry && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4">Отрасль</h3>
+                    <p className="text-gray-300">{userProfile.industry}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {activeTab === "portfolio" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {portfolio.map((item) => (
-                  <div key={item.$id} className="glass-card p-6 rounded-xl">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                      <div className="flex items-center gap-1 text-yellow-400">
-                        <Star className="w-4 h-4 fill-current" />
-                        <span className="text-sm">{item.rating?.toFixed(1) || "N/A"}</span>
-                      </div>
-                    </div>
-                    <p className="text-gray-400 mb-4">{item.description}</p>
-                    
-                    {/* Client and Review */}
-                    <div className="mb-4 p-3 bg-gray-800/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-400">Client: {item.clientName}</span>
-                        <span className="text-sm text-gray-500">{new Date(item.completedAt).toLocaleDateString()}</span>
-                            </div>
-                      {item.review && (
-                        <div className="text-sm text-gray-300 italic">
-                          "{item.review}"
-                        </div>
-                      )}
-                      </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span className="text-green-400 font-semibold">${item.budget.toLocaleString()}</span>
-                      <span className="text-blue-400">{item.category}</span>
-                    </div>
-                  </div>
-                ))}
-                {portfolio.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-400">No portfolio items yet.</p>
-                  </div>
-                )}
-                </div>
-              )}
+              <div className="text-center py-12">
+                <Award className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Портфолио пусто</h3>
+                <p className="text-gray-400">Здесь будут отображаться ваши выполненные проекты</p>
+              </div>
+            )}
 
-            {activeTab === "solutions" && profile.userType === "freelancer" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {solutions.map((solution) => (
-                  <div key={solution.$id} className="glass-card p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold text-white mb-2">{solution.title}</h3>
-                    <p className="text-gray-400 mb-4 line-clamp-2">{solution.description}</p>
-                    
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center">
-                        <div className="text-sm text-gray-400">Downloads</div>
-                        <div className="text-white font-semibold">{solution.downloads}</div>
-                          </div>
-                      <div className="text-center">
-                        <div className="text-sm text-gray-400">Rating</div>
-                        <div className="flex items-center justify-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                          <span className="text-white font-semibold">{solution.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-400 font-semibold">${solution.price}</span>
-                      <span className="text-blue-400 text-sm">{solution.category}</span>
-                    </div>
-                  </div>
-                ))}
-                {solutions.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-400">No solutions yet.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+            {activeTab === "solutions" && (
+              <div className="text-center py-12">
+                <Eye className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Решения</h3>
+                <p className="text-gray-400">Здесь будут отображаться ваши решения и продукты</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Profile Edit Modal */}
+      {isOwnProfile && userProfile && (
+        <ProfileEditModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          userProfile={userProfile}
+          onProfileUpdated={handleProfileUpdated}
+        />
+      )}
     </div>
   );
 }

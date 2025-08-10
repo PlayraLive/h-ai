@@ -173,11 +173,17 @@ export default function JobTimeline({
           : app
       ));
 
-      // Send message about the action
+      // If accepted, switch job to in_progress (активный контракт)
+      if (action === 'accept' && onUpdateJob) {
+        onUpdateJob(job.$id, { status: 'in_progress' });
+      }
+
+      // Send message about the action with business tone
       if (onSendMessage) {
+        const freelancerName = applications.find(a => a.$id === applicationId)?.freelancerName;
         const actionText = action === 'accept' 
-          ? `✅ Принята заявка от ${applications.find(a => a.$id === applicationId)?.freelancerName}`
-          : `❌ Отклонена заявка от ${applications.find(a => a.$id === applicationId)?.freelancerName}`;
+          ? `✅ Контракт активирован. Исполнитель: ${freelancerName}.` 
+          : `❌ Отклонена заявка от ${freelancerName}.`;
         onSendMessage(actionText, 'status');
       }
 
@@ -290,11 +296,30 @@ export default function JobTimeline({
               "px-3 py-1 rounded-full text-sm font-medium border",
               getStatusColor(job.status)
             )}>
-              {job.status === 'active' && 'Активный'}
+              {job.status === 'active' && 'Джобс активен'}
+              {job.status === 'in_progress' && 'Активный контракт'}
               {job.status === 'pending' && 'Ожидает'}
-              {job.status === 'completed' && 'Завершен'}
+              {job.status === 'completed' && 'Контракт завершен'}
               {job.status === 'cancelled' && 'Отменен'}
             </span>
+
+            {isClient && job.status === 'in_progress' && (
+              <button
+                onClick={() => {
+                  // выбрать принятого фрилансера
+                  const accepted = applications.find(a => a.status === 'accepted');
+                  if (accepted) {
+                    setSelectedFreelancer(accepted);
+                    setShowCompletionModal(true);
+                  } else {
+                    alert('Нет принятого исполнителя для завершения контракта');
+                  }
+                }}
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700"
+              >
+                Завершить контракт
+              </button>
+            )}
           </div>
         </div>
 

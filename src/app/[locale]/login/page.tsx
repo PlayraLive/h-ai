@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, Zap, Github, Chrome, AlertCircle, CheckCircle } from 'lucide-react';
@@ -19,8 +19,23 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [locale, setLocale] = useState('en');
 
   const { login, loginWithGoogle } = useAuth();
+
+  // Get locale from params
+  useEffect(() => {
+    const getLocale = async () => {
+      try {
+        const resolvedParams = await params;
+        setLocale(resolvedParams.locale);
+      } catch (error) {
+        console.error('Error getting locale:', error);
+        setLocale('en');
+      }
+    };
+    getLocale();
+  }, [params]);
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -57,7 +72,9 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
 
       if (result.success) {
         console.log('Login successful');
-        router.push('/en/dashboard');
+        // Получаем текущую локаль из state
+        const currentLocale = locale;
+        router.push(`/${currentLocale}/dashboard`);
       } else {
         console.error('Login failed:', result.error);
         setErrors({ general: result.error || 'Invalid email or password' });
@@ -76,7 +93,9 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
       if (provider === 'google') {
         await loginWithGoogle();
         console.log('Google login successful');
-        router.push('/en/dashboard');
+        // Получаем текущую локаль из state
+        const currentLocale = locale;
+        router.push(`/${currentLocale}/dashboard`);
       }
       // Add GitHub login here when implemented
     } catch (err) {
@@ -92,7 +111,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link href="/en" className="inline-flex items-center space-x-2 mb-8">
+          <Link href={`/${locale}`} className="inline-flex items-center space-x2 mb-8">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
             </div>

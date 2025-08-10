@@ -154,20 +154,31 @@ export class EnhancedMessagingService {
     senderAvatar?: string;
   }): Promise<EnhancedMessage> {
     try {
-      const messageData = {
+      // Normalize fields to match Appwrite collection schema
+      const nowIso = new Date().toISOString();
+      // Minimal, schema-safe payload (superset of common fields)
+      const normalizedType = (data.messageType === 'file' || data.messageType === 'system') ? data.messageType : 'text';
+      const messageData: Record<string, unknown> = {
         conversationId: data.conversationId,
+        conversation_id: data.conversationId,
         senderId: data.senderId,
+        sender_id: data.senderId,
         receiverId: data.receiverId,
+        receiver_id: data.receiverId,
         content: data.content,
         messageType: data.messageType || 'text',
-        timestamp: new Date().toISOString(),
+        type: normalizedType,
+        timestamp: nowIso,
+        createdAt: nowIso,
+        created_at: nowIso,
         isRead: false,
+        read: false,
         edited: false,
-        attachments: JSON.stringify(data.attachments || []),
         status: 'sent',
         senderName: data.senderName || '',
         senderAvatar: data.senderAvatar || '',
-        replyTo: data.replyTo || ''
+        replyTo: data.replyTo || '',
+        attachments: data.attachments || []
       };
 
       // Create message
@@ -178,12 +189,16 @@ export class EnhancedMessagingService {
         messageData
       );
 
-      // Update conversation
+      // Update conversation (non-blocking)
+      try {
       await this.updateConversationLastMessage(
         data.conversationId,
         data.content,
         data.receiverId
       );
+      } catch (convUpdateError) {
+        console.warn('Warning: failed to update conversation metadata:', convUpdateError);
+      }
 
       // Send notification
       try {
@@ -205,7 +220,10 @@ export class EnhancedMessagingService {
       
       return {
         ...message,
-        attachments: JSON.parse(message.attachments || '[]')
+        attachments: Array.isArray((message as any).attachments)
+          ? (message as any).attachments
+          : [],
+        timestamp: (message as any).timestamp || (message as any).createdAt || nowIso
       } as unknown as EnhancedMessage;
 
     } catch (error) {
@@ -221,7 +239,7 @@ export class EnhancedMessagingService {
     offset: number = 0
   ): Promise<EnhancedMessage[]> {
     try {
-      const response = await databases.listDocuments(
+      let response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.MESSAGES,
         [
@@ -231,10 +249,26 @@ export class EnhancedMessagingService {
           Query.offset(offset)
         ]
       );
+      // Fallback to snake_case attribute if no results
+      if (!response.documents?.length) {
+        response = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.MESSAGES,
+          [
+            Query.equal('conversation_id', conversationId),
+            Query.orderDesc('$createdAt'),
+            Query.limit(limit),
+            Query.offset(offset)
+          ]
+        );
+      }
 
       return response.documents.map(doc => ({
         ...doc,
-        attachments: JSON.parse(doc.attachments || '[]')
+        attachments: Array.isArray((doc as any).attachments)
+          ? (doc as any).attachments
+          : JSON.parse((doc as any).attachments || '[]'),
+        timestamp: (doc as any).timestamp || (doc as any).createdAt || (doc as any).$createdAt
       })) as unknown as EnhancedMessage[];
 
     } catch (error) {
@@ -274,37 +308,53 @@ export class EnhancedMessagingService {
     userId: string
   ): Promise<void> {
     try {
-      // Get unread messages  
-      const unreadMessages = await databases.listDocuments(
+      // Fetch messages for this conversation (avoid filtering by read flags/receiver to support legacy fields)
+      let candidates = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.MESSAGES,
         [
           Query.equal('conversationId', conversationId),
-          Query.equal('receiverId', userId),
-          Query.equal('isRead', false)
+          Query.limit(200)
         ]
       );
+      if (!candidates.documents?.length) {
+        candidates = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.MESSAGES,
+          [
+            Query.equal('conversation_id', conversationId),
+            Query.limit(200)
+          ]
+        );
+      }
 
       // Update each message
-      const updatePromises = unreadMessages.documents.map(message =>
+      const updatePromises = candidates.documents
+        .filter((m: any) =>
+          // only those addressed to this user
+          ((m.receiverId === userId) || (m.receiver_id === userId)) &&
+          !(m.isRead === true || m.read === true)
+        )
+        .map(message =>
         databases.updateDocument(
           DATABASE_ID,
           COLLECTIONS.MESSAGES,
           message.$id,
-          { isRead: true, status: 'read' }
+          { isRead: true, read: true, status: 'read' }
         )
       );
 
       await Promise.all(updatePromises);
 
-      // Update conversation unread count
+      // Update conversation unread count (skip if missing)
+      try {
       const conversation = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.CONVERSATIONS,
         conversationId
       );
 
-      const unreadCount = JSON.parse(conversation.unreadCount || '{}');
+        const unreadCount = JSON.parse((conversation as any).unreadCount || '{}');
       unreadCount[userId] = 0;
 
       await databases.updateDocument(
@@ -316,6 +366,9 @@ export class EnhancedMessagingService {
           updatedAt: new Date().toISOString()
         }
       );
+      } catch (_e) {
+        console.warn('Warning: conversation not found while marking as read');
+      }
 
     } catch (error) {
       console.error('Error marking messages as read:', error);
@@ -356,18 +409,24 @@ export class EnhancedMessagingService {
       );
 
     } catch (error) {
-      console.error('Error updating conversation:', error);
-      throw new Error('Failed to update conversation');
+      // If conversation is missing, skip without throwing
+      console.warn('Warning: cannot update conversation last message:', error);
     }
   }
 
   // Delete message
   static async deleteMessage(messageId: string): Promise<void> {
     try {
-      await databases.deleteDocument(
+      // Soft delete to keep conversation consistency
+      await databases.updateDocument(
         DATABASE_ID,
         COLLECTIONS.MESSAGES,
-        messageId
+        messageId,
+        {
+          content: 'Сообщение удалено',
+          edited: true,
+          editedAt: new Date().toISOString()
+        }
       );
     } catch (error) {
       console.error('Error deleting message:', error);
@@ -394,7 +453,9 @@ export class EnhancedMessagingService {
 
       return {
         ...message,
-        attachments: JSON.parse(message.attachments || '[]')
+        attachments: Array.isArray((message as any).attachments)
+          ? (message as any).attachments
+          : []
       } as unknown as EnhancedMessage;
 
     } catch (error) {

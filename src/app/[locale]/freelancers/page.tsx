@@ -538,6 +538,7 @@ function FreelancerCard({
     // Получаем текущую локаль из URL
     const currentLocale = window.location.pathname.split('/')[1] || 'en';
 
+    // Открываем профиль конкретного фрилансера
     router.push(`/${currentLocale}/profile/${freelancer.id}`);
   };
 

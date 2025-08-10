@@ -1,12 +1,14 @@
+// Use env-based collection IDs to match actual Appwrite setup
 import {
   databases,
   DATABASE_ID,
   COLLECTIONS,
-  UserDocument,
-  createPermissions,
-  Query,
-  ID,
-} from "./database";
+  account,
+} from "@/lib/appwrite";
+
+// Keep shared types locally to avoid mismatch
+import type { UserDocument } from "./database";
+import { Permission, Role, Query, ID } from 'appwrite';
 
 // Users API Service
 export class UsersService {
@@ -30,7 +32,12 @@ export class UsersService {
           topRated: false,
           availability: "available",
         },
-        createPermissions(userId),
+        [
+          Permission.read(Role.any()),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ],
       );
 
       return user as UserDocument;
@@ -50,7 +57,12 @@ export class UsersService {
       );
 
       return user as UserDocument;
-    } catch (error) {
+    } catch (error: any) {
+      // Gracefully ignore 404 (document not found) without noisy logs
+      const message: string = error?.message || '';
+      if (message.includes('Document with the requested ID could not be found')) {
+        return null;
+      }
       console.error("Error fetching user profile:", error);
       return null;
     }
