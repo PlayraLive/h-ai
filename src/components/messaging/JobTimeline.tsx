@@ -323,10 +323,30 @@ export default function JobTimeline({
 
             {isClient && job.status === 'in_progress' && (
               <button
-                onClick={() => {
-                  if (onSendMessage) {
+                onClick={async () => {
+                  try {
                     const amount = job.budgetMax || job.budget || 0;
-                    onSendMessage(`🧾 Счет к оплате: ${formatCurrency(amount)}. Пожалуйста, подтвердите оплату для продолжения работ.`, 'payment');
+                    const res = await fetch('/api/payments/checkout', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        jobId: job.$id,
+                        title: job.title,
+                        amount,
+                        currency: 'usd',
+                        clientId: user?.$id,
+                        freelancerId: applications.find(a => a.status === 'accepted')?.freelancerId
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    } else {
+                      alert('Не удалось создать платёж.');
+                    }
+                  } catch (e) {
+                    console.error('Checkout error', e);
+                    alert('Ошибка оплаты');
                   }
                 }}
                 className="px-3 py-1 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700"
