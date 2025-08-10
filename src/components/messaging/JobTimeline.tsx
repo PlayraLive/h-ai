@@ -303,7 +303,7 @@ export default function JobTimeline({
               {job.status === 'cancelled' && 'Отменен'}
             </span>
 
-            {isClient && job.status === 'in_progress' && (
+            {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
               <button
                 onClick={() => {
                   // выбрать принятого фрилансера
@@ -312,7 +312,7 @@ export default function JobTimeline({
                     setSelectedFreelancer(accepted);
                     setShowCompletionModal(true);
                   } else {
-                    alert('Нет принятого исполнителя для завершения контракта');
+                    alert('Нет принятого исполнителя. Вы можете закрыть джобс без завершения контракта (отмена).');
                   }
                 }}
                 className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700"
@@ -321,7 +321,7 @@ export default function JobTimeline({
               </button>
             )}
 
-            {isClient && job.status === 'in_progress' && (
+            {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
               <button
                 onClick={async () => {
                   try {
@@ -352,6 +352,30 @@ export default function JobTimeline({
                 className="px-3 py-1 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700"
               >
                 Оплатить
+              </button>
+            )}
+
+            {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
+              <button
+                onClick={async () => {
+                  try {
+                    const confirmCancel = window.confirm('Закрыть джобс? Это пометит его как отменённый.');
+                    if (!confirmCancel) return;
+                    const res = await fetch(`/api/jobs/${job.$id}/cancel`, { method: 'POST' });
+                    if (res.ok) {
+                      onUpdateJob?.(job.$id, { status: 'cancelled' });
+                      onSendMessage?.('⛔ Джобс закрыт клиентом.', 'status');
+                    } else {
+                      alert('Не удалось закрыть джобс');
+                    }
+                  } catch (e) {
+                    console.error('Cancel job error', e);
+                    alert('Ошибка при закрытии джобса');
+                  }
+                }}
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-600 text-white hover:bg-gray-700"
+              >
+                Закрыть джобс
               </button>
             )}
           </div>
