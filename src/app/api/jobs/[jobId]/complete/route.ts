@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databases, DATABASE_ID, COLLECTIONS, ID } from '@/lib/appwrite/database';
+import { EnhancedMessagingService } from '@/lib/services/enhanced-messaging';
 
 export async function POST(
   request: NextRequest,
@@ -16,6 +17,13 @@ export async function POST(
       );
     }
 
+    // Get job details first
+    const job = await databases.getDocument(
+      DATABASE_ID,
+      COLLECTIONS.JOBS,
+      params.jobId
+    );
+
     // 1. Обновить статус джобса
     await databases.updateDocument(
       DATABASE_ID,
@@ -28,19 +36,31 @@ export async function POST(
       }
     );
 
-    // 2. Создать запись о завершении проекта
-    const completionRecord = await databases.createDocument(
+    // 2. Создать отзыв клиента о фрилансере
+    const clientReview = await databases.createDocument(
       DATABASE_ID,
       COLLECTIONS.REVIEWS,
       ID.unique(),
       {
         jobId: params.jobId,
-        freelancerId,
-        clientId,
+        projectId: params.jobId,
+        reviewerId: clientId,
+        revieweeId: freelancerId,
+        reviewerType: 'client',
         rating,
+        title: `Review for ${job.freelancerName}`,
         comment,
-        paymentAmount,
-        completedAt: new Date().toISOString()
+        tags: JSON.stringify([]),
+        skillRatings: JSON.stringify({
+          communication: rating,
+          quality: rating,
+          timeliness: rating,
+          professionalism: rating
+        }),
+        isPublic: true,
+        helpful: 0,
+        notHelpful: 0,
+        createdAt: new Date().toISOString()
       }
     );
 
@@ -74,67 +94,104 @@ export async function POST(
 
     // 4. Создать запись в портфолио фрилансера
     try {
-      const job = await databases.getDocument(
-        DATABASE_ID,
-        COLLECTIONS.JOBS,
-        params.jobId
-      );
-
       await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.PROJECTS,
         ID.unique(),
         {
           freelancerId,
+          clientId,
           jobId: params.jobId,
           title: job.title,
           description: job.description,
           category: job.category,
-          skills: job.skills,
+          skills: Array.isArray(job.skills) ? job.skills : JSON.parse(job.skills || '[]'),
           budget: paymentAmount,
           rating,
           clientComment: comment,
           completedAt: new Date().toISOString(),
-          status: 'completed'
+          status: 'completed',
+          clientName: job.clientName || 'Anonymous Client',
+          image: null, // Add project images later
+          tags: Array.isArray(job.tags) ? job.tags : JSON.parse(job.tags || '[]')
         }
       );
     } catch (error) {
       console.error('Error creating portfolio item:', error);
     }
 
-    // 5. Создать уведомление для фрилансера
+    // 5. Отправить системное сообщение о завершении проекта
     try {
-      const jobData = await databases.getDocument(
-        DATABASE_ID,
-        COLLECTIONS.JOBS,
-        params.jobId
-      );
+      const conversationId = `job-${params.jobId}`;
+      await EnhancedMessagingService.sendMessage({
+        conversationId,
+        senderId: 'system',
+        receiverId: freelancerId,
+        content: `🎉 **Проект завершен!**\n\nКлиент завершил проект "${job.title}".\n\n💰 **Оплачено:** $${paymentAmount}\n⭐ **Рейтинг:** ${rating}/5\n💬 **Отзыв:** "${comment}"\n\nПоздравляем с успешным завершением!`,
+        messageType: 'system',
+        metadata: {
+          projectCompleted: true,
+          jobId: params.jobId,
+          finalPayment: paymentAmount,
+          rating: rating
+        }
+      });
+    } catch (msgError) {
+      console.error('Error sending completion message:', msgError);
+    }
 
+    // 6. Создать уведомления
+    try {
+      // Уведомление для фрилансера
       await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.NOTIFICATIONS,
         ID.unique(),
         {
           userId: freelancerId,
-          title: '🎉 Проект завершен!',
-          message: `Ваш проект "${jobData.title}" был успешно завершен. Рейтинг: ${rating}/5`,
           type: 'project_completed',
-          priority: 'high',
-          action_url: `/en/portfolio`,
-          metadata: JSON.stringify({
+          title: '🎉 Проект завершен!',
+          message: `Ваш проект "${job.title}" завершен с рейтингом ${rating}/5. Оплата: $${paymentAmount}`,
+          data: JSON.stringify({
             jobId: params.jobId,
             rating,
-            paymentAmount
-          })
+            paymentAmount,
+            comment,
+            chatUrl: `/en/messages?job=${params.jobId}`,
+            reviewId: clientReview.$id
+          }),
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }
+      );
+
+      // Уведомление клиенту о возможности оставить отзыв фрилансеру (взаимный отзыв)
+      await databases.createDocument(
+        DATABASE_ID,
+        COLLECTIONS.NOTIFICATIONS,
+        ID.unique(),
+        {
+          userId: clientId,
+          type: 'review_request',
+          title: '⭐ Время для отзыва',
+          message: `Проект "${job.title}" завершен. Теперь фрилансер может оставить отзыв о работе с вами`,
+          data: JSON.stringify({
+            jobId: params.jobId,
+            freelancerId,
+            freelancerName: job.freelancerName,
+            actionUrl: `/en/jobs/${params.jobId}?action=review`
+          }),
+          isRead: false,
+          createdAt: new Date().toISOString()
         }
       );
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('Error creating notifications:', error);
     }
 
     return NextResponse.json({
       success: true,
-      completion: completionRecord
+      completion: clientReview
     });
 
   } catch (error) {

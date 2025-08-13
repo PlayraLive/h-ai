@@ -177,8 +177,33 @@ export default function DashboardPage() {
           setUserType(data.profile.user_type);
         }
       }
+
+      // Загружаем реальную статистику
+      await loadUserStats();
     } catch (error) {
       console.error('Error loading user profile:', error);
+    }
+  };
+
+  const loadUserStats = async () => {
+    if (!user) return;
+
+    try {
+      setStatsLoading(true);
+      const response = await fetch(`/api/users/${user.$id}/stats`);
+      const data = await response.json();
+
+      if (data.success) {
+        setUserStats(prev => ({
+          ...prev,
+          ...data.stats,
+          joinedDate: user.$createdAt
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -703,7 +728,7 @@ export default function DashboardPage() {
   const freelancerStats = [
     {
       label: "Total Earnings",
-      value: safeCurrency(user?.totalEarnings || 0),
+      value: safeCurrency(userStats.totalEarnings || 0),
       change: "+12%",
       changeType: "positive",
       icon: DollarSign,
@@ -713,11 +738,8 @@ export default function DashboardPage() {
     },
     {
       label: "Active Projects",
-      value: (user?.totalEarnings
-        ? Math.floor(user.totalEarnings / 1000)
-        : userStats.portfolioItems
-      ).toString(),
-      change: `+${Math.max(0, userStats.portfolioItems - 3)}`,
+      value: userStats.activeJobs.toString(),
+      change: `+${Math.max(0, userStats.activeJobs - 1)}`,
       changeType: "positive",
       icon: Briefcase,
       color: "text-blue-400",
@@ -726,8 +748,8 @@ export default function DashboardPage() {
     },
     {
       label: "Completed Jobs",
-      value: (user?.completedJobs || 0).toString(),
-      change: "+5",
+      value: userStats.completedJobs.toString(),
+      change: `+${Math.max(0, userStats.completedJobs - 3)}`,
       changeType: "positive",
       icon: CheckCircle,
       color: "text-purple-400",
@@ -736,7 +758,7 @@ export default function DashboardPage() {
     },
     {
       label: "Client Rating",
-      value: (user?.rating || 0).toFixed(1),
+      value: userStats.rating > 0 ? userStats.rating.toFixed(1) : "0.0",
       change: "+0.1",
       changeType: "positive",
       icon: Star,
@@ -749,7 +771,7 @@ export default function DashboardPage() {
   const clientStats = [
     {
       label: "Total Spent",
-      value: safeCurrency(user?.totalEarnings || 0),
+      value: safeCurrency(userStats.totalSpent || 0),
       change: "+18%",
       changeType: "positive",
       icon: DollarSign,
@@ -759,10 +781,7 @@ export default function DashboardPage() {
     },
     {
       label: "Active Jobs",
-      value: (user?.totalEarnings
-        ? Math.floor(user.totalEarnings / 2000)
-        : userStats.portfolioItems
-      ).toString(),
+      value: userStats.activeJobs.toString(),
       change: "+1",
       changeType: "positive",
       icon: Briefcase,
@@ -772,7 +791,7 @@ export default function DashboardPage() {
     },
     {
       label: "Hired Freelancers",
-      value: (user?.completedJobs || 0).toString(),
+      value: userStats.hiredFreelancers.toString(),
       change: "+3",
       changeType: "positive",
       icon: Users,
@@ -782,7 +801,7 @@ export default function DashboardPage() {
     },
     {
       label: "Success Rate",
-      value: `${user?.successRate || 96}%`,
+      value: `${Math.round(userStats.successRate || 0)}%`,
       change: "+2%",
       changeType: "positive",
       icon: TrendingUp,

@@ -5,6 +5,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { JobsService, ApplicationsService } from '@/lib/appwrite/jobs';
 import { cn } from '@/lib/utils';
 import JobCompletionModal from '@/components/jobs/JobCompletionModal';
+import MutualReviewModal from '@/components/reviews/MutualReviewModal';
 import {
   Calendar,
   Clock,
@@ -83,6 +84,7 @@ export default function JobTimeline({
   const [hasApplied, setHasApplied] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [selectedFreelancer, setSelectedFreelancer] = useState<any>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const isClient = user?.$id === job.clientId;
   const isFreelancer = !isClient;
@@ -775,6 +777,15 @@ export default function JobTimeline({
                        <p className="text-sm text-gray-500 dark:text-gray-400">
                          Проект успешно завершен
                        </p>
+                       <div className="mt-3 flex space-x-2">
+                         <button
+                           onClick={() => setShowReviewModal(true)}
+                           className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2"
+                         >
+                           <Star className="w-4 h-4" />
+                           <span>{isClient ? 'Оценить фрилансера' : 'Оценить клиента'}</span>
+                         </button>
+                       </div>
                      </div>
                    </div>
                  )}
@@ -784,19 +795,41 @@ export default function JobTimeline({
                  )}
        </div>
 
-       {/* Job Completion Modal */}
-       {showCompletionModal && selectedFreelancer && (
-         <JobCompletionModal
-           isOpen={showCompletionModal}
-           onClose={() => {
-             setShowCompletionModal(false);
-             setSelectedFreelancer(null);
-           }}
-           job={job}
-           freelancer={selectedFreelancer}
-           onComplete={handleJobCompletion}
-         />
-       )}
-     </div>
+             {/* Job Completion Modal */}
+      {showCompletionModal && selectedFreelancer && (
+        <JobCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setSelectedFreelancer(null);
+          }}
+          job={job}
+          freelancer={selectedFreelancer}
+          onComplete={handleJobCompletion}
+        />
+      )}
+
+      {/* Mutual Review Modal */}
+      {showReviewModal && job.status === 'completed' && (
+        <MutualReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          job={{
+            $id: job.$id,
+            title: job.title,
+            description: job.description,
+            clientId: job.clientId,
+            freelancerId: job.freelancerId || '',
+            freelancerName: job.freelancerName || 'Freelancer',
+            selectedBudget: job.selectedBudget || job.budgetMax || 0,
+            selectedDuration: job.selectedDuration || 'Not specified'
+          }}
+          onReviewComplete={() => {
+            // Refresh job data or show success message
+            console.log('Review completed successfully');
+          }}
+        />
+      )}
+    </div>
    );
  } 
