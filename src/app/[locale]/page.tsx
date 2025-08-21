@@ -1,5 +1,6 @@
 import HeroSection from '@/components/HeroSection';
 import MobileHeroSection from '@/components/MobileHeroSection';
+
 import AISpecialistsGrid from '@/components/AISpecialistsGrid';
 import SolutionsCarousel from '@/components/SolutionsCarousel';
 import Navbar from '@/components/Navbar';
@@ -25,6 +26,8 @@ export default async function HomePage({
         <div className="block md:hidden">
           <MobileHeroSection />
         </div>
+
+
 
         {/* AI Specialists Carousel */}
                       <AISpecialistsGrid limit={4} title="AI Специалисты" />

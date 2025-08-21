@@ -28,7 +28,6 @@ export interface JobRequirements {
   budgetMin?: number;
   budgetMax?: number;
   category?: string;
-  location?: string;
 }
 
 export interface MatchScore {
@@ -51,6 +50,8 @@ export class FreelancerMatchingService {
     limit: number = 10
   ): Promise<{ freelancers: FreelancerProfile[]; matches: MatchScore[] }> {
     try {
+      console.log('🔍 Поиск фрилансеров для требований:', jobRequirements);
+      
       // Получаем всех фрилансеров
       const freelancersResponse = await databases.listDocuments(
         DATABASE_ID,
@@ -58,21 +59,37 @@ export class FreelancerMatchingService {
         [
           Query.equal('userType', 'freelancer'),
           Query.limit(100), // Ограничиваем для производительности
-          Query.orderDesc('rating')
+          // Query.orderDesc('rating') // Убираем сортировку по рейтингу пока не исправим
         ]
       );
 
       const freelancers = freelancersResponse.documents as FreelancerProfile[];
+      
+      console.log('🔍 Найдено фрилансеров в базе:', freelancers.length);
+      if (freelancers.length > 0) {
+        console.log('🔍 Первый фрилансер:', {
+          id: freelancers[0].$id,
+          name: freelancers[0].name,
+          skills: freelancers[0].skills,
+          userType: freelancers[0].userType
+        });
+      }
 
       // Вычисляем совпадения для каждого фрилансера
       const matches: MatchScore[] = [];
 
       for (const freelancer of freelancers) {
-        const matchScore = this.calculateMatchScore(freelancer, jobRequirements);
-        if (matchScore.score > 0.3) { // Минимальный порог совпадения
-          matches.push(matchScore);
+        try {
+          const matchScore = this.calculateMatchScore(freelancer, jobRequirements);
+          if (matchScore.score > 0.1) { // Снижаем минимальный порог совпадения
+            matches.push(matchScore);
+          }
+        } catch (error) {
+          console.warn('Ошибка вычисления матча для фрилансера:', freelancer.$id, error);
         }
       }
+
+      console.log('🔍 Вычислено матчей:', matches.length);
 
       // Сортируем по убыванию рейтинга совпадения
       matches.sort((a, b) => b.score - a.score);
@@ -81,14 +98,16 @@ export class FreelancerMatchingService {
       const topMatches = matches.slice(0, limit);
       const matchingFreelancers = topMatches.map(match => 
         freelancers.find(f => f.$id === match.freelancerId)!
-      );
+      ).filter(Boolean); // Убираем undefined
+
+      console.log('🔍 Возвращаем фрилансеров:', matchingFreelancers.length);
 
       return {
         freelancers: matchingFreelancers,
         matches: topMatches
       };
     } catch (error) {
-      console.error('Error finding matching freelancers:', error);
+      console.error('❌ Ошибка поиска фрилансеров:', error);
       throw new Error('Failed to find matching freelancers');
     }
   }
@@ -100,44 +119,54 @@ export class FreelancerMatchingService {
     freelancer: FreelancerProfile,
     jobRequirements: JobRequirements
   ): MatchScore {
+    console.log('🔍 Вычисляем матч для фрилансера:', freelancer.name, 'ID:', freelancer.$id);
+    console.log('🔍 Навыки фрилансера:', freelancer.skills);
+    console.log('🔍 Требуемые навыки:', jobRequirements.skills);
+    
     const reasons: string[] = [];
     let totalScore = 0;
 
-    // 1. Совпадение навыков (40% от общего рейтинга)
+    // 1. Совпадение навыков (50% от общего рейтинга)
     const skillsMatch = this.calculateSkillsMatch(freelancer.skills || [], jobRequirements.skills);
-    const skillsScore = skillsMatch * 0.4;
+    const skillsScore = skillsMatch * 0.5;
     totalScore += skillsScore;
 
     if (skillsMatch > 0.7) {
       reasons.push('Отличное совпадение навыков');
     } else if (skillsMatch > 0.4) {
       reasons.push('Хорошее совпадение навыков');
+    } else if (skillsMatch > 0.1) {
+      reasons.push('Частичное совпадение навыков');
     }
 
-    // 2. Рейтинг фрилансера (25% от общего рейтинга)
+    // 2. Рейтинг фрилансера (20% от общего рейтинга)
     const rating = freelancer.rating || 0;
-    const ratingScore = (rating / 5) * 0.25;
+    const ratingScore = (rating / 5) * 0.2;
     totalScore += ratingScore;
 
     if (rating >= 4.5) {
       reasons.push('Высокий рейтинг');
     } else if (rating >= 4.0) {
       reasons.push('Хороший рейтинг');
+    } else if (rating > 0) {
+      reasons.push('Есть рейтинг');
     }
 
     // 3. Опыт работы (20% от общего рейтинга)
     const completedJobs = freelancer.completedJobs || 0;
-    const experienceScore = Math.min(completedJobs / 50, 1) * 0.2; // Максимум при 50+ проектах
+    const experienceScore = Math.min(completedJobs / 20, 1) * 0.2; // Максимум при 20+ проектах
     totalScore += experienceScore;
 
-    if (completedJobs >= 20) {
+    if (completedJobs >= 10) {
       reasons.push('Большой опыт работы');
-    } else if (completedJobs >= 5) {
+    } else if (completedJobs >= 3) {
       reasons.push('Достаточный опыт');
+    } else if (completedJobs > 0) {
+      reasons.push('Есть опыт');
     }
 
-    // 4. Доступность (10% от общего рейтинга)
-    const availabilityScore = freelancer.availability === 'available' ? 0.1 : 0.05;
+    // 4. Доступность (5% от общего рейтинга)
+    const availabilityScore = freelancer.availability === 'available' ? 0.05 : 0.025;
     totalScore += availabilityScore;
 
     if (freelancer.availability === 'available') {
@@ -176,12 +205,15 @@ export class FreelancerMatchingService {
       reasons.push('Быстрый отклик');
     }
 
+    const finalScore = Math.min(totalScore, 1);
+    console.log('🔍 Финальный матч для', freelancer.name, ':', finalScore, 'Причины:', reasons);
+    
     return {
       freelancerId: freelancer.$id,
-      score: Math.min(totalScore, 1), // Максимум 1.0
+      score: finalScore, // Максимум 1.0
       skillsMatch,
       ratingScore: rating / 5,
-      experienceScore: Math.min(completedJobs / 50, 1),
+      experienceScore: Math.min(completedJobs / 20, 1),
       availabilityScore: freelancer.availability === 'available' ? 1 : 0.5,
       budgetCompatibility,
       reasons
@@ -193,6 +225,7 @@ export class FreelancerMatchingService {
    */
   private static calculateSkillsMatch(freelancerSkills: string[], jobSkills: string[]): number {
     if (jobSkills.length === 0) return 0.5; // Нейтральный балл если навыки не указаны
+    if (freelancerSkills.length === 0) return 0; // Нет навыков у фрилансера
 
     const normalizedFreelancerSkills = freelancerSkills.map(skill => skill.toLowerCase().trim());
     const normalizedJobSkills = jobSkills.map(skill => skill.toLowerCase().trim());
@@ -246,22 +279,6 @@ export class FreelancerMatchingService {
   }
 
   /**
-   * Получить объяснение почему фрилансер подходит
-   */
-  static getMatchExplanation(match: MatchScore): string {
-    const percentage = Math.round(match.score * 100);
-    let explanation = `Совпадение ${percentage}%: `;
-    
-    if (match.reasons.length > 0) {
-      explanation += match.reasons.join(', ');
-    } else {
-      explanation += 'Базовое совпадение профиля';
-    }
-    
-    return explanation;
-  }
-
-  /**
    * Фильтровать фрилансеров по дополнительным критериям
    */
   static filterFreelancers(
@@ -271,31 +288,79 @@ export class FreelancerMatchingService {
       maxHourlyRate?: number;
       verified?: boolean;
       available?: boolean;
-      location?: string;
     }
   ): FreelancerProfile[] {
-    return freelancers.filter(freelancer => {
-      if (filters.minRating && (freelancer.rating || 0) < filters.minRating) {
-        return false;
-      }
+    let filtered = [...freelancers];
+
+    if (filters.minRating && filters.minRating > 0) {
+      filtered = filtered.filter(f => (f.rating || 0) >= filters.minRating!);
+    }
+
+    if (filters.maxHourlyRate && filters.maxHourlyRate < 1000) {
+      filtered = filtered.filter(f => (f.hourlyRate || 0) <= filters.maxHourlyRate!);
+    }
+
+    if (filters.verified) {
+      filtered = filtered.filter(f => f.verification_status === 'verified');
+    }
+
+    if (filters.available) {
+      filtered = filtered.filter(f => f.availability === 'available');
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Получить топ фрилансеров по рейтингу
+   */
+  static async getTopFreelancers(limit: number = 10): Promise<FreelancerProfile[]> {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.USERS,
+        [
+          Query.equal('userType', 'freelancer'),
+          Query.limit(limit),
+          Query.orderDesc('$createdAt') // Сортируем по дате создания
+        ]
+      );
+
+      return response.documents as FreelancerProfile[];
+    } catch (error) {
+      console.error('Error getting top freelancers:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Получить фрилансеров по навыкам
+   */
+  static async getFreelancersBySkills(skills: string[], limit: number = 10): Promise<FreelancerProfile[]> {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.USERS,
+        [
+          Query.equal('userType', 'freelancer'),
+          Query.limit(limit)
+        ]
+      );
+
+      const freelancers = response.documents as FreelancerProfile[];
       
-      if (filters.maxHourlyRate && (freelancer.hourlyRate || 0) > filters.maxHourlyRate) {
-        return false;
-      }
-      
-      if (filters.verified && freelancer.verification_status !== 'verified') {
-        return false;
-      }
-      
-      if (filters.available && freelancer.availability !== 'available') {
-        return false;
-      }
-      
-      if (filters.location && freelancer.location !== filters.location) {
-        return false;
-      }
-      
-      return true;
-    });
+      // Фильтруем по навыкам
+      return freelancers.filter(freelancer => 
+        freelancer.skills && freelancer.skills.some(skill =>
+          skills.some(requiredSkill =>
+            skill.toLowerCase().includes(requiredSkill.toLowerCase()) ||
+            requiredSkill.toLowerCase().includes(skill.toLowerCase())
+          )
+        )
+      );
+    } catch (error) {
+      console.error('Error getting freelancers by skills:', error);
+      return [];
+    }
   }
 }

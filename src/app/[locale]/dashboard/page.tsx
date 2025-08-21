@@ -133,6 +133,16 @@ export default function DashboardPage() {
     commentsReceived: 0,
     sharesReceived: 0,
     joinedDate: new Date().toISOString(),
+    // Добавляем недостающие поля для фрилансера/клиента
+    activeJobs: 0,
+    completedJobs: 0,
+    totalEarnings: 0,
+    rating: 0,
+    totalSpent: 0,
+    projectsPosted: 0,
+    averageProjectCost: 0,
+    successRate: 0,
+    hiredFreelancers: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -360,98 +370,7 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  // Load real user statistics
-  const loadUserStats = useCallback(async () => {
-    if (!user) return;
 
-    setStatsLoading(true);
-    try {
-      // Get user profile data
-      const userProfile = await UsersService.getUserProfile(user.$id);
-
-      if (userProfile) {
-        // Get portfolio count
-        const portfolioResponse = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTIONS.PROJECTS,
-          [Query.equal("userId", user.$id)],
-        );
-
-        // Get user's reels
-        const reelsResponse = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTIONS.REELS,
-          [Query.equal("creatorId", user.$id)],
-        );
-
-        // Get interaction stats for user's content
-        let totalViews = 0;
-        let totalLikes = 0;
-        let featuredItems = 0;
-
-        // Calculate stats from portfolio
-        for (const item of portfolioResponse.documents) {
-          const stats = await InteractionsService.getInteractionStats(
-            item.$id,
-            "portfolio",
-          );
-          totalViews += stats.views;
-          totalLikes += stats.likes;
-          if (item.featured) featuredItems++;
-        }
-
-        // Calculate stats from reels
-        for (const reel of reelsResponse.documents) {
-          const stats = await InteractionsService.getInteractionStats(
-            reel.$id,
-            "reel",
-          );
-          totalViews += stats.views;
-          totalLikes += stats.likes;
-        }
-
-        // Get followers and following
-        const followers = await InteractionsService.getUserFollowers(user.$id);
-        const following = await InteractionsService.getUserFollowing(user.$id);
-
-        // Get user's projects
-        const projectsResponse = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTIONS.PROJECTS,
-          [Query.equal("freelancerId", user.$id)],
-        );
-
-        // Calculate days since joining
-        const joinDate = new Date(
-          userProfile.$createdAt || new Date().toISOString(),
-        );
-        const today = new Date();
-        const daysSinceJoining = Math.floor(
-          (today.getTime() - joinDate.getTime()) / (1000 * 3600 * 24),
-        );
-
-        setUserStats({
-          portfolioItems: portfolioResponse.documents.length,
-          totalViews,
-          totalLikes,
-          averageRating: userProfile.rating || 0,
-          featuredItems,
-          nftItems: reelsResponse.documents.filter((r: any) => r.isPremium)
-            .length,
-          streakDays: Math.min(daysSinceJoining, 30),
-          followers: followers.length,
-          following: following.length,
-          commentsReceived: userProfile.reviewsCount || 0,
-          sharesReceived: 0,
-          joinedDate: userProfile.$createdAt || new Date().toISOString(),
-        });
-      }
-    } catch (error) {
-      console.error("Error loading user stats:", error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [user]);
 
   // Load AI orders from API
   const loadAIOrders = useCallback(async () => {
@@ -1022,32 +941,49 @@ export default function DashboardPage() {
       <div className="w-full pb-20 lg:pb-0 main-content">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4 sm:space-y-6">
           
-          {/* Onboarding Alert */}
+          {/* Enhanced Onboarding Alert */}
           {needsOnboarding && !showOnboarding && (
-            <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-white" />
+            <div className="relative bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-purple-500/10 border border-purple-500/20 rounded-2xl p-6 overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/20 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-600/20 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
+              
+              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start space-x-4">
+                  <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25 animate-pulse">
+                    <Sparkles className="w-7 h-7 text-white" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {userType === 'client' ? 'Завершите настройку профиля' : 'Создайте профессиональный профиль'}
+                  <div className="max-w-md">
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      {userType === 'client' ? '🚀 Завершите настройку профиля' : '⭐ Создайте профессиональный профиль'}
                     </h3>
-                    <p className="text-gray-400">
+                    <p className="text-gray-300 leading-relaxed">
                       {userType === 'client' 
-                        ? 'Заполните информацию о компании для привлечения лучших фрилансеров'
-                        : 'Добавьте информацию о навыках для получения большего количества заказов'}
+                        ? 'Заполните информацию о компании для привлечения лучших фрилансеров. Это займет всего 2 минуты!'
+                        : 'Добавьте информацию о навыках для получения большего количества заказов. Создайте впечатляющий профиль!'}
                     </p>
+                    <div className="flex items-center space-x-2 mt-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-400 font-medium">Быстрая настройка</span>
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => triggerOnboarding(userType === 'client' ? 'first_job' : 'first_application')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
-                >
-                  <span>Настроить</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button
+                    onClick={() => triggerOnboarding(userType === 'client' ? 'first_job' : 'first_application')}
+                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center space-x-3 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 hover:scale-105"
+                  >
+                    <span>🎯 Настроить профиль</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setNeedsOnboarding(false)}
+                    className="px-6 py-4 border border-gray-600 text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-xl font-medium transition-all duration-200"
+                  >
+                    Позже
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -1074,29 +1010,39 @@ export default function DashboardPage() {
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* User Type Switcher */}
-                  <div className="flex bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm">
-                    <button
-                      onClick={() => handleUserTypeChange("freelancer")}
-                      className={cn(
-                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                        userType === "freelancer"
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                          : "text-gray-400 hover:text-white hover:bg-gray-700/50",
-                      )}
-                    >
-                      👨‍💻 Freelancer
-                    </button>
-                    <button
-                      onClick={() => handleUserTypeChange("client")}
-                      className={cn(
-                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                        userType === "client"
-                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
-                          : "text-gray-400 hover:text-white hover:bg-gray-700/50",
-                      )}
-                    >
-                      🏢 Client
-                    </button>
+                  <div className="bg-gray-800/80 rounded-xl p-1 backdrop-blur-sm border border-gray-700/50">
+                    <div className="flex">
+                      <button
+                        onClick={() => handleUserTypeChange("freelancer")}
+                        className={cn(
+                          "relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 flex items-center space-x-2",
+                          userType === "freelancer"
+                            ? "text-white"
+                            : "text-gray-400 hover:text-white"
+                        )}
+                      >
+                        {userType === "freelancer" && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg shadow-lg shadow-blue-600/25" />
+                        )}
+                        <span className="relative z-10">👨‍💻</span>
+                        <span className="relative z-10 font-medium">Фрилансер</span>
+                      </button>
+                      <button
+                        onClick={() => handleUserTypeChange("client")}
+                        className={cn(
+                          "relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 flex items-center space-x-2",
+                          userType === "client"
+                            ? "text-white"
+                            : "text-gray-400 hover:text-white"
+                        )}
+                      >
+                        {userType === "client" && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg shadow-purple-600/25" />
+                        )}
+                        <span className="relative z-10">🏢</span>
+                        <span className="relative z-10 font-medium">Клиент</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Action Button */}

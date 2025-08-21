@@ -84,13 +84,21 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* CTA Button */}
+        {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="#user-type-selection"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-4 rounded-3xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <span className="text-lg">Начать работу</span>
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+          </Link>
+          
           <Link
             href="/en/specialists"
             className="group inline-flex items-center gap-3 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md text-gray-900 dark:text-white font-semibold px-8 py-4 rounded-3xl transition-all duration-300 border-2 border-gray-300/40 dark:border-white/30 hover:border-gray-400/60 dark:hover:border-white/50 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
           >
-            <span className="text-lg">Find AI Specialists</span>
+            <span className="text-lg">Найти специалистов</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>

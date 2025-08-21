@@ -7,6 +7,7 @@ import { AchievementProvider } from '@/contexts/AchievementContext';
 import { UserTypeProvider } from '@/contexts/UserTypeContext';
 import AuthProvider from '@/components/AuthProvider';
 import AuthCallback from '@/components/AuthCallback';
+import Web3Provider from '@/providers/Web3Provider';
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -14,19 +15,21 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthContextProvider>
-          <UserTypeProvider>
-            <AchievementProvider>
-              <AuthProvider>
-                <AuthCallback />
-                {children}
-              </AuthProvider>
-            </AchievementProvider>
-          </UserTypeProvider>
-        </AuthContextProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <Web3Provider>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthContextProvider>
+            <UserTypeProvider>
+              <AchievementProvider>
+                <AuthProvider>
+                  <AuthCallback />
+                  {children}
+                </AuthProvider>
+              </AchievementProvider>
+            </UserTypeProvider>
+          </AuthContextProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </Web3Provider>
   );
 } 

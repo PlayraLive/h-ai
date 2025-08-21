@@ -17,6 +17,28 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Исправляем проблемы с Web3 библиотеками в браузере
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+        ws: false,
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {

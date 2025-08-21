@@ -1,0 +1,27 @@
+{
+  "name": "blockchain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:mumbai": "npx hardhat run scripts/deploy.js --network polygonMumbai",
+    "deploy:amoy": "npx hardhat run scripts/deploy.js --network polygonAmoy",
+    "deploy:polygon": "npx hardhat run scripts/deploy.js --network polygon",
+    "deploy:base-sepolia": "npx hardhat run scripts/deploy.js --network baseSepolia",
+    "deploy:base": "npx hardhat run scripts/deploy.js --network base",
+    "deploy:arbitrum-sepolia": "npx hardhat run scripts/deploy.js --network arbitrumSepolia",
+    "deploy:arbitrum": "npx hardhat run scripts/deploy.js --network arbitrum"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.1",
+    "hardhat": "^3.0.0"
+  }
+}

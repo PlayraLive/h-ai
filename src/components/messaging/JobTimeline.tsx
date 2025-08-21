@@ -6,6 +6,7 @@ import { JobsService, ApplicationsService } from '@/lib/appwrite/jobs';
 import { cn } from '@/lib/utils';
 import JobCompletionModal from '@/components/jobs/JobCompletionModal';
 import MutualReviewModal from '@/components/reviews/MutualReviewModal';
+import CryptoPaymentModal from '@/components/web3/CryptoPaymentModal';
 import {
   Calendar,
   Clock,
@@ -44,7 +45,8 @@ import {
   XCircle,
   UserCheck,
   UserX,
-  MessageCircle
+  MessageCircle,
+  AlertTriangle
 } from 'lucide-react';
 
 interface JobTimelineProps {
@@ -85,6 +87,8 @@ export default function JobTimeline({
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [selectedFreelancer, setSelectedFreelancer] = useState<any>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showCryptoPayment, setShowCryptoPayment] = useState(false);
+  const [showJobMenu, setShowJobMenu] = useState(false);
 
   const isClient = user?.$id === job.clientId;
   const isFreelancer = !isClient;
@@ -95,6 +99,18 @@ export default function JobTimeline({
       loadApplications();
     }
   }, [job?.$id]);
+
+  // Close job menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showJobMenu && !(event.target as Element).closest('.job-menu-container')) {
+        setShowJobMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showJobMenu]);
 
   const loadApplications = async () => {
     setLoading(true);
@@ -192,6 +208,37 @@ export default function JobTimeline({
     } catch (error) {
       console.error('Error updating application:', error);
       alert('Не удалось обновить заявку. Попробуйте еще раз.');
+    }
+  };
+
+  // Handle escrow contract management
+  const handleEscrowAction = async (action: 'close' | 'release' | 'dispute', contractId?: string) => {
+    if (!isClient) return;
+    
+    try {
+      switch (action) {
+        case 'close':
+          if (confirm('Закрыть escrow контракт? Средства будут возвращены клиенту.')) {
+            // TODO: Implement escrow close
+            alert('Функция закрытия escrow будет добавлена позже');
+          }
+          break;
+        case 'release':
+          if (confirm('Выпустить средства фрилансеру? Это действие нельзя отменить.')) {
+            // TODO: Implement escrow release
+            alert('Функция выпуска средств будет добавлена позже');
+          }
+          break;
+        case 'dispute':
+          if (confirm('Открыть спор по escrow контракту?')) {
+            // TODO: Implement escrow dispute
+            alert('Функция открытия спора будет добавлена позже');
+          }
+          break;
+      }
+    } catch (error) {
+      console.error('Error handling escrow action:', error);
+      alert('Ошибка при выполнении действия');
     }
   };
 
@@ -305,94 +352,224 @@ export default function JobTimeline({
               {job.status === 'cancelled' && 'Отменен'}
             </span>
 
+            {/* Job Actions Menu */}
             {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
-              <button
-                onClick={() => {
-                  // выбрать принятого фрилансера
-                  const accepted = applications.find(a => a.status === 'accepted');
-                  if (accepted) {
-                    setSelectedFreelancer(accepted);
-                    setShowCompletionModal(true);
-                  } else {
-                    // Быстрое завершение без найма
-                    if (confirm('Завершить проект без найма исполнителя?')) {
-                      fetch(`/api/jobs/${job.$id}/quick-complete`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ clientId: user?.$id, title: job.title })
-                      }).then(async (res) => {
-                        if (res.ok) {
-                          onUpdateJob?.(job.$id, { status: 'completed' });
-                          onSendMessage?.('✅ Проект завершён без найма.', 'status');
-                        } else {
-                          alert('Не удалось завершить проект');
-                        }
-                      }).catch(() => alert('Ошибка завершения'));
-                    }
-                  }
-                }}
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700"
-              >
-                Завершить контракт
-              </button>
-            )}
+              <div className="relative job-menu-container">
+                <button
+                  onClick={() => setShowJobMenu(!showJobMenu)}
+                  className="p-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-700/30"
+                  title="Действия с джобсом"
+                >
+                  <MoreVertical className="w-5 h-5 text-gray-300" />
+                </button>
+                
+                {showJobMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-gray-800/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50">
+                    <div className="py-2">
+                      {/* Contract Management */}
+                      <div className="px-4 py-2">
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                          Управление контрактом
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          setShowJobMenu(false);
+                          // выбрать принятого фрилансера
+                          const accepted = applications.find(a => a.status === 'accepted');
+                          if (accepted) {
+                            setSelectedFreelancer(accepted);
+                            setShowCompletionModal(true);
+                          } else {
+                            // Быстрое завершение без найма
+                            if (confirm('Завершить проект без найма исполнителя?')) {
+                              fetch(`/api/jobs/${job.$id}/quick-complete`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clientId: user?.$id, title: job.title })
+                              }).then(async (res) => {
+                                if (res.ok) {
+                                  onUpdateJob?.(job.$id, { status: 'completed' });
+                                  onSendMessage?.('✅ Проект завершён без найма.', 'status');
+                                } else {
+                                  alert('Не удалось завершить проект');
+                                }
+                              }).catch(() => alert('Ошибка завершения'));
+                            }
+                          }
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors text-left"
+                      >
+                        <div className="p-2 bg-purple-600/20 rounded-lg">
+                          <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Завершить контракт</div>
+                          <div className="text-xs text-gray-400">Закрыть проект</div>
+                        </div>
+                      </button>
 
-            {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
-              <button
-                onClick={async () => {
-                  try {
-                    const amount = job.budgetMax || job.budget || 0;
-                    const res = await fetch('/api/payments/checkout', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        jobId: job.$id,
-                        title: job.title,
-                        amount,
-                        currency: 'usd',
-                        clientId: user?.$id,
-                        freelancerId: applications.find(a => a.status === 'accepted')?.freelancerId
-                      })
-                    });
-                    const data = await res.json();
-                    if (data.url) {
-                      window.location.href = data.url;
-                    } else {
-                      alert('Не удалось создать платёж.');
-                    }
-                  } catch (e) {
-                    console.error('Checkout error', e);
-                    alert('Ошибка оплаты');
-                  }
-                }}
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700"
-              >
-                Оплатить
-              </button>
-            )}
+                      {/* Payment Methods */}
+                      <div className="px-4 py-2 mt-2">
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                          Способы оплаты
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={async () => {
+                          setShowJobMenu(false);
+                          try {
+                            const amount = job.budgetMax || job.budget || 0;
+                            const res = await fetch('/api/payments/checkout', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                jobId: job.$id,
+                                title: job.title,
+                                amount,
+                                currency: 'usd',
+                                clientId: user?.$id,
+                                freelancerId: applications.find(a => a.status === 'accepted')?.freelancerId
+                              })
+                            });
+                            const data = await res.json();
+                            if (data.url) {
+                              window.location.href = data.url;
+                            } else {
+                              alert('Не удалось создать платёж.');
+                            }
+                          } catch (e) {
+                            console.error('Checkout error', e);
+                            alert('Ошибка оплаты');
+                          }
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors text-left"
+                      >
+                        <div className="p-2 bg-green-600/20 rounded-lg">
+                          <CreditCard className="w-4 h-4 text-green-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">💳 Оплата картой</div>
+                          <div className="text-xs text-gray-400">Stripe / банковские карты</div>
+                        </div>
+                      </button>
+                      
+                                             <button
+                         onClick={() => {
+                           setShowJobMenu(false);
+                           setShowCryptoPayment(true);
+                         }}
+                         className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors text-left"
+                       >
+                         <div className="p-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-lg">
+                           <Zap className="w-4 h-4 text-purple-400" />
+                         </div>
+                         <div>
+                           <div className="font-medium">⚡ Крипто-платеж</div>
+                           <div className="text-xs text-gray-400">Смарт-контракты / USDC</div>
+                         </div>
+                       </button>
 
-            {isClient && job.status !== 'completed' && job.status !== 'cancelled' && (
-              <button
-                onClick={async () => {
-                  try {
-                    const confirmCancel = window.confirm('Закрыть джобс? Это пометит его как отменённый.');
-                    if (!confirmCancel) return;
-                    const res = await fetch(`/api/jobs/${job.$id}/cancel`, { method: 'POST' });
-                    if (res.ok) {
-                      onUpdateJob?.(job.$id, { status: 'cancelled' });
-                      onSendMessage?.('⛔ Джобс закрыт клиентом.', 'status');
-                    } else {
-                      alert('Не удалось закрыть джобс');
-                    }
-                  } catch (e) {
-                    console.error('Cancel job error', e);
-                    alert('Ошибка при закрытии джобса');
-                  }
-                }}
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-600 text-white hover:bg-gray-700"
-              >
-                Закрыть джобс
-              </button>
+                       {/* Escrow Management - Only show if escrow exists */}
+                       {job.escrowContractId && (
+                         <>
+                           <div className="px-4 py-2 mt-2">
+                             <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                               Управление Escrow
+                             </div>
+                           </div>
+                           
+                           <button
+                             onClick={() => {
+                               setShowJobMenu(false);
+                               handleEscrowAction('release', job.escrowContractId);
+                             }}
+                             className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-green-900/30 text-green-400 hover:text-green-300 transition-colors text-left"
+                           >
+                             <div className="p-2 bg-green-600/20 rounded-lg">
+                               <CheckCircle className="w-4 h-4" />
+                             </div>
+                             <div>
+                               <div className="font-medium">✅ Выпустить средства</div>
+                               <div className="text-xs text-gray-400">Передать фрилансеру</div>
+                             </div>
+                           </button>
+                           
+                           <button
+                             onClick={() => {
+                               setShowJobMenu(false);
+                               handleEscrowAction('close', job.escrowContractId);
+                             }}
+                             className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-yellow-900/30 text-yellow-400 hover:text-yellow-300 transition-colors text-left"
+                           >
+                             <div className="p-2 bg-yellow-600/20 rounded-lg">
+                               <AlertCircle className="w-4 h-4" />
+                             </div>
+                             <div>
+                               <div className="font-medium">⚠️ Закрыть контракт</div>
+                               <div className="text-xs text-gray-400">Возврат средств клиенту</div>
+                             </div>
+                           </button>
+                           
+                           <button
+                             onClick={() => {
+                               setShowJobMenu(false);
+                               handleEscrowAction('dispute', job.escrowContractId);
+                             }}
+                             className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-orange-900/30 text-orange-400 hover:text-orange-300 transition-colors text-left"
+                           >
+                             <div className="p-2 bg-orange-600/20 rounded-lg">
+                               <AlertTriangle className="w-4 h-4" />
+                             </div>
+                             <div>
+                               <div className="font-medium">🚨 Открыть спор</div>
+                               <div className="text-xs text-gray-400">Арбитраж / разрешение</div>
+                             </div>
+                           </button>
+                         </>
+                       )}
+
+                      {/* Contract Actions */}
+                      <div className="px-4 py-2 mt-2">
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                          Действия с контрактом
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={async () => {
+                          setShowJobMenu(false);
+                          try {
+                            const confirmCancel = window.confirm('Закрыть джобс? Это пометит его как отменённый.');
+                            if (!confirmCancel) return;
+                            const res = await fetch(`/api/jobs/${job.$id}/cancel`, { method: 'POST' });
+                            if (res.ok) {
+                              onUpdateJob?.(job.$id, { status: 'cancelled' });
+                              onSendMessage?.('⛔ Джобс закрыт клиентом.', 'status');
+                            } else {
+                              alert('Не удалось закрыть джобс');
+                            }
+                          } catch (e) {
+                            console.error('Cancel job error', e);
+                            alert('Ошибка при закрытии джобса');
+                          }
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-red-900/30 text-red-400 hover:text-red-300 transition-colors text-left"
+                      >
+                        <div className="p-2 bg-red-600/20 rounded-lg">
+                          <XCircle className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Закрыть джобс</div>
+                          <div className="text-xs text-gray-400">Отменить проект</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -827,6 +1004,38 @@ export default function JobTimeline({
           onReviewComplete={() => {
             // Refresh job data or show success message
             console.log('Review completed successfully');
+          }}
+        />
+      )}
+
+      {/* Crypto Payment Modal */}
+      {showCryptoPayment && (
+        <CryptoPaymentModal
+          isOpen={showCryptoPayment}
+          onClose={() => setShowCryptoPayment(false)}
+          job={{
+            $id: job.$id,
+            title: job.title,
+            freelancerId: applications.find(a => a.status === 'accepted')?.freelancerId || job.freelancerId || '',
+            freelancerName: applications.find(a => a.status === 'accepted')?.freelancerName || job.freelancerName || 'Freelancer',
+            selectedBudget: job.selectedBudget || job.budgetMax || 0,
+            selectedDuration: job.selectedDuration || 'Not specified'
+          }}
+          onPaymentSuccess={(txHash, contractId) => {
+            console.log('Crypto payment successful:', { txHash, contractId });
+            // Update job status or refresh data
+            if (onUpdateJob) {
+              onUpdateJob(job.$id, { 
+                status: 'in_progress',
+                paymentMethod: 'crypto',
+                escrowContractId: contractId,
+                escrowTxHash: txHash
+              });
+            }
+                              // Send system message
+                  if (onSendMessage) {
+                    onSendMessage(`🔐 Создан escrow контракт: ${contractId.slice(0, 10)}...${contractId.slice(-8)}`, 'status');
+                  }
           }}
         />
       )}

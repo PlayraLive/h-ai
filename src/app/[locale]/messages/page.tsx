@@ -370,6 +370,63 @@ export default function EnhancedMessagesPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, jobCards.length]);
+
+  // Восстановление последней активной конверсации при загрузке
+  useEffect(() => {
+    if (isAuthenticated && user && conversations.length > 0 && !selectedConversation) {
+      // Пытаемся восстановить последнюю активную конверсацию
+      const lastActiveConversation = conversations.find(c => 
+        c.lastMessageTime && new Date(c.lastMessageTime) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Последние 7 дней
+      ) || conversations[0];
+      
+      if (lastActiveConversation) {
+        setSelectedConversation(lastActiveConversation.$id!);
+        loadConversationMessages(lastActiveConversation.$id!);
+      }
+    }
+  }, [isAuthenticated, user, conversations, selectedConversation]);
+
+  // Сохранение сообщений в localStorage для резервного копирования
+  useEffect(() => {
+    if (messages.length > 0 && selectedConversation) {
+      try {
+        const key = `messages_${selectedConversation}_${user?.$id}`;
+        const dataToSave = {
+          conversationId: selectedConversation,
+          messages: messages,
+          lastUpdated: new Date().toISOString(),
+          userId: user?.$id
+        };
+        localStorage.setItem(key, JSON.stringify(dataToSave));
+        console.log('💾 Сообщения сохранены в localStorage:', messages.length);
+      } catch (error) {
+        console.error('❌ Ошибка сохранения в localStorage:', error);
+      }
+    }
+  }, [messages, selectedConversation, user?.$id]);
+
+  // Восстановление сообщений из localStorage при перезагрузке
+  useEffect(() => {
+    if (selectedConversation && user && messages.length === 0) {
+      try {
+        const key = `messages_${selectedConversation}_${user.$id}`;
+        const savedData = localStorage.getItem(key);
+        
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          const lastUpdated = new Date(parsedData.lastUpdated);
+          const isRecent = Date.now() - lastUpdated.getTime() < 24 * 60 * 60 * 1000; // Последние 24 часа
+          
+          if (isRecent && parsedData.messages && parsedData.messages.length > 0) {
+            console.log('🔄 Восстанавливаем сообщения из localStorage:', parsedData.messages.length);
+            setMessages(parsedData.messages);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Ошибка восстановления из localStorage:', error);
+      }
+    }
+  }, [selectedConversation, user, messages.length]);
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -404,48 +461,94 @@ export default function EnhancedMessagesPage() {
   // Load conversation messages  
   const loadConversationMessages = useCallback(async (conversationId: string) => {
     if (!conversationId || !user) return;
+    
+    console.log('🔄 Загрузка сообщений для конверсации:', conversationId);
+    
     try {
       // Load real messages from database
       const conversationMessages = await EnhancedMessagingService.getConversationMessages(conversationId);
-      setMessages(conversationMessages.reverse()); // Reverse to show chronologically
+      console.log('✅ Загружено сообщений из БД:', conversationMessages.length);
       
-      // Mark messages as read
-      await EnhancedMessagingService.markMessagesAsRead(conversationId, user.$id);
-      
-      // Update conversation in state
-      setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
+      if (conversationMessages.length > 0) {
+        // Reverse to show chronologically (newest at bottom)
+        const sortedMessages = conversationMessages.reverse();
+        setMessages(sortedMessages);
+        
+        // Mark messages as read
+        await EnhancedMessagingService.markMessagesAsRead(conversationId, user.$id);
+        
+        // Update conversation in state
+        const conversation = conversations.find(c => c.$id === conversationId);
+        setCurrentConversation(conversation || null);
+        
+        console.log('✅ Сообщения восстановлены успешно');
+      } else {
+        console.log('📝 Нет сообщений в конверсации, показываем пустой чат');
+        setMessages([]);
+        setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
+      }
     } catch (error) {
       console.error('❌ Error loading messages:', error);
-      // Fallback to demo messages
-      const demoMessages: EnhancedMessage[] = [
-        {
-          $id: 'msg-1',
-          conversationId,
-          senderId: user.$id,
-          receiverId: 'alex-ai',
-          content: 'Привет! Как дела с проектом дизайна логотипа?',
-          messageType: 'text',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          isRead: true,
-          status: 'read',
-          senderName: user.name || 'Вы',
-          senderAvatar: user.avatar
-        },
-        {
-          $id: 'msg-2',
-          conversationId,
-          senderId: 'alex-ai',
-          receiverId: user.$id,
-          content: 'Привет! Отлично работаю над концепцией. Уже готов первый вариант дизайна 🎨',
-          messageType: 'text',
-          timestamp: new Date(Date.now() - 3000000).toISOString(),
-          isRead: false,
-          status: 'delivered',
-          senderName: 'Алекс AI',
-          senderAvatar: '/images/specialists/alex-ai.jpg'
+      
+      // Попробуем восстановить из localStorage
+      try {
+        const key = `messages_${conversationId}_${user.$id}`;
+        const savedData = localStorage.getItem(key);
+        
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          const lastUpdated = new Date(parsedData.lastUpdated);
+          const isRecent = Date.now() - lastUpdated.getTime() < 24 * 60 * 60 * 1000; // Последние 24 часа
+          
+          if (isRecent && parsedData.messages && parsedData.messages.length > 0) {
+            console.log('🔄 Восстанавливаем сообщения из localStorage:', parsedData.messages.length);
+            setMessages(parsedData.messages);
+            setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
+            return;
+          }
         }
-      ];
-      setMessages(demoMessages);
+      } catch (localStorageError) {
+        console.error('❌ Ошибка восстановления из localStorage:', localStorageError);
+      }
+      
+      // Fallback to demo messages only if this is an AI conversation
+      const conversation = conversations.find(c => c.$id === conversationId);
+      if (conversation && conversation.type === 'ai_specialist') {
+        console.log('🤖 Показываем демо сообщения для AI специалиста');
+        const demoMessages: EnhancedMessage[] = [
+          {
+            $id: 'msg-1',
+            conversationId,
+            senderId: user.$id,
+            receiverId: 'alex-ai',
+            content: 'Привет! Как дела с проектом дизайна логотипа?',
+            messageType: 'text',
+            timestamp: new Date(Date.now() - 3600000).toISOString(),
+            isRead: true,
+            status: 'read',
+            senderName: user.name || 'Вы',
+            senderAvatar: user.avatar
+          },
+          {
+            $id: 'msg-2',
+            conversationId,
+            senderId: 'alex-ai',
+            receiverId: user.$id,
+            content: 'Привет! Отлично работаю над концепцией. Уже готов первый вариант дизайна 🎨',
+            messageType: 'text',
+            timestamp: new Date(Date.now() - 3000000).toISOString(),
+            isRead: false,
+            status: 'delivered',
+            senderName: 'Алекс AI',
+            senderAvatar: '/images/specialists/alex-ai.jpg'
+          }
+        ];
+        setMessages(demoMessages);
+      } else {
+        console.log('💬 Показываем пустой чат для обычной конверсации');
+        setMessages([]);
+      }
+      
       setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
     }
   }, [user, conversations]);
@@ -648,6 +751,14 @@ export default function EnhancedMessagesPage() {
       );
       setConversations(updatedConversations);
       
+      // Обновляем текущую конверсацию
+      setCurrentConversation(prev => prev?.$id === conversationId ? {
+        ...prev,
+        lastMessage: newMessage.trim() || `📎 ${attachedFiles.length} файл(ов)`,
+        lastMessageTime: sentMessage.timestamp,
+        updatedAt: sentMessage.timestamp
+      } : prev);
+      
       // Generate AI response for AI specialists
       if (receiverId === 'alex-ai' || receiverId === 'viktor-reels') {
         setTimeout(async () => {
@@ -726,7 +837,28 @@ export default function EnhancedMessagesPage() {
               senderAvatar
             });
         
-        setMessages(prev => [...prev, aiResponse]);
+                    setMessages(prev => [...prev, aiResponse]);
+            
+            // Обновляем конверсацию с AI ответом
+            const updatedConversationsWithAI = conversations.map(conv => 
+              conv.$id === conversationId 
+                ? {
+                    ...conv,
+                    lastMessage: aiResponseContent.slice(0, 50) + (aiResponseContent.length > 50 ? '...' : ''),
+                    lastMessageTime: aiResponse.timestamp,
+                    updatedAt: aiResponse.timestamp
+                  }
+                : conv
+            );
+            setConversations(updatedConversationsWithAI);
+            
+            // Обновляем текущую конверсацию
+            setCurrentConversation(prev => prev?.$id === conversationId ? {
+              ...prev,
+              lastMessage: aiResponseContent.slice(0, 50) + (aiResponseContent.length > 50 ? '...' : ''),
+              lastMessageTime: aiResponse.timestamp,
+              updatedAt: aiResponse.timestamp
+            } : prev);
           } catch (error) {
             console.error('Error sending AI response:', error);
           }

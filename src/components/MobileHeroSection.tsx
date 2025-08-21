@@ -79,14 +79,24 @@ export default function MobileHeroSection() {
           </div>
         </div>
 
-        {/* CTA Button */}
-        <Link
-          href="/en/specialists"
-          className="group inline-flex items-center gap-2 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md text-gray-900 dark:text-white font-semibold px-6 py-3 rounded-3xl transition-all duration-300 border-2 border-gray-300/40 dark:border-white/30 hover:border-gray-400/60 dark:hover:border-white/50 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-        >
-          <span>Find Specialists</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-        </Link>
+        {/* CTA Buttons */}
+        <div className="flex flex-col gap-3">
+          <Link
+            href="#user-type-selection"
+            className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-3xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <span>Начать работу</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+          </Link>
+          
+          <Link
+            href="/en/specialists"
+            className="group inline-flex items-center gap-2 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md text-gray-900 dark:text-white font-semibold px-6 py-3 rounded-3xl transition-all duration-300 border-2 border-gray-300/40 dark:border-white/30 hover:border-gray-400/60 dark:hover:border-white/50 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <span>Найти специалистов</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+          </Link>
+        </div>
 
         {/* Stats */}
         <div className="mt-12 grid grid-cols-3 gap-4 text-center">

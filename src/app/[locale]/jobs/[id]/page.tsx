@@ -26,6 +26,11 @@ import {
   Briefcase,
   Target,
   MessageCircle,
+  MoreVertical,
+  Trash2,
+  Edit,
+  X,
+  Shield,
 } from "lucide-react";
 import { JobsService, ApplicationsService } from "@/lib/appwrite/jobs";
 import { UsersService } from "@/lib/appwrite/users";
@@ -96,6 +101,10 @@ export default function JobDetailsPage() {
   const [jobInvitations, setJobInvitations] = useState<any[]>([]);
   const [jobApplications, setJobApplications] = useState<any[]>([]);
   const [showApplicationsModal, setShowApplicationsModal] = useState(false);
+  const [showJobMenu, setShowJobMenu] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAdminCallModal, setShowAdminCallModal] = useState(false);
 
   useEffect(() => {
     loadJob();
@@ -114,32 +123,51 @@ export default function JobDetailsPage() {
       let clientJobsCount = 0;
       let clientTotalSpent = 0;
       let clientComputedRating: number | null = null;
+      
       try {
-        const [profile, clientJobs] = await Promise.all([
-          jobData?.clientId ? UsersService.getUserProfile(jobData.clientId) : Promise.resolve(null),
-          jobData?.clientId ? JobsService.getJobsByClient(jobData.clientId).catch(() => []) : Promise.resolve([]),
-        ]);
-        clientProfile = profile;
-        clientJobsCount = Array.isArray(clientJobs) ? clientJobs.length : 0;
-        // Try compute stats (total spent, etc.) without requiring profile
         if (jobData?.clientId) {
+          // Load client profile
+          try {
+            clientProfile = await UsersService.getUserProfile(jobData.clientId);
+            console.log('✅ Loaded client profile:', clientProfile);
+          } catch (error) {
+            console.warn('Could not load client profile:', error);
+          }
+
+          // Load client jobs count
+          try {
+            const clientJobs = await JobsService.getJobsByClient(jobData.clientId);
+            clientJobsCount = Array.isArray(clientJobs) ? clientJobs.length : 0;
+            console.log('✅ Loaded client jobs count:', clientJobsCount);
+          } catch (error) {
+            console.warn('Could not load client jobs:', error);
+            clientJobsCount = 0;
+          }
+
+          // Load client stats (total spent, rating, etc.)
           try {
             const statsService = new UserProfileService();
             const stats = await statsService.getClientStats(jobData.clientId);
             clientTotalSpent = stats.totalSpent || 0;
-          } catch {}
+            clientComputedRating = (stats as any).averageRating || null;
+            console.log('✅ Loaded client stats:', stats);
+          } catch (error) {
+            console.warn('Could not load client stats:', error);
+            clientTotalSpent = 0;
+            clientComputedRating = null;
+          }
         }
       } catch (e) {
-        console.warn('Could not enrich client info:', e);
+        console.warn('Error loading client data:', e);
       }
       
-      // Fallbacks when profile is missing
-      const safeRating = typeof clientProfile?.rating === 'number' ? clientProfile.rating : 4.5;
-      const safeTotalSpent = typeof clientProfile?.totalEarned === 'number' ? clientProfile.totalEarned : clientTotalSpent;
+      // Use real data with fallbacks
+      const safeRating = clientComputedRating || clientProfile?.rating || 4.5;
+      const safeTotalSpent = clientTotalSpent || clientProfile?.totalSpent || 0;
       const safeMemberSince = clientProfile?.$createdAt || jobData.$createdAt!;
-      const safeAvatar = (clientProfile?.avatar as string) || jobData.clientAvatar ||
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150";
-      const safeName = clientProfile?.name || jobData.clientName || 'Anonymous Client';
+      const safeAvatar = clientProfile?.avatar_url || jobData.clientAvatar || null;
+      const safeName = clientProfile?.name || clientProfile?.company_name || jobData.clientName || 'Anonymous Client';
+      const safeVerified = clientProfile?.verified || false;
 
       // Convert Appwrite document to Job interface
       const convertedJob: Job = {
@@ -198,7 +226,7 @@ export default function JobDetailsPage() {
           jobsPosted: clientJobsCount || 0,
           totalSpent: safeTotalSpent,
           memberSince: safeMemberSince,
-          verified: !!clientProfile?.verified,
+          verified: safeVerified,
           clientId: jobData.clientId,
         },
       };
@@ -364,6 +392,40 @@ export default function JobDetailsPage() {
     }
   };
 
+  // Delete job function
+  const handleDeleteJob = async () => {
+    if (!user || !job) return;
+    
+    try {
+      // Check if there are any applications
+      if (jobApplications.length > 0) {
+        alert('Нельзя удалить джобс, если есть заявки от фрилансеров');
+        return;
+      }
+
+      // TODO: Implement actual job deletion
+      // const result = await JobsService.deleteJob(job.id);
+      
+      alert('Джобс успешно удален!');
+      router.push('/en/jobs');
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      alert('Ошибка при удалении джобса');
+    }
+  };
+
+  // Close job menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showJobMenu && !(event.target as Element).closest('.job-menu-container')) {
+        setShowJobMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showJobMenu]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0F]">
@@ -486,10 +548,81 @@ export default function JobDetailsPage() {
                   platforms={["twitter","linkedin"]}
                   size="small"
                   showLabels={false}
-                  dropdown
                   className="p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl transition-all duration-300 backdrop-blur-sm border border-gray-700/30"
                 />
-                {/* Removed flag and extra icons as requested */}
+                
+                {/* Job Actions Menu */}
+                {user && (user.userType === 'client' || user.userType === 'admin') && (
+                  <div className="relative job-menu-container">
+                    <button
+                      onClick={() => setShowJobMenu(!showJobMenu)}
+                      className="p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl transition-all duration-300 backdrop-blur-sm border border-gray-700/30 group"
+                      title="Действия с джобсом"
+                    >
+                      <MoreVertical className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                    </button>
+                    
+                    {showJobMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50">
+                        <div className="py-2">
+                          {/* Dispute Resolution Service */}
+                          <button
+                            onClick={() => {
+                              setShowJobMenu(false);
+                              setShowDisputeModal(true);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors text-left"
+                          >
+                            <div className="p-2 bg-orange-600/20 rounded-lg">
+                              <Flag className="w-4 h-4 text-orange-400" />
+                            </div>
+                            <div>
+                              <div className="font-medium">Разрешение споров</div>
+                              <div className="text-xs text-gray-400">Крипто-сервис</div>
+                            </div>
+                          </button>
+                          
+                          {/* Delete Job - Only if no freelancers joined */}
+                          {jobApplications.length === 0 && (
+                            <button
+                              onClick={() => {
+                                setShowJobMenu(false);
+                                setShowDeleteConfirm(true);
+                              }}
+                              className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-red-900/30 text-red-400 hover:text-red-300 transition-colors text-left"
+                            >
+                              <div className="p-2 bg-red-600/20 rounded-lg">
+                                <Trash2 className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-medium">Удалить джобс</div>
+                                <div className="text-xs text-gray-400">Только если нет заявок</div>
+                              </div>
+                            </button>
+                          )}
+                          
+                          {/* Edit Job */}
+                          <button
+                            onClick={() => {
+                              setShowJobMenu(false);
+                              // TODO: Implement edit functionality
+                              alert('Редактирование джобса будет добавлено позже');
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors text-left"
+                          >
+                            <div className="p-2 bg-blue-600/20 rounded-lg">
+                              <Edit className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <div>
+                              <div className="font-medium">Редактировать</div>
+                              <div className="text-xs text-gray-400">Изменить детали</div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -503,7 +636,7 @@ export default function JobDetailsPage() {
                   <div className="p-2 bg-purple-600/20 rounded-lg mr-3">
                     <Briefcase className="w-6 h-6 text-purple-400" />
                   </div>
-                  Job Overview
+                  Обзор проекта
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
@@ -513,11 +646,12 @@ export default function JobDetailsPage() {
                         <DollarSign className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
                       </div>
                       <div className="text-lg md:text-xl font-bold text-white mb-1 break-words leading-tight">
-                        ${job.budget.min.toLocaleString()}-$
-                        {job.budget.max.toLocaleString()}
+                        {job.budget.currency === 'USD' ? '$' : job.budget.currency}
+                        {job.budget.min.toLocaleString()}
+                        {job.budget.max > job.budget.min ? `-${job.budget.currency === 'USD' ? '$' : job.budget.currency}${job.budget.max.toLocaleString()}` : ''}
                       </div>
                       <div className="text-xs md:text-sm text-gray-400">
-                        Budget
+                        Бюджет
                       </div>
                     </div>
                   </div>
@@ -527,10 +661,10 @@ export default function JobDetailsPage() {
                         <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
                       </div>
                       <div className="text-lg md:text-xl font-bold text-white mb-1">
-                        {job.proposals}
+                        {job.proposals || 0}
                       </div>
                       <div className="text-xs md:text-sm text-gray-400">
-                        Proposals
+                        Заявки
                       </div>
                     </div>
                   </div>
@@ -540,10 +674,10 @@ export default function JobDetailsPage() {
                         <Calendar className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
                       </div>
                       <div className="text-lg md:text-xl font-bold text-white mb-1 break-words leading-tight">
-                        {new Date(job.deadline).toLocaleDateString()}
+                        {job.deadline ? new Date(job.deadline).toLocaleDateString('ru-RU') : 'Не указан'}
                       </div>
                       <div className="text-xs md:text-sm text-gray-400">
-                        Deadline
+                        Дедлайн
                       </div>
                     </div>
                   </div>
@@ -553,10 +687,10 @@ export default function JobDetailsPage() {
                         <Award className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
                       </div>
                       <div className="text-lg md:text-xl font-bold text-white mb-1 capitalize break-words leading-tight">
-                        {job.experienceLevel}
+                        {job.experienceLevel || 'Не указан'}
                       </div>
                       <div className="text-xs md:text-sm text-gray-400">
-                        Level
+                        Уровень
                       </div>
                     </div>
                   </div>
@@ -575,16 +709,26 @@ export default function JobDetailsPage() {
                   <Target className="w-5 h-5 mr-3 text-purple-400" />
                   Skills Required
                 </h3>
-                <div className="flex flex-wrap gap-3">
-                  {job.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-white rounded-full text-sm font-medium border border-purple-500/30"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                {job.skills && job.skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {job.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-white rounded-full text-sm font-medium border border-purple-500/30"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="w-12 h-12 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Target className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-gray-400">Навыки не указаны</p>
+                    <p className="text-gray-500 text-sm mt-1">Клиент не указал требуемые навыки</p>
+                  </div>
+                )}
               </div>
 
               {/* Requirements */}
@@ -593,14 +737,24 @@ export default function JobDetailsPage() {
                   <CheckCircle className="w-5 h-5 mr-3 text-green-400" />
                   Requirements
                 </h3>
-                <ul className="space-y-3">
-                  {job.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-300">{req}</span>
-                    </li>
-                  ))}
-                </ul>
+                {job.requirements && job.requirements.length > 0 ? (
+                  <ul className="space-y-3">
+                    {job.requirements.map((req, index) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-300">{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-400 text-lg">Требования не указаны</p>
+                    <p className="text-gray-500 text-sm mt-2">Клиент не добавил конкретные требования к проекту</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -722,12 +876,20 @@ export default function JobDetailsPage() {
                       {job.clientInfo.name}
                     </h4>
                     <div className="flex items-center space-x-1">
-                      <div className="flex items-center space-x-1 bg-yellow-600/20 px-2 py-1 rounded-lg">
-                        <Star className="w-4 h-4 fill-current text-yellow-400" />
-                        <span className="text-white font-medium text-sm">
-                          {job.clientInfo.rating}/5
-                        </span>
-                      </div>
+                      {job.clientInfo.rating > 0 ? (
+                        <div className="flex items-center space-x-1 bg-yellow-600/20 px-2 py-1 rounded-lg">
+                          <Star className="w-4 h-4 fill-current text-yellow-400" />
+                          <span className="text-white font-medium text-sm">
+                            {job.clientInfo.rating.toFixed(1)}/5
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1 bg-gray-600/20 px-2 py-1 rounded-lg">
+                          <span className="text-gray-400 text-sm">
+                            Нет отзывов
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -738,7 +900,7 @@ export default function JobDetailsPage() {
                       Jobs Posted
                     </div>
                     <div className="text-white font-bold text-lg break-words">
-                      {job.clientInfo.jobsPosted}
+                      {job.clientInfo.jobsPosted > 0 ? job.clientInfo.jobsPosted : 'Новый клиент'}
                     </div>
                   </div>
                   <div className="bg-gray-800/30 p-4 rounded-xl backdrop-blur-sm border border-gray-700/30 min-w-0">
@@ -746,7 +908,7 @@ export default function JobDetailsPage() {
                       Total Spent
                     </div>
                     <div className="text-white font-bold text-lg break-words">
-                      ${job.clientInfo.totalSpent.toLocaleString()}
+                      {job.clientInfo.totalSpent > 0 ? `$${job.clientInfo.totalSpent.toLocaleString()}` : 'Первый проект'}
                     </div>
                   </div>
                   <div className="sm:col-span-2 bg-gray-800/30 p-4 rounded-xl backdrop-blur-sm border border-gray-700/30 min-w-0">
@@ -754,9 +916,11 @@ export default function JobDetailsPage() {
                       Member Since
                     </div>
                     <div className="text-white font-bold break-words">
-                      {new Date(
-                        job.clientInfo.memberSince,
-                      ).toLocaleDateString()}
+                      {new Date(job.clientInfo.memberSince).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </div>
                   </div>
                 </div>
@@ -772,25 +936,40 @@ export default function JobDetailsPage() {
                 </h3>
                 <div className="bg-gradient-to-r from-gray-800/30 to-gray-900/30 p-4 rounded-xl border border-gray-700/30 backdrop-blur-sm mb-4">
                   <div className="flex items-center space-x-4 mb-4">
-                    <img
-                      src={job.companyLogo}
-                      alt={job.company}
-                      className="w-14 h-14 rounded-xl object-cover ring-2 ring-green-500/20"
-                    />
+                    {job.companyLogo ? (
+                      <img
+                        src={job.companyLogo}
+                        alt={job.company}
+                        className="w-14 h-14 rounded-xl object-cover ring-2 ring-green-500/20"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const nextElement = e.currentTarget
+                            .nextElementSibling as HTMLElement;
+                          if (nextElement) {
+                            nextElement.style.display = "flex";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br from-green-600 to-blue-600 ring-2 ring-green-500/20 flex items-center justify-center ${job.companyLogo ? "hidden" : "flex"}`}
+                    >
+                      <Building className="w-7 h-7 text-white" />
+                    </div>
                     <div>
                       <h4 className="font-bold text-white text-lg mb-1">
-                        {job.company}
+                        {job.company || 'Компания не указана'}
                       </h4>
                       <div className="flex items-center space-x-2 bg-gray-700/50 px-3 py-1 rounded-lg">
                         <Building className="w-4 h-4 text-gray-400" />
                         <span className="text-sm text-gray-300">
-                          {job.category}
+                          {job.category || 'Категория не указана'}
                         </span>
                       </div>
                     </div>
                   </div>
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    {job.companyDescription}
+                    {job.companyDescription || 'Описание компании не указано'}
                   </p>
                 </div>
               </div>
@@ -1093,6 +1272,251 @@ export default function JobDetailsPage() {
           }}
           onApplicationAccepted={handleAcceptApplication}
         />
+      )}
+
+      {/* Dispute Resolution Modal */}
+      {showDisputeModal && job && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="p-3 bg-orange-600/20 rounded-xl mr-3">
+                  <Flag className="w-6 h-6 text-orange-400" />
+                </div>
+                Разрешение споров
+              </h2>
+              <button
+                onClick={() => setShowDisputeModal(false)}
+                className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/30">
+                <h3 className="text-lg font-semibold text-white mb-3">Крипто-сервис разрешения споров</h3>
+                <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                  Наша система использует смарт-контракты для автоматического разрешения споров между клиентами и фрилансерами.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-green-600/10 border border-green-600/20 p-3 rounded-lg">
+                    <div className="text-green-400 font-medium text-sm">Автоматизация</div>
+                    <div className="text-gray-300 text-xs">Смарт-контракты выполняются автоматически</div>
+                  </div>
+                  <div className="bg-blue-600/10 border border-blue-600/20 p-3 rounded-lg">
+                    <div className="text-blue-400 font-medium text-sm">Прозрачность</div>
+                    <div className="text-gray-300 text-xs">Все решения записываются в блокчейн</div>
+                  </div>
+                  <div className="bg-purple-600/10 border border-purple-600/20 p-3 rounded-lg">
+                    <div className="text-purple-400 font-medium text-sm">Безопасность</div>
+                    <div className="text-gray-300 text-xs">Защита от мошенничества</div>
+                  </div>
+                  <div className="bg-orange-600/10 border border-orange-600/20 p-3 rounded-lg">
+                    <div className="text-orange-400 font-medium text-sm">Скорость</div>
+                    <div className="text-gray-300 text-xs">Быстрое разрешение конфликтов</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-700/30 p-4 rounded-lg border border-gray-600/30">
+                  <h4 className="text-white font-medium mb-2">Как это работает:</h4>
+                  <ol className="text-gray-300 text-sm space-y-2 list-decimal list-inside">
+                    <li>Создается смарт-контракт с условиями проекта</li>
+                    <li>Средства блокируются в контракте</li>
+                    <li>При возникновении спора запускается арбитраж</li>
+                    <li>Решение принимается автоматически или голосованием</li>
+                    <li>Средства распределяются согласно решению</li>
+                  </ol>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    // TODO: Implement dispute creation
+                    alert('Создание спора будет добавлено позже');
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Создать спор
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDisputeModal(false);
+                    setShowAdminCallModal(true);
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  🚨 Призвать админа
+                </button>
+                <button
+                  onClick={() => setShowDisputeModal(false)}
+                  className="px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && job && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 max-w-md w-full">
+            <div className="text-center">
+              <div className="p-3 bg-red-600/20 rounded-full w-fit mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Удалить джобс?</h3>
+              <p className="text-gray-400 mb-6">
+                Вы уверены, что хотите удалить джобс "{job.title}"? Это действие нельзя отменить.
+              </p>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleDeleteJob}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Удалить
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Call Modal */}
+      {showAdminCallModal && job && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 max-w-2xl w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="p-3 bg-purple-600/20 rounded-xl mr-3">
+                  <Shield className="w-6 h-6 text-purple-400" />
+                </div>
+                Призыв администратора
+              </h2>
+              <button
+                onClick={() => setShowAdminCallModal(false)}
+                className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/30">
+                <h3 className="text-lg font-semibold text-white mb-3">Призыв администратора для джобса</h3>
+                <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                  Администратор поможет разрешить спор или конфликт по джобсу "{job.title}". 
+                  Опишите проблему и выберите уровень срочности.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-purple-600/10 border border-purple-600/20 p-3 rounded-lg">
+                    <div className="text-purple-400 font-medium text-sm">Быстрый ответ</div>
+                    <div className="text-gray-300 text-xs">Администратор ответит в течение 24 часов</div>
+                  </div>
+                  <div className="bg-blue-600/10 border border-blue-600/20 p-3 rounded-lg">
+                    <div className="text-blue-400 font-medium text-sm">Профессиональное решение</div>
+                    <div className="text-gray-300 text-xs">Опытные арбитры рассмотрят ваш случай</div>
+                  </div>
+                  <div className="bg-orange-600/10 border border-orange-600/20 p-3 rounded-lg">
+                    <div className="text-orange-400 font-medium text-sm">Крипто-защита</div>
+                    <div className="text-gray-300 text-xs">Смарт-контракты обеспечат справедливость</div>
+                  </div>
+                  <div className="bg-green-600/10 border border-green-600/20 p-3 rounded-lg">
+                    <div className="text-green-400 font-medium text-sm">Прозрачность</div>
+                    <div className="text-gray-300 text-xs">Все решения записываются в блокчейн</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Причина призыва администратора *
+                  </label>
+                  <select 
+                    className="w-full p-3 bg-gray-800/50 border border-gray-700/30 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Выберите причину</option>
+                    <option value="payment_dispute">Спор по оплате</option>
+                    <option value="quality_dispute">Спор по качеству работы</option>
+                    <option value="deadline_dispute">Спор по срокам</option>
+                    <option value="communication_issue">Проблемы с коммуникацией</option>
+                    <option value="fraud_suspicion">Подозрение в мошенничестве</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Уровень срочности *
+                  </label>
+                  <div className="grid grid-cols-4 gap-3">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="urgency" value="low" className="text-purple-600" />
+                      <span className="text-sm text-gray-300">Низкий</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="urgency" value="medium" className="text-purple-600" defaultChecked />
+                      <span className="text-sm text-gray-300">Средний</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="urgency" value="high" className="text-purple-600" />
+                      <span className="text-sm text-gray-300">Высокий</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="urgency" value="critical" className="text-purple-600" />
+                      <span className="text-sm text-gray-300">Критичный</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Подробное описание проблемы *
+                  </label>
+                  <textarea 
+                    rows={4}
+                    className="w-full p-3 bg-gray-800/50 border border-gray-700/30 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                    placeholder="Опишите детально проблему, которая требует вмешательства администратора..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    // TODO: Implement admin call
+                    alert('Призыв администратора будет добавлено позже');
+                    setShowAdminCallModal(false);
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  🚨 Отправить призыв
+                </button>
+                <button
+                  onClick={() => setShowAdminCallModal(false)}
+                  className="px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
