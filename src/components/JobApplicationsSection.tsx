@@ -123,17 +123,22 @@ export default function JobApplicationsSection({
     }
   };
 
+  // 🔒 УЛУЧШЕННАЯ ФУНКЦИЯ: Принятие заявки с интеграцией безопасной системы сообщений
   const handleAcceptApplication = async (application: Application) => {
     if (actionLoading) return;
 
     setActionLoading(application.$id);
     try {
+      console.log(`🎉 Принимаем заявку от ${application.freelancerName}...`);
+
+      // 1. Обновляем статус заявки в базе данных
       await ApplicationsService.updateApplicationStatus(
         application.$id,
         "accepted",
-        "Congratulations! Your application has been accepted. We look forward to working with you.",
+        `🎉 Поздравляем! Ваша заявка на проект "${jobTitle}" принята. Мы с нетерпением ждем сотрудничества с вами!`,
       );
 
+      // 2. Обновляем локальное состояние
       setApplications((prev) =>
         prev.map((app) =>
           app.$id === application.$id
@@ -142,32 +147,59 @@ export default function JobApplicationsSection({
         ),
       );
 
+      // 3. 🔒 ИНТЕГРАЦИЯ С БЕЗОПАСНОЙ СИСТЕМОЙ СООБЩЕНИЙ
+      try {
+        console.log(`🔐 Добавляем фрилансера ${application.freelancerId} в безопасный канал джоба...`);
+        
+        // Импортируем MessagingHelpers для работы с каналами
+        const { MessagingHelpers } = await import('../lib/messaging-integration');
+        
+        // Добавляем фрилансера в канал джоба
+        await MessagingHelpers.addFreelancerToJob(jobId, application.freelancerId);
+        
+        console.log(`✅ Фрилансер успешно добавлен в безопасный канал!`);
+        
+        // 4. Уведомляем о успешном принятии
+        alert(`🎉 Заявка от ${application.freelancerName} принята! Фрилансер добавлен в приватный канал проекта.`);
+        
+      } catch (messagingError) {
+        console.error('❌ Ошибка при интеграции с системой сообщений:', messagingError);
+        // Продолжаем работу даже если не удалось добавить в канал
+        alert(`✅ Заявка от ${application.freelancerName} принята!`);
+      }
+
+      // 5. Вызываем callback для родительского компонента
       onApplicationAccepted?.(application);
-      alert("Application accepted successfully! The freelancer has been notified.");
+      
     } catch (error) {
-      console.error("Error accepting application:", error);
-      alert("Failed to accept application. Please try again.");
+      console.error("❌ Error accepting application:", error);
+      alert("Произошла ошибка при принятии заявки. Попробуйте еще раз.");
     } finally {
       setActionLoading(null);
     }
   };
 
+  // 📝 УЛУЧШЕННАЯ ФУНКЦИЯ: Отклонение заявки с вежливым уведомлением
   const handleRejectApplication = async (application: Application) => {
     if (actionLoading) return;
 
     const reason = prompt(
-      "Please provide a brief reason for rejection (optional):",
+      "Укажите краткую причину отклонения (опционально):",
     );
 
     setActionLoading(application.$id);
     try {
+      console.log(`👋 Отклоняем заявку от ${application.freelancerName}...`);
+
+      // 1. Обновляем статус заявки с вежливым сообщением
       await ApplicationsService.updateApplicationStatus(
         application.$id,
         "rejected",
         reason ||
-          "Thank you for your application. We have decided to move forward with another candidate.",
+          `Спасибо за вашу заявку на проект "${jobTitle}". К сожалению, мы приняли решение работать с другим кандидатом. Желаем вам удачи в поиске подходящих проектов!`,
       );
 
+      // 2. Обновляем локальное состояние
       setApplications((prev) =>
         prev.map((app) =>
           app.$id === application.$id
@@ -176,10 +208,12 @@ export default function JobApplicationsSection({
         ),
       );
 
-      alert("Application rejected successfully. The freelancer has been notified.");
+      // 3. Уведомляем о отклонении
+      alert(`👋 Заявка от ${application.freelancerName} отклонена. Фрилансер получил вежливое уведомление.`);
+      
     } catch (error) {
-      console.error("Error rejecting application:", error);
-      alert("Failed to reject application. Please try again.");
+      console.error("❌ Error rejecting application:", error);
+      alert("Произошла ошибка при отклонении заявки. Попробуйте еще раз.");
     } finally {
       setActionLoading(null);
     }

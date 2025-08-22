@@ -26,7 +26,7 @@ export function ConversationList({
   className = ''
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'archived'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'direct' | 'projects' | 'ai' | 'archived'>('all');
 
   // Фильтрация конверсаций
   const filteredConversations = conversations.filter(conversation => {
@@ -35,11 +35,14 @@ export function ConversationList({
       conversation.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conversation.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Фильтр по статусу
+    // Фильтр по статусу и типу
     const matchesFilter = 
       filter === 'all' || 
       (filter === 'unread' && (conversation.unreadCount[userId] || 0) > 0) ||
-      (filter === 'archived' && conversation.isArchived);
+      (filter === 'archived' && conversation.isArchived) ||
+      (filter === 'direct' && conversation.conversationType === 'direct' && !conversation.metadata?.isAIChannel) ||
+      (filter === 'projects' && (conversation.conversationType === 'project' || conversation.conversationType === 'contract')) ||
+      (filter === 'ai' && conversation.metadata?.isAIChannel);
 
     return matchesSearch && matchesFilter;
   });
@@ -65,11 +68,100 @@ export function ConversationList({
   };
 
   const getConversationAvatar = (conversation: Conversation) => {
+    // AI специалисты
+    if (conversation.metadata?.isAIChannel) return '🤖';
+    
+    // Каналы проектов и джобов
+    if (conversation.conversationType === 'project') {
+      if (conversation.metadata?.isJobChannel) return '💼';
+      return '📋';
+    }
+    
+    // Контракты и активные проекты
+    if (conversation.conversationType === 'contract') return '🏗️';
+    
+    // Групповые чаты
     if (conversation.conversationType === 'group') return '👥';
-    if (conversation.conversationType === 'project') return '📋';
-    if (conversation.conversationType === 'contract') return '📄';
+    
+    // Поддержка
     if (conversation.conversationType === 'support') return '🎧';
+    
+    // Обычные чаты
     return '👤';
+  };
+
+  const getConversationTypeLabel = (conversation: Conversation) => {
+    if (conversation.metadata?.isAIChannel) {
+      return {
+        label: 'AI Специалист',
+        color: 'bg-purple-100 text-purple-600',
+        icon: '🤖'
+      };
+    }
+    
+    if (conversation.conversationType === 'project') {
+      if (conversation.metadata?.isJobChannel) {
+        return {
+          label: 'Джоб',
+          color: 'bg-blue-100 text-blue-600',
+          icon: '💼'
+        };
+      }
+      return {
+        label: 'Проект',
+        color: 'bg-blue-100 text-blue-600',
+        icon: '📋'
+      };
+    }
+    
+    if (conversation.conversationType === 'contract') {
+      return {
+        label: 'Активный проект',
+        color: 'bg-green-100 text-green-600',
+        icon: '🏗️'
+      };
+    }
+    
+    if (conversation.conversationType === 'group') {
+      return {
+        label: 'Группа',
+        color: 'bg-purple-100 text-purple-600',
+        icon: '👥'
+      };
+    }
+    
+    if (conversation.conversationType === 'support') {
+      return {
+        label: 'Поддержка',
+        color: 'bg-orange-100 text-orange-600',
+        icon: '🎧'
+      };
+    }
+    
+    return {
+      label: 'Личный чат',
+      color: 'bg-gray-100 text-gray-600',
+      icon: '👤'
+    };
+  };
+
+  const getPrivacyIndicator = (conversation: Conversation) => {
+    // Уровни приватности
+    if (conversation.metadata?.isEncrypted) {
+      return { icon: '🔒', tooltip: 'Зашифрованный чат', color: 'text-green-600' };
+    }
+    
+    if (conversation.conversationType === 'contract' || 
+        conversation.conversationType === 'project' ||
+        conversation.metadata?.isJobChannel) {
+      return { icon: '🔐', tooltip: 'Приватный проектный канал', color: 'text-blue-600' };
+    }
+    
+    if (conversation.metadata?.isPrivate) {
+      return { icon: '👁️', tooltip: 'Приватный чат', color: 'text-gray-600' };
+    }
+    
+    return { icon: '🌐', tooltip: 'Обычный чат', color: 'text-gray-400' };
   };
 
   const formatLastMessageTime = (timestamp?: string) => {
@@ -125,23 +217,28 @@ export function ConversationList({
           </div>
         </div>
 
-        {/* Фильтры */}
-        <div className="flex gap-1 mt-3">
+        {/* Фильтры с улучшенной категоризацией */}
+        <div className="flex gap-1 mt-3 overflow-x-auto">
           {[
-            { key: 'all', label: 'Все', count: conversations.length },
-            { key: 'unread', label: 'Непрочитанные', count: conversations.filter(c => (c.unreadCount[userId] || 0) > 0).length },
-            { key: 'archived', label: 'Архив', count: conversations.filter(c => c.isArchived).length }
-          ].map(({ key, label, count }) => (
+            { key: 'all', label: 'Все', count: conversations.length, icon: '💬' },
+            { key: 'unread', label: 'Непрочитанные', count: conversations.filter(c => (c.unreadCount[userId] || 0) > 0).length, icon: '🔴' },
+            { key: 'direct', label: 'Личные', count: conversations.filter(c => c.conversationType === 'direct' && !c.metadata?.isAIChannel).length, icon: '👤' },
+            { key: 'projects', label: 'Проекты', count: conversations.filter(c => c.conversationType === 'project' || c.conversationType === 'contract').length, icon: '💼' },
+            { key: 'ai', label: 'AI', count: conversations.filter(c => c.metadata?.isAIChannel).length, icon: '🤖' },
+            { key: 'archived', label: 'Архив', count: conversations.filter(c => c.isArchived).length, icon: '📦' }
+          ].map(({ key, label, count, icon }) => (
             <button
               key={key}
               onClick={() => setFilter(key as any)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              className={`px-3 py-1 rounded-full text-sm transition-colors flex items-center gap-1 whitespace-nowrap ${
                 filter === key
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {label} {count > 0 && `(${count})`}
+              <span>{icon}</span>
+              <span>{label}</span>
+              {count > 0 && <span className="bg-white bg-opacity-20 px-1 rounded">{count}</span>}
             </button>
           ))}
         </div>
@@ -245,23 +342,48 @@ export function ConversationList({
                         </p>
                       )}
 
-                      {/* Метаданные */}
-                      <div className="flex items-center gap-2 mt-1">
-                        {conversation.conversationType === 'project' && (
-                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">
-                            Проект
+                      {/* Метаданные и индикаторы */}
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const typeInfo = getConversationTypeLabel(conversation);
+                            return (
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${typeInfo.color} flex items-center gap-1`}>
+                                <span>{typeInfo.icon}</span>
+                                <span>{typeInfo.label}</span>
+                              </span>
+                            );
+                          })()}
+                          
+                          {conversation.isGroup && (
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <span>👥</span>
+                              <span>{conversation.participants.length}</span>
                           </span>
                         )}
-                        {conversation.conversationType === 'contract' && (
-                          <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded">
-                            Контракт
+                          
+                          {/* Дополнительные индикаторы */}
+                          {conversation.metadata?.autoDeleteAfter && (
+                            <span className="text-xs text-amber-600 flex items-center gap-1" title="Временный чат">
+                              <span>⏰</span>
                           </span>
                         )}
-                        {conversation.isGroup && (
-                          <span className="text-xs text-gray-500">
-                            {conversation.participants.length} участников
+                        </div>
+                        
+                        {/* Индикатор приватности */}
+                        <div className="flex items-center gap-1">
+                          {(() => {
+                            const privacy = getPrivacyIndicator(conversation);
+                            return (
+                              <span 
+                                className={`text-xs ${privacy.color}`} 
+                                title={privacy.tooltip}
+                              >
+                                {privacy.icon}
                           </span>
-                        )}
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>

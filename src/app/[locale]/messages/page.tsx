@@ -3,10 +3,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { 
-  EnhancedMessagingService, 
-  EnhancedMessage, 
-  EnhancedConversation 
-} from '@/lib/services/enhanced-messaging';
+  messagingService, 
+  Message as EnhancedMessage, 
+  Conversation as EnhancedConversation 
+} from '../../../services/messaging';
+import { MessagingHelpers } from '../../../lib/messaging-integration';
 import { UnifiedOrderService, UnifiedOrder } from '@/lib/services/unified-order-service';
 import { JobsService } from '@/lib/appwrite/jobs';
 import Navbar from '@/components/Navbar';
@@ -359,7 +360,7 @@ export default function EnhancedMessagesPage() {
           }
           if (job) {
             setActiveView('jobs');
-            handleSelectJob(jobIdParam);
+            await handleSelectJob(jobIdParam);
             setViewMode('order_timeline');
           }
         } catch (e) {
@@ -430,9 +431,17 @@ export default function EnhancedMessagesPage() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      // Load real conversations from database
-      const userConversations = await EnhancedMessagingService.getUserConversations(user.$id);
-      setConversations(userConversations);
+      // 🔒 Load real conversations from secure database service
+      const userConversations = await messagingService.getSecureUserConversations(user.$id);
+      setConversations(userConversations.map(conv => ({
+        ...conv,
+        type: conv.conversationType as any,
+        lastMessage: conv.lastMessage || '',
+        lastMessageAt: conv.lastMessageAt || conv.updatedAt,
+        lastMessageBy: conv.lastMessageBy || '',
+        createdAt: conv.createdAt,
+        updatedAt: conv.updatedAt
+      })));
       
       // Load unified orders
       const clientOrders = await UnifiedOrderService.getUserOrders(user.$id, 'client');
@@ -465,25 +474,36 @@ export default function EnhancedMessagesPage() {
     console.log('🔄 Загрузка сообщений для конверсации:', conversationId);
     
     try {
-      // Load real messages from database
-      const conversationMessages = await EnhancedMessagingService.getConversationMessages(conversationId);
-      console.log('✅ Загружено сообщений из БД:', conversationMessages.length);
+      // 🔒 Load messages with SECURITY CHECK - user access validation
+      const conversationMessages = await messagingService.getMessages(conversationId, user.$id, 50, 0);
+      console.log('🔒✅ Загружено защищенных сообщений из БД:', conversationMessages.length);
       
       if (conversationMessages.length > 0) {
-        // Reverse to show chronologically (newest at bottom)
-        const sortedMessages = conversationMessages.reverse();
-        setMessages(sortedMessages);
+        // Messages are already sorted chronologically by the service
+        const formattedMessages = conversationMessages.map(msg => ({
+          ...msg,
+          timestamp: msg.createdAt,
+          status: 'delivered' as const,
+          senderName: '', // TODO: Load from user service if needed
+          senderAvatar: ''
+        }));
+        setMessages(formattedMessages);
         
-        // Mark messages as read
-        await EnhancedMessagingService.markMessagesAsRead(conversationId, user.$id);
+        // Mark messages as read for current user
+        const unreadMessages = conversationMessages.filter(m => 
+          !m.isRead && m.receiverId === user.$id
+        );
+        for (const message of unreadMessages) {
+          await messagingService.markMessageAsRead(message.$id, user.$id);
+        }
         
         // Update conversation in state
         const conversation = conversations.find(c => c.$id === conversationId);
         setCurrentConversation(conversation || null);
         
-        console.log('✅ Сообщения восстановлены успешно');
+        console.log('🔒✅ Защищенные сообщения восстановлены успешно');
       } else {
-        console.log('📝 Нет сообщений в конверсации, показываем пустой чат');
+        console.log('📝 Нет доступных сообщений в конверсации (проверка безопасности прошла)');
         setMessages([]);
         setCurrentConversation(conversations.find(c => c.$id === conversationId) || null);
       }
@@ -578,20 +598,54 @@ export default function EnhancedMessagesPage() {
     }
   }, [unifiedOrders, handleSelectConversation]);
 
-  // Handle job selection
-  const handleSelectJob = useCallback((jobId: string) => {
+  // Handle job selection with secure channel creation
+  const handleSelectJob = useCallback(async (jobId: string) => {
     console.log('💼 Selecting job:', jobId);
     
     const job = jobCards.find(j => j.$id === jobId);
-    if (job) {
+    if (job && user) {
       setSelectedJob(job);
       setViewMode('order_timeline');
       
-      // Create or get conversation for this job
-      const jobConversationId = `job-${jobId}`;
-      handleSelectConversation(jobConversationId);
+      try {
+        // 🔒 Create or get secure conversation for this job
+        let jobConversation = await messagingService.findJobChannel(jobId);
+        
+        if (!jobConversation) {
+          console.log('📋 Creating new secure job channel...');
+          jobConversation = await messagingService.createJobChannel({
+            jobId: jobId,
+            jobTitle: job.title || `Джоб ${jobId}`,
+            clientId: job.clientId || user.$id, // Fallback to current user
+            freelancerId: job.freelancerId, // May be undefined initially
+            additionalParticipants: []
+          });
+          
+          // Add to conversations list if not exists
+          const conversationExists = conversations.some(c => c.$id === jobConversation.$id);
+          if (!conversationExists) {
+            const formattedConversation = {
+              ...jobConversation,
+              type: 'project' as any,
+              lastMessage: jobConversation.lastMessage || '',
+              lastMessageAt: jobConversation.lastMessageAt || jobConversation.createdAt,
+              lastMessageBy: jobConversation.lastMessageBy || ''
+            };
+            setConversations(prev => [formattedConversation, ...prev]);
+          }
+        }
+        
+        console.log('✅ Job channel ready:', jobConversation.$id);
+        handleSelectConversation(jobConversation.$id);
+        
+      } catch (error) {
+        console.error('❌ Error creating/finding job channel:', error);
+        // Fallback to mock conversation
+        const fallbackId = `job-${jobId}`;
+        handleSelectConversation(fallbackId);
+      }
     }
-  }, [jobCards, handleSelectConversation]);
+  }, [jobCards, user, conversations, handleSelectConversation]);
   // Handle order updates
   const handleUpdateOrder = useCallback(async (orderId: string, updates: Partial<UnifiedOrder>) => {
     try {
@@ -627,8 +681,8 @@ export default function EnhancedMessagesPage() {
       if (input == null) return;
       const newContent = input.trim();
       if (!newContent || newContent === target.content) return;
-      const updated = await EnhancedMessagingService.editMessage(messageId, newContent);
-      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: updated.content, status: 'sent' } : m));
+      await messagingService.editMessage(messageId, newContent);
+      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: newContent, status: 'sent', isEdited: true } : m));
     } catch (e) {
       console.error('❌ Error editing message:', e);
     } finally {
@@ -639,8 +693,8 @@ export default function EnhancedMessagesPage() {
   const handleDeleteMessage = useCallback(async (messageId: string) => {
     try {
       if (!window.confirm('Удалить сообщение?')) return;
-      await EnhancedMessagingService.deleteMessage(messageId);
-      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: 'Сообщение удалено', status: 'sent' } : m));
+      await messagingService.deleteMessage(messageId);
+      setMessages(prev => prev.map(m => m.$id === messageId ? { ...m, content: 'Сообщение удалено', status: 'sent', isDeleted: true } : m));
     } catch (e) {
       console.error('❌ Error deleting message:', e);
     } finally {
@@ -659,15 +713,21 @@ export default function EnhancedMessagesPage() {
       // If no conversation is selected, create one with AI specialist
       if (!conversationId || !conversation) {
         try {
-          const newConversation = await EnhancedMessagingService.getOrCreateConversation(
-            [user.$id, 'alex-ai'],
-            'Chat with AI Specialist',
-            'ai_specialist'
-          );
+          const newConversation = await messagingService.createConversation({
+            participants: [user.$id, 'alex-ai'],
+            title: 'Chat with AI Specialist',
+            conversationType: 'direct'
+          });
           conversationId = newConversation.$id!;
-          conversation = newConversation;
+          conversation = {
+            ...newConversation,
+            type: 'ai_specialist' as any,
+            lastMessage: '',
+            lastMessageAt: newConversation.createdAt,
+            lastMessageBy: ''
+          };
           setSelectedConversation(conversationId);
-          setConversations(prev => [newConversation, ...prev]);
+          setConversations(prev => [conversation, ...prev]);
         } catch (error) {
           console.error('Error creating conversation:', error);
           // Instead of throwing error, create a mock conversation
@@ -721,20 +781,29 @@ export default function EnhancedMessagesPage() {
         }
       }
       
-      // Send message to database
-      const sentMessage = await EnhancedMessagingService.sendMessage({
+      // 🔒 Send message to database with SECURITY VALIDATION
+      const sentMessage = await messagingService.sendMessage({
         conversationId: conversationId,
         senderId: user.$id,
         receiverId,
         content: newMessage.trim(),
         messageType: attachedFiles.length > 0 ? 'file' : 'text',
-        senderName: user.name || 'Вы',
-        senderAvatar: user.avatar,
-        attachments: fileUrls
+        attachments: fileUrls,
+        metadata: {
+          senderName: user.name || 'Вы',
+          senderAvatar: user.avatar
+        }
       });
       
-      // Add message to state
-      setMessages(prev => [...prev, sentMessage]);
+      // Add message to state with proper formatting
+      const formattedMessage = {
+        ...sentMessage,
+        timestamp: sentMessage.createdAt,
+        status: 'delivered' as const,
+        senderName: user.name || 'Вы',
+        senderAvatar: user.avatar || ''
+      };
+      setMessages(prev => [...prev, formattedMessage]);
       setNewMessage('');
       setAttachedFiles([]);
       
@@ -827,17 +896,27 @@ export default function EnhancedMessagesPage() {
               }
             }
             
-            const aiResponse = await EnhancedMessagingService.sendMessage({
-          conversationId: conversationId,
+            const aiResponse = await messagingService.sendMessage({
+              conversationId: conversationId,
               senderId: receiverId,
               receiverId: user.$id,
               content: aiResponseContent,
               messageType: 'ai_response',
-              senderName,
-              senderAvatar
+              metadata: {
+                senderName,
+                senderAvatar,
+                isAIResponse: true
+              }
             });
         
-                    setMessages(prev => [...prev, aiResponse]);
+                    const formattedAIMessage = {
+                      ...aiResponse,
+                      timestamp: aiResponse.createdAt,
+                      status: 'delivered' as const,
+                      senderName,
+                      senderAvatar
+                    };
+                    setMessages(prev => [...prev, formattedAIMessage]);
             
             // Обновляем конверсацию с AI ответом
             const updatedConversationsWithAI = conversations.map(conv => 
@@ -845,8 +924,8 @@ export default function EnhancedMessagesPage() {
                 ? {
                     ...conv,
                     lastMessage: aiResponseContent.slice(0, 50) + (aiResponseContent.length > 50 ? '...' : ''),
-                    lastMessageTime: aiResponse.timestamp,
-                    updatedAt: aiResponse.timestamp
+                    lastMessageTime: aiResponse.createdAt,
+                    updatedAt: aiResponse.createdAt
                   }
                 : conv
             );
@@ -856,8 +935,8 @@ export default function EnhancedMessagesPage() {
             setCurrentConversation(prev => prev?.$id === conversationId ? {
               ...prev,
               lastMessage: aiResponseContent.slice(0, 50) + (aiResponseContent.length > 50 ? '...' : ''),
-              lastMessageTime: aiResponse.timestamp,
-              updatedAt: aiResponse.timestamp
+              lastMessageTime: aiResponse.createdAt,
+              updatedAt: aiResponse.createdAt
             } : prev);
           } catch (error) {
             console.error('Error sending AI response:', error);

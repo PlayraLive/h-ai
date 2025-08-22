@@ -172,42 +172,84 @@ export default function JobTimeline({
     }
   };
 
-  // Handle application actions
+  // 🔒 УЛУЧШЕННАЯ ФУНКЦИЯ: Обработка заявок с интеграцией безопасной системы сообщений
   const handleApplicationAction = async (applicationId: string, action: 'accept' | 'reject') => {
     if (!isClient) return;
 
     try {
+      setLoading(true);
+      console.log(`🎯 ${action === 'accept' ? 'Принимаем' : 'Отклоняем'} заявку ${applicationId}`);
+
+      const application = applications.find(a => a.$id === applicationId);
+      if (!application) {
+        throw new Error('Application not found');
+      }
+
       const newStatus = action === 'accept' ? 'accepted' : 'rejected';
       const response = action === 'accept' 
-        ? 'Congratulations! Your application has been accepted. We look forward to working with you.'
-        : 'Thank you for your application. We have decided to move forward with another candidate.';
+        ? `🎉 Поздравляем! Ваша заявка на проект "${job.title}" принята. Мы с нетерпением ждем сотрудничества с вами!`
+        : `Спасибо за вашу заявку на проект "${job.title}". К сожалению, мы приняли решение работать с другим кандидатом.`;
 
+      // 1. Обновляем статус заявки в базе данных
       await ApplicationsService.updateApplicationStatus(applicationId, newStatus, response);
 
-      // Update local state
+      // 2. Обновляем локальное состояние
       setApplications(prev => prev.map(app => 
         app.$id === applicationId 
           ? { ...app, status: newStatus as any, clientResponse: response }
           : app
       ));
 
-      // If accepted, switch job to in_progress (активный контракт)
-      if (action === 'accept' && onUpdateJob) {
-        onUpdateJob(job.$id, { status: 'in_progress' });
+      // 3. 🔒 ИНТЕГРАЦИЯ С БЕЗОПАСНОЙ СИСТЕМОЙ СООБЩЕНИЙ
+      if (action === 'accept') {
+        try {
+          console.log(`🔐 Добавляем фрилансера ${application.freelancerId} в безопасный канал джоба...`);
+          
+          // Импортируем MessagingHelpers для работы с каналами
+          const { MessagingHelpers } = await import('../../../lib/messaging-integration');
+          
+          // Добавляем фрилансера в канал джоба
+          await MessagingHelpers.addFreelancerToJob(job.$id, application.freelancerId);
+          
+          console.log(`✅ Фрилансер успешно добавлен в безопасный канал!`);
+          
+          // 4. Переводим джоб в активное состояние
+          if (onUpdateJob) {
+            onUpdateJob(job.$id, { 
+              status: 'in_progress',
+              acceptedFreelancer: application.freelancerId,
+              contractStartedAt: new Date().toISOString()
+            });
+          }
+
+        } catch (messagingError) {
+          console.error('❌ Ошибка при интеграции с системой сообщений:', messagingError);
+          // Продолжаем работу даже если не удалось добавить в канал
+          
+          if (onUpdateJob) {
+            onUpdateJob(job.$id, { status: 'in_progress' });
+          }
+        }
       }
 
-      // Send message about the action with business tone
+      // 5. Отправляем уведомление в тайм-лайн
       if (onSendMessage) {
-        const freelancerName = applications.find(a => a.$id === applicationId)?.freelancerName;
         const actionText = action === 'accept' 
-          ? `✅ Контракт активирован. Исполнитель: ${freelancerName}.` 
-          : `❌ Отклонена заявка от ${freelancerName}.`;
+          ? `✅ Контракт активирован. Исполнитель: ${application.freelancerName}. Фрилансер добавлен в приватный канал проекта.` 
+          : `❌ Отклонена заявка от ${application.freelancerName}.`;
         onSendMessage(actionText, 'status');
       }
 
+      // 6. Показываем успешное уведомление пользователю
+      const actionText = action === 'accept' ? 'принята' : 'отклонена';
+      const emoji = action === 'accept' ? '🎉' : '👋';
+      alert(`${emoji} Заявка от ${application.freelancerName} ${actionText}!${action === 'accept' ? ' Фрилансер добавлен в приватный канал проекта.' : ''}`);
+
     } catch (error) {
-      console.error('Error updating application:', error);
-      alert('Не удалось обновить заявку. Попробуйте еще раз.');
+      console.error('❌ Error handling application action:', error);
+      alert('Произошла ошибка при обработке заявки. Попробуйте еще раз.');
+    } finally {
+      setLoading(false);
     }
   };
 

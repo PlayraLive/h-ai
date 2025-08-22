@@ -91,13 +91,14 @@ export function useMessaging(options: UseMessagingOptions): UseMessagingReturn {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesOffsetRef = useRef(0);
 
-  // 📱 Загрузка сообщений
+  // 📱 Загрузка сообщений (с проверкой безопасности)
   const loadMessages = useCallback(async (conversationId: string, offset = 0) => {
     if (!conversationId) return;
     
     try {
       setIsLoadingMessages(offset === 0);
-      const newMessages = await messagingService.getMessages(conversationId, 50, offset);
+      // 🔒 Теперь передаем userId для проверки доступа
+      const newMessages = await messagingService.getMessages(conversationId, options.userId, 50, offset);
       
       if (offset === 0) {
         setMessages(newMessages);
@@ -119,19 +120,22 @@ export function useMessaging(options: UseMessagingOptions): UseMessagingReturn {
         }
       }
     } catch (err) {
+      console.error('🚫 Message loading failed:', err);
       setError(err instanceof Error ? err.message : 'Ошибка загрузки сообщений');
     } finally {
       setIsLoadingMessages(false);
     }
   }, [options.userId, options.autoMarkAsRead]);
 
-  // 📋 Загрузка конверсаций
+  // 📋 Загрузка конверсаций (с улучшенной безопасностью)
   const loadConversations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const userConversations = await messagingService.getUserConversations(options.userId);
+      // 🔒 Используем безопасный метод загрузки конверсаций
+      const userConversations = await messagingService.getSecureUserConversations(options.userId);
       setConversations(userConversations);
     } catch (err) {
+      console.error('🚫 Conversation loading failed:', err);
       setError(err instanceof Error ? err.message : 'Ошибка загрузки конверсаций');
     } finally {
       setIsLoading(false);

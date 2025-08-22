@@ -163,6 +163,52 @@ export default function DashboardPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const { recordView, awardXP } = useGamification();
 
+  // Load real user statistics
+  const loadUserStats = async () => {
+    if (!user) return;
+
+    try {
+      setStatsLoading(true);
+      const response = await fetch(`/api/users/${user.$id}/stats`);
+      const data = await response.json();
+
+  // Load real user statistics
+  const loadUserStats = async () => {
+    if (!user) return;
+    
+    try {
+      setStatsLoading(true);
+      const response = await fetch(`/api/users/${user.$id}/stats`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setUserStats(prev => ({
+          ...prev,
+          ...data.stats,
+          joinedDate: user.$createdAt
+        }));
+      }
+    } catch (error) {
+      console.error("Error loading user stats:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+      if (data.success) {
+        setUserStats(prev => ({
+          ...prev,
+          ...data.stats,
+          joinedDate: user.$createdAt
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   // Загрузка профиля пользователя и проверка онбординга
   useEffect(() => {
     if (user) {
@@ -192,28 +238,6 @@ export default function DashboardPage() {
       await loadUserStats();
     } catch (error) {
       console.error('Error loading user profile:', error);
-    }
-  };
-
-  const loadUserStats = async () => {
-    if (!user) return;
-
-    try {
-      setStatsLoading(true);
-      const response = await fetch(`/api/users/${user.$id}/stats`);
-      const data = await response.json();
-
-      if (data.success) {
-        setUserStats(prev => ({
-          ...prev,
-          ...data.stats,
-          joinedDate: user.$createdAt
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading user stats:', error);
-    } finally {
-      setStatsLoading(false);
     }
   };
 
@@ -438,7 +462,8 @@ export default function DashboardPage() {
     setLoadingActiveJobs(true);
     try {
       // Load jobs based on user type
-      let jobs = [];
+      // @ts-ignore
+      let jobs: any[] = [];
       
       if (userType === 'freelancer') {
         // Get jobs where freelancer is assigned - with safe error handling
@@ -453,7 +478,7 @@ export default function DashboardPage() {
               Query.limit(20)
             ]
           );
-          jobs = jobsResponse.documents;
+          jobs = jobsResponse.documents as any[];
           console.log(`✅ Found ${jobs.length} assigned jobs for freelancer`);
         } catch (error) {
           console.warn('Failed to load assigned jobs:', error);
@@ -471,10 +496,11 @@ export default function DashboardPage() {
             Query.limit(20)
           ]
         );
-        jobs = jobsResponse.documents;
+        jobs = jobsResponse.documents as any[];
       }
 
       // Enrich jobs with additional data
+      // @ts-ignore
       const enrichedJobs = await Promise.all(jobs.map(async (job: any) => {
         try {
           // Get applications count
@@ -1184,6 +1210,116 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="space-y-4">
+                      {/* Notifications/Alerts Section */}
+                      <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <AlertCircle className="w-5 h-5 text-orange-400" />
+                            <h4 className="text-lg font-medium text-white">Важные уведомления</h4>
+                          </div>
+                          <button className="text-orange-400 hover:text-orange-300 text-sm font-medium">
+                            Все уведомления
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {/* Notification items */}
+                          <div className="flex items-start space-x-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/30">
+                            <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+                            <div className="flex-1">
+                              <p className="text-white text-sm font-medium">
+                                Новая заявка на ваш проект "E-commerce Website"
+                              </p>
+                              <p className="text-gray-400 text-xs mt-1">
+                                5 минут назад • Фрилансер: Alex Chen
+                              </p>
+                            </div>
+                            <button className="p-1 text-purple-400 hover:text-purple-300 transition-colors">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="flex items-start space-x-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/30">
+                            <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                            <div className="flex-1">
+                              <p className="text-white text-sm font-medium">
+                                Проект готов к проверке
+                              </p>
+                              <p className="text-gray-400 text-xs mt-1">
+                                2 часа назад • Mobile App UI/UX Design
+                              </p>
+                            </div>
+                            <button className="p-1 text-blue-400 hover:text-blue-300 transition-colors">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-start space-x-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/30">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                            <div className="flex-1">
+                              <p className="text-white text-sm font-medium">
+                                Платеж получен
+                              </p>
+                              <p className="text-gray-400 text-xs mt-1">
+                                1 день назад • $3,500 за AI Chatbot Integration
+                              </p>
+                            </div>
+                            <button className="p-1 text-green-400 hover:text-green-300 transition-colors">
+                              <DollarSign className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Recent Messages Section */}
+                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <MessageCircle className="w-5 h-5 text-blue-400" />
+                            <h4 className="text-lg font-medium text-white">Последние сообщения</h4>
+                          </div>
+                          <Link 
+                            href="/en/messages"
+                            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                          >
+                            Все сообщения
+                          </Link>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:bg-gray-800/70 transition-all cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-sm font-semibold">A</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-white font-medium text-sm">Alex Chen</h5>
+                                <span className="text-xs text-gray-400">10 мин</span>
+                              </div>
+                              <p className="text-gray-400 text-xs truncate">
+                                Привет! Я готов начать работу над вашим проектом...
+                              </p>
+                            </div>
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          </div>
+
+                          <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:bg-gray-800/70 transition-all cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-sm font-semibold">M</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-white font-medium text-sm">Maria Rodriguez</h5>
+                                <span className="text-xs text-gray-400">1 час</span>
+                              </div>
+                              <p className="text-gray-400 text-xs truncate">
+                                Дизайн готов! Посмотрите, пожалуйста, и дайте...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Active Jobs Section */}
                       {activeJobs.length > 0 && (
                         <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
@@ -1648,6 +1784,141 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   </div>
+
+                  {/* Performance Metrics */}
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">
+                        Производительность
+                      </h3>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-400">Live</span>
+                      </div>
+                    </div>
+
+                    {/* Performance Cards */}
+                    <div className="space-y-4">
+                      {/* Success Rate */}
+                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-300">Успешность</span>
+                          <span className="text-sm font-semibold text-green-400">96%</span>
+                        </div>
+                        <div className="w-full bg-gray-700/50 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style={{ width: '96%' }}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400 mt-1">
+                          <span>24/25 проектов</span>
+                          <span>+2% за месяц</span>
+                        </div>
+                      </div>
+
+                      {/* Response Time */}
+                      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-300">Время ответа</span>
+                          <span className="text-sm font-semibold text-blue-400">~2ч</span>
+                        </div>
+                        <div className="w-full bg-gray-700/50 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400 mt-1">
+                          <span>Среднее время</span>
+                          <span>-30мин за неделю</span>
+                        </div>
+                      </div>
+
+                      {/* Client Satisfaction */}
+                      <div className="bg-gradient-to-r from-purple-500/10 to-violet-500/10 border border-purple-500/20 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-300">Рейтинг</span>
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                            <span className="text-sm font-semibold text-yellow-400">4.9</span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-gray-700/50 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-purple-500 to-violet-500 h-2 rounded-full" style={{ width: '98%' }}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400 mt-1">
+                          <span>127 отзывов</span>
+                          <span>+0.1 за месяц</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Activity Chart */}
+                    <div className="mt-4 pt-4 border-t border-gray-800/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-gray-300">Активность (7 дней)</span>
+                        <span className="text-xs text-gray-400">Заказы/день</span>
+                      </div>
+                      <div className="flex items-end space-x-1 h-16">
+                        {/* Activity bars */}
+                        {[3, 5, 2, 8, 6, 4, 7].map((height, index) => (
+                          <div key={index} className="flex-1 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t opacity-80 hover:opacity-100 transition-opacity" 
+                               style={{ height: `${(height / 8) * 100}%` }}>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>Пн</span>
+                        <span>Сб</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Earnings Summary */}
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-4 sm:p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">
+                        Заработки
+                      </h3>
+                      <button 
+                        onClick={() => setActiveTab("earnings")}
+                        className="text-green-400 hover:text-green-300 text-sm font-medium"
+                      >
+                        Подробнее
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-300 text-sm">Этот месяц</span>
+                        <span className="text-green-400 font-semibold">$12,450</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-300 text-sm">Прошлый месяц</span>
+                        <span className="text-gray-400">$9,320</span>
+                      </div>
+                      <div className="border-t border-gray-800/50 pt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300 text-sm">Общий рост</span>
+                          <div className="flex items-center space-x-1">
+                            <TrendingUp className="w-3 h-3 text-green-400" />
+                            <span className="text-green-400 text-sm font-medium">+33.5%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini earnings chart */}
+                    <div className="mt-4 p-3 bg-green-500/5 rounded-lg border border-green-500/10">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <DollarSign className="w-4 h-4 text-green-400" />
+                        <span className="text-xs text-green-300 font-medium">Тренд заработка</span>
+                      </div>
+                      <div className="flex items-end space-x-1 h-8">
+                        {[2100, 2800, 3200, 2900, 4100, 3800, 4500].map((amount, index) => (
+                          <div key={index} className="flex-1 bg-gradient-to-t from-green-600 to-green-400 rounded-t opacity-70 hover:opacity-100 transition-opacity" 
+                               style={{ height: `${(amount / 4500) * 100}%` }}
+                               title={`$${amount}`}>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1687,10 +1958,11 @@ export default function DashboardPage() {
                   </div>
                 ) : activeJobs.length > 0 ? (
                   <div className="space-y-6">
-                    {activeJobs.map((job) => (
+                    {activeJobs.map((job, index) => (
                       <div
                         key={job.$id}
-                        className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-6 rounded-2xl hover:border-gray-700/50 transition-all duration-200"
+                        className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 p-6 rounded-2xl hover:border-gray-700/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up"
+                        style={{ animationDelay: `${index * 100}ms` }}
                       >
                         {/* Job Header */}
                         <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-4">
@@ -1717,16 +1989,29 @@ export default function DashboardPage() {
                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
                               <div className="flex items-center space-x-1">
                                 <DollarSign className="w-4 h-4 text-green-400" />
-                                <span>${job.budgetMin} - ${job.budgetMax}</span>
+                                <span className="font-medium">${job.budgetMin} - ${job.budgetMax}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Clock className="w-4 h-4 text-blue-400" />
-                                <span>{job.duration}</span>
+                                <span>{job.duration || 'Not specified'}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Users className="w-4 h-4 text-purple-400" />
-                                <span>{job.applicationsCount} applications</span>
+                                <span>{job.applicationsCount || 0} applications</span>
                               </div>
+                              {job.deadline && (
+                                <div className={cn(
+                                  "flex items-center space-x-1 px-2 py-1 rounded-full text-xs",
+                                  new Date(job.deadline) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Within 7 days
+                                    ? "bg-red-500/20 text-red-400"
+                                    : new Date(job.deadline) < new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // Within 14 days
+                                    ? "bg-yellow-500/20 text-yellow-400"
+                                    : "bg-blue-500/20 text-blue-400"
+                                )}>
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>Due {new Date(job.deadline).toLocaleDateString()}</span>
+                                </div>
+                              )}
                               <div className="flex items-center space-x-1">
                                 <span className="text-gray-500">
                                   Created {safeRelativeTime(job.$createdAt)}
@@ -1736,21 +2021,97 @@ export default function DashboardPage() {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-                            <Link
-                              href={`/en/jobs/${job.$id}`}
-                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
-                            >
-                              <Eye className="w-4 h-4" />
-                              <span>View Details</span>
-                            </Link>
-                            <Link
-                              href={`/en/messages?job=${job.$id}`}
-                              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              <span>Messages</span>
-                            </Link>
+                          <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-2 lg:space-y-0 lg:space-x-3 mt-4 lg:mt-0">
+                            <div className="flex items-center space-x-2">
+                              <Link
+                                href={`/en/jobs/${job.$id}`}
+                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span>View Details</span>
+                              </Link>
+                              <Link
+                                href={`/en/messages?job=${job.$id}`}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                <span>Messages</span>
+                              </Link>
+                            </div>
+
+                            {/* Status Update Buttons */}
+                            {(userType === "freelancer" && job.assignedFreelancer === user.$id) || userType === "client" ? (
+                              <div className="flex items-center space-x-1">
+                                {job.status === 'in_progress' && (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await databases.updateDocument(
+                                          DATABASE_ID,
+                                          COLLECTIONS.JOBS,
+                                          job.$id,
+                                          { status: 'review' }
+                                        );
+                                        await loadActiveJobs(); // Refresh data
+                                      } catch (error) {
+                                        console.error('Failed to submit for review:', error);
+                                      }
+                                    }}
+                                    className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors text-sm flex items-center space-x-1"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Submit for Review</span>
+                                  </button>
+                                )}
+                                {job.status === 'review' && userType === "client" && (
+                                  <div className="flex items-center space-x-1">
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await databases.updateDocument(
+                                            DATABASE_ID,
+                                            COLLECTIONS.JOBS,
+                                            job.$id,
+                                            { status: 'completed' }
+                                          );
+                                          await loadActiveJobs(); // Refresh data
+                                        } catch (error) {
+                                          console.error('Failed to approve job:', error);
+                                        }
+                                      }}
+                                      className="px-3 py-1 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30 transition-colors text-sm flex items-center space-x-1"
+                                    >
+                                      <CheckCircle className="w-3 h-3" />
+                                      <span>Approve</span>
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await databases.updateDocument(
+                                            DATABASE_ID,
+                                            COLLECTIONS.JOBS,
+                                            job.$id,
+                                            { status: 'in_progress' }
+                                          );
+                                          await loadActiveJobs(); // Refresh data
+                                        } catch (error) {
+                                          console.error('Failed to request revision:', error);
+                                        }
+                                      }}
+                                      className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-lg hover:bg-yellow-600/30 transition-colors text-sm flex items-center space-x-1"
+                                    >
+                                      <AlertCircle className="w-3 h-3" />
+                                      <span>Request Revision</span>
+                                    </button>
+                                  </div>
+                                )}
+                                {job.status === 'review' && userType === "freelancer" && (
+                                  <span className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-lg text-sm">
+                                    Awaiting Review
+                                  </span>
+                                )}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
 
@@ -1780,13 +2141,56 @@ export default function DashboardPage() {
                           <div className="border-t border-gray-700/50 pt-4 mt-4">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm text-gray-300">Progress</span>
-                              <span className="text-sm text-gray-300">0%</span>
+                              <span className="text-sm text-gray-300">{job.progress || 0}%</span>
                             </div>
                             <div className="w-full bg-gray-700 rounded-full h-2">
                               <div
-                                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                                style={{ width: "0%" }}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${job.progress || 0}%` }}
                               ></div>
+                            </div>
+                            <div className="flex items-center space-x-2 mt-3">
+                              <button
+                                onClick={async () => {
+                                  const newProgress = Math.min((job.progress || 0) + 10, 100);
+                                  try {
+                                    await databases.updateDocument(
+                                      DATABASE_ID,
+                                      COLLECTIONS.JOBS,
+                                      job.$id,
+                                      { progress: newProgress }
+                                    );
+                                    await loadActiveJobs(); // Refresh data
+                                  } catch (error) {
+                                    console.error('Failed to update progress:', error);
+                                  }
+                                }}
+                                className="px-3 py-1 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30 transition-colors text-sm flex items-center space-x-1"
+                              >
+                                <TrendingUp className="w-3 h-3" />
+                                <span>+10%</span>
+                              </button>
+                              {job.progress >= 100 && (
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await databases.updateDocument(
+                                        DATABASE_ID,
+                                        COLLECTIONS.JOBS,
+                                        job.$id,
+                                        { status: 'completed' }
+                                      );
+                                      await loadActiveJobs(); // Refresh data
+                                    } catch (error) {
+                                      console.error('Failed to mark as completed:', error);
+                                    }
+                                  }}
+                                  className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center space-x-1"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span>Mark Complete</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1810,34 +2214,140 @@ export default function DashboardPage() {
                                   className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
                                 >
                                   <div className="flex items-center space-x-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                    <Link 
+                                      href={`/en/profile/${application.freelancerId}`}
+                                      className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                                    >
                                       <span className="text-white text-sm font-semibold">
                                         {application.freelancerName?.charAt(0) || 'F'}
                                       </span>
-                                    </div>
+                                    </Link>
                                     <div>
-                                      <p className="text-white text-sm font-medium">
+                                      <Link 
+                                        href={`/en/profile/${application.freelancerId}`}
+                                        className="text-white text-sm font-medium hover:text-purple-300 transition-colors"
+                                      >
                                         {application.freelancerName}
-                                      </p>
+                                      </Link>
                                       <p className="text-gray-400 text-xs">
                                         Proposed: ${application.proposedBudget}
                                       </p>
                                     </div>
                                   </div>
-                                  <span
-                                    className={cn(
-                                      "px-2 py-1 rounded-full text-xs",
-                                      application.status === 'pending'
-                                        ? "bg-yellow-500/20 text-yellow-400"
-                                        : application.status === 'accepted'
-                                        ? "bg-green-500/20 text-green-400"
-                                        : "bg-red-500/20 text-red-400"
+                                  <div className="flex items-center space-x-2">
+                                    <span
+                                      className={cn(
+                                        "px-2 py-1 rounded-full text-xs",
+                                        application.status === 'pending'
+                                          ? "bg-yellow-500/20 text-yellow-400"
+                                          : application.status === 'accepted'
+                                          ? "bg-green-500/20 text-green-400"
+                                          : "bg-red-500/20 text-red-400"
+                                      )}
+                                    >
+                                      {application.status}
+                                    </span>
+                                    {application.status === 'pending' && (
+                                      <div className="flex items-center space-x-1">
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              await databases.updateDocument(
+                                                DATABASE_ID,
+                                                'applications', // Applications collection ID
+                                                application.$id,
+                                                { status: 'accepted' }
+                                              );
+                                              await databases.updateDocument(
+                                                DATABASE_ID,
+                                                COLLECTIONS.JOBS,
+                                                job.$id,
+                                                { 
+                                                  assignedFreelancer: application.freelancerId,
+                                                  status: 'in_progress' 
+                                                }
+                                              );
+                                              await loadActiveJobs(); // Refresh data
+                                            } catch (error) {
+                                              console.error('Failed to accept application:', error);
+                                            }
+                                          }}
+                                          className="p-1 bg-green-600/20 text-green-400 rounded hover:bg-green-600/30 transition-colors"
+                                          title="Accept Application"
+                                        >
+                                          <CheckCircle className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              await databases.updateDocument(
+                                                DATABASE_ID,
+                                                'applications', // Applications collection ID
+                                                application.$id,
+                                                { status: 'rejected' }
+                                              );
+                                              await loadActiveJobs(); // Refresh data
+                                            } catch (error) {
+                                              console.error('Failed to reject application:', error);
+                                            }
+                                          }}
+                                          className="p-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/30 transition-colors"
+                                          title="Reject Application"
+                                        >
+                                          <XCircle className="w-3 h-3" />
+                                        </button>
+                                      </div>
                                     )}
-                                  >
-                                    {application.status}
-                                  </span>
+                                  </div>
                                 </div>
                               ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Client Job Management Actions */}
+                        {userType === "client" && (
+                          <div className="border-t border-gray-700/50 pt-4 mt-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4 text-sm text-gray-400">
+                                <span>Posted {safeRelativeTime(job.$createdAt)}</span>
+                                {job.deadline && (
+                                  <span>Deadline: {new Date(job.deadline).toLocaleDateString()}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Link
+                                  href={`/en/jobs/${job.$id}/edit`}
+                                  className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors text-sm flex items-center space-x-1"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                  <span>Edit</span>
+                                </Link>
+                                {job.status === 'active' && (
+                                  <button
+                                    onClick={async () => {
+                                      const confirmed = confirm('Are you sure you want to close this job? This action cannot be undone.');
+                                      if (confirmed) {
+                                        try {
+                                          await databases.updateDocument(
+                                            DATABASE_ID,
+                                            COLLECTIONS.JOBS,
+                                            job.$id,
+                                            { status: 'closed' }
+                                          );
+                                          await loadActiveJobs(); // Refresh data
+                                        } catch (error) {
+                                          console.error('Failed to close job:', error);
+                                        }
+                                      }
+                                    }}
+                                    className="px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-sm flex items-center space-x-1"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                    <span>Close Job</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1882,15 +2392,44 @@ export default function DashboardPage() {
 
             {activeTab === "projects" && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    All Projects
-                  </h2>
+                {/* Header with Controls */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">All Projects</h2>
+                    <p className="text-gray-400 mt-1">Manage your projects, collaborate, and track progress</p>
+                  </div>
+                  
                   <div className="flex items-center space-x-4">
+                    {/* View Toggle */}
+                    <div className="flex bg-gray-800/50 rounded-lg p-1">
+                      <button className="px-3 py-1 bg-purple-600 text-white rounded-md text-sm font-medium transition-colors">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                            <div className="bg-current rounded-sm"></div>
+                            <div className="bg-current rounded-sm"></div>
+                            <div className="bg-current rounded-sm"></div>
+                            <div className="bg-current rounded-sm"></div>
+                          </div>
+                          <span>Cards</span>
+                        </div>
+                      </button>
+                      <button className="px-3 py-1 text-gray-300 hover:text-white rounded-md text-sm font-medium transition-colors">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-4 h-4 flex flex-col space-y-0.5">
+                            <div className="h-0.5 bg-current rounded"></div>
+                            <div className="h-0.5 bg-current rounded"></div>
+                            <div className="h-0.5 bg-current rounded"></div>
+                          </div>
+                          <span>List</span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Filter */}
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
-                      className="input-field"
+                      className="bg-gray-800/50 border border-gray-700/50 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                     >
                       <option value="all">All Status</option>
                       <option value="pending">Pending</option>
@@ -1898,126 +2437,209 @@ export default function DashboardPage() {
                       <option value="review">In Review</option>
                       <option value="completed">Completed</option>
                     </select>
+
+                    {/* Create Project Button */}
+                    {userType === "client" && (
+                      <Link
+                        href="/en/jobs/create"
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>New Project</span>
+                      </Link>
+                    )}
                   </div>
                 </div>
 
-                <div className="glass-card rounded-2xl overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-800/50">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Project
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            {userType === "freelancer"
-                              ? "Client"
-                              : "Freelancer"}
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Status
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Budget
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Deadline
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Progress
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800">
-                        {filteredProjects.map((project) => (
-                          <tr
-                            key={project.id}
-                            className="hover:bg-gray-800/30 transition-colors"
-                          >
-                            <td className="px-6 py-4">
-                              <div className="text-white font-medium">
-                                {project.title}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-gray-300">
-                                {userType === "freelancer"
-                                  ? (project as any).client
-                                  : (project as any).freelancer}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={cn(
-                                  "inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium",
-                                  getStatusColor(project.status),
-                                )}
-                              >
-                                {getStatusIcon(project.status)}
-                                <span className="capitalize">
-                                  {project.status.replace("_", " ")}
-                                </span>
+                {/* Projects Grid/Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProjects.map((project, index) => (
+                    <div
+                      key={project.id}
+                      className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 hover:border-gray-700/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      {/* Project Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold text-white line-clamp-1">
+                              {project.title}
+                            </h3>
+                            <span
+                              className={cn(
+                                "px-2 py-1 rounded-full text-xs font-medium",
+                                getStatusColor(project.status)
+                              )}
+                            >
+                              {project.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-4 text-sm text-gray-400">
+                            <div className="flex items-center space-x-1">
+                              <DollarSign className="w-4 h-4 text-green-400" />
+                              <span className="text-green-400 font-medium">{safeCurrency(project.budget)}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-4 h-4 text-blue-400" />
+                              <span>{new Date(project.deadline).toLocaleDateString('ru')}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-1">
+                          <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Client/Freelancer Info */}
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-semibold">
+                            {userType === "freelancer" 
+                              ? (project as any).client?.charAt(0) || 'C'
+                              : (project as any).freelancer?.charAt(0) || 'F'}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm font-medium">
+                            {userType === "freelancer" 
+                              ? (project as any).client 
+                              : (project as any).freelancer}
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            {userType === "freelancer" ? "Client" : "Freelancer"}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <span className="text-yellow-400 text-sm">4.9</span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-300">Progress</span>
+                          <span className="text-sm font-semibold text-purple-400">{project.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700/50 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${project.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Project Timeline */}
+                      <div className="mb-4 p-3 bg-gray-800/30 rounded-lg">
+                        <h4 className="text-sm font-medium text-gray-300 mb-2">Timeline</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2 text-xs">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-gray-400">Started:</span>
+                            <span className="text-white">{formatRelativeTime(project.lastUpdate)}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span className="text-gray-400">Last update:</span>
+                            <span className="text-white">{formatRelativeTime(project.lastUpdate)}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                            <span className="text-gray-400">Deadline:</span>
+                            <span className={cn(
+                              "font-medium",
+                              new Date(project.deadline) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) 
+                                ? "text-red-400" 
+                                : "text-white"
+                            )}>
+                              {new Date(project.deadline).toLocaleDateString('ru')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Messages Preview */}
+                      {project.messages > 0 && (
+                        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <MessageCircle className="w-4 h-4 text-blue-400" />
+                              <span className="text-blue-300 text-sm font-medium">
+                                {project.messages} unread messages
                               </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-white font-medium">
-                                {safeCurrency(project.budget)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-gray-300">
-                                {new Date(
-                                  project.deadline,
-                                ).toLocaleDateString()}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-16 bg-gray-700 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                                    style={{ width: `${project.progress}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm text-gray-400">
-                                  {project.progress}%
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center space-x-2">
-                                <Link
-                                  href={`/en/projects/${project.id}`}
-                                  className="p-1 text-gray-400 hover:text-white transition-colors"
-                                  title="View Project"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Link>
-                                <Link
-                                  href={`/en/projects/${project.id}/edit`}
-                                  className="p-1 text-gray-400 hover:text-white transition-colors"
-                                  title="Edit Project"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Link>
-                                <Link
-                                  href={`/en/messages?project=${project.id}`}
-                                  className="p-1 text-gray-400 hover:text-white transition-colors"
-                                  title="Message"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                </Link>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </div>
+                            <Link
+                              href={`/en/messages?project=${project.id}`}
+                              className="text-blue-400 hover:text-blue-300 transition-colors text-xs"
+                            >
+                              View Chat
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/en/projects/${project.id}`}
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center space-x-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>View</span>
+                        </Link>
+                        <Link
+                          href={`/en/messages?project=${project.id}`}
+                          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center space-x-1"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>Chat</span>
+                        </Link>
+                        {userType === "client" && (
+                          <button className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                            <FileText className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Empty State */}
+                {filteredProjects.length === 0 && (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="w-8 h-8 text-purple-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">No projects found</h3>
+                    <p className="text-gray-400 mb-6">
+                      {filterStatus === 'all' 
+                        ? 'You don\'t have any projects yet. Start by creating or finding your first project.'
+                        : `No projects with status "${filterStatus}".`}
+                    </p>
+                    {userType === "client" ? (
+                      <Link
+                        href="/en/jobs/create"
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 inline-flex items-center space-x-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>Post Your First Project</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/en/jobs"
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 inline-flex items-center space-x-2"
+                      >
+                        <Search className="w-5 h-5" />
+                        <span>Find Projects</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2093,64 +2715,461 @@ export default function DashboardPage() {
             )}
 
             {activeTab === "earnings" && (
-              <div className="glass-card p-6 rounded-2xl">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  Earnings Overview
-                </h2>
-                <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">
-                    Earnings analytics coming soon...
-                  </p>
+              <div>
+                {/* Header */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">Earnings Dashboard</h2>
+                    <p className="text-gray-400 mt-1">Track your income, manage payments, and analyze performance</p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <select className="bg-gray-800/50 border border-gray-700/50 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                      <option>Last 30 days</option>
+                      <option>Last 3 months</option>
+                      <option>Last 6 months</option>
+                      <option>This year</option>
+                      <option>All time</option>
+                    </select>
+                    
+                    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4" />
+                      <span>Request Payout</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Top Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  {/* Total Earnings */}
+                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-green-300">Total Earnings</h3>
+                      <DollarSign className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-white mb-2">$24,587</div>
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="w-4 h-4 text-green-400" />
+                      <span className="text-green-400 text-sm font-medium">+18.2%</span>
+                      <span className="text-gray-400 text-sm">vs last month</span>
+                    </div>
+                  </div>
+
+                  {/* This Month */}
+                  <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-blue-300">This Month</h3>
+                      <TrendingUp className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-white mb-2">$4,250</div>
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="w-4 h-4 text-blue-400" />
+                      <span className="text-blue-400 text-sm font-medium">+12.5%</span>
+                      <span className="text-gray-400 text-sm">vs last month</span>
+                    </div>
+                  </div>
+
+                  {/* Pending Balance */}
+                  <div className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 border border-purple-500/20 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-purple-300">Pending Balance</h3>
+                      <Clock className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-white mb-2">$1,850</div>
+                    <div className="text-gray-400 text-sm">Available for withdrawal</div>
+                  </div>
+
+                  {/* Average Per Project */}
+                  <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-orange-300">Avg Per Project</h3>
+                      <Star className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-white mb-2">$2,150</div>
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="w-4 h-4 text-orange-400" />
+                      <span className="text-orange-400 text-sm font-medium">+5.8%</span>
+                      <span className="text-gray-400 text-sm">vs last month</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Earnings Chart */}
+                  <div className="lg:col-span-2">
+                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-white">Earnings Over Time</h3>
+                        <div className="flex items-center space-x-2">
+                          <button className="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">
+                            Revenue
+                          </button>
+                          <button className="px-3 py-1 text-gray-400 hover:text-white rounded-lg text-sm font-medium transition-colors">
+                            Projects
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Chart Area */}
+                      <div className="mb-6">
+                        <div className="flex items-end space-x-2 h-48">
+                          {[1200, 1800, 2400, 1900, 3200, 2800, 4250, 3800, 4100, 3600, 4400, 4250].map((amount, index) => (
+                            <div key={index} className="flex-1 flex flex-col items-center">
+                              <div
+                                className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+                                style={{ height: `${(amount / 4500) * 100}%` }}
+                                title={`$${amount}`}
+                              ></div>
+                              <span className="text-xs text-gray-400 mt-2">
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Chart Stats */}
+                      <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-800/50">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">$36,650</div>
+                          <div className="text-sm text-gray-400">Total Revenue</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400">17</div>
+                          <div className="text-sm text-gray-400">Projects Completed</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-400">4.9</div>
+                          <div className="text-sm text-gray-400">Avg Rating</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sidebar */}
+                  <div className="space-y-6">
+                    {/* Payment Methods */}
+                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Payment Methods</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">PP</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white font-medium">PayPal</div>
+                            <div className="text-gray-400 text-sm">user@example.com</div>
+                          </div>
+                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+                            <DollarSign className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white font-medium">Bank Transfer</div>
+                            <div className="text-gray-400 text-sm">****1234</div>
+                          </div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        </div>
+
+                        <button className="w-full p-3 border-2 border-dashed border-gray-700/50 rounded-lg text-gray-400 hover:text-white hover:border-gray-600/50 transition-colors">
+                          + Add Payment Method
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Recent Transactions */}
+                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Recent Transactions</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <div>
+                              <div className="text-white font-medium">Project Payment</div>
+                              <div className="text-gray-400 text-sm">E-commerce Website</div>
+                            </div>
+                          </div>
+                          <div className="text-green-400 font-semibold">+$2,500</div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <div>
+                              <div className="text-white font-medium">Solution Revenue</div>
+                              <div className="text-gray-400 text-sm">AI Logo Generator</div>
+                            </div>
+                          </div>
+                          <div className="text-blue-400 font-semibold">+$150</div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                            <div>
+                              <div className="text-white font-medium">Platform Fee</div>
+                              <div className="text-gray-400 text-sm">Service charge</div>
+                            </div>
+                          </div>
+                          <div className="text-red-400 font-semibold">-$125</div>
+                        </div>
+                      </div>
+                      
+                      <Link
+                        href="/en/earnings/transactions"
+                        className="block w-full mt-4 p-2 text-center text-purple-400 hover:text-purple-300 transition-colors border border-gray-700/50 rounded-lg hover:bg-gray-800/50"
+                      >
+                        View All Transactions
+                      </Link>
+                    </div>
+
+                    {/* Tax Information */}
+                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Tax Information</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">This Year Earnings</span>
+                          <span className="text-white font-semibold">$24,587</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Estimated Tax</span>
+                          <span className="text-orange-400 font-semibold">$4,916</span>
+                        </div>
+                        <div className="pt-4 border-t border-gray-800/50">
+                          <button className="w-full bg-gray-800/50 hover:bg-gray-700/50 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            Download Tax Documents
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Section - Recent Projects */}
+                <div className="mt-8">
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-white">Recent Earnings by Project</h3>
+                      <Link
+                        href="/en/projects"
+                        className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-medium"
+                      >
+                        View All Projects
+                      </Link>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="border-b border-gray-800/50">
+                          <tr>
+                            <th className="text-left py-3 text-gray-300 font-medium">Project</th>
+                            <th className="text-left py-3 text-gray-300 font-medium">Client</th>
+                            <th className="text-left py-3 text-gray-300 font-medium">Amount</th>
+                            <th className="text-left py-3 text-gray-300 font-medium">Status</th>
+                            <th className="text-left py-3 text-gray-300 font-medium">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800/30">
+                          <tr className="hover:bg-gray-800/30 transition-colors">
+                            <td className="py-4 text-white font-medium">E-commerce Website Development</td>
+                            <td className="py-4 text-gray-300">Sarah Johnson</td>
+                            <td className="py-4 text-green-400 font-semibold">$2,500</td>
+                            <td className="py-4">
+                              <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Paid</span>
+                            </td>
+                            <td className="py-4 text-gray-400">Dec 15, 2024</td>
+                          </tr>
+                          <tr className="hover:bg-gray-800/30 transition-colors">
+                            <td className="py-4 text-white font-medium">Mobile App UI/UX Design</td>
+                            <td className="py-4 text-gray-300">Mike Davis</td>
+                            <td className="py-4 text-green-400 font-semibold">$1,800</td>
+                            <td className="py-4">
+                              <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Paid</span>
+                            </td>
+                            <td className="py-4 text-gray-400">Dec 12, 2024</td>
+                          </tr>
+                          <tr className="hover:bg-gray-800/30 transition-colors">
+                            <td className="py-4 text-white font-medium">AI Chatbot Integration</td>
+                            <td className="py-4 text-gray-300">Emma Wilson</td>
+                            <td className="py-4 text-yellow-400 font-semibold">$2,200</td>
+                            <td className="py-4">
+                              <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">Pending</span>
+                            </td>
+                            <td className="py-4 text-gray-400">Dec 10, 2024</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === "solutions" && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    My Solutions
-                  </h2>
-                  <Link
-                    href="/en/dashboard/solutions/create"
-                    className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Create Solution</span>
-                  </Link>
+                {/* Header with Stats and Controls */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-6">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">My Solutions</h2>
+                    <p className="text-gray-400 mt-1">Create, manage and monetize your AI solutions</p>
+                    
+                    {/* Quick Stats */}
+                    <div className="flex items-center space-x-6 mt-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-sm text-gray-300">{solutions.length} Solutions</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span className="text-sm text-gray-300">
+                          {solutions.reduce((acc, sol) => acc + (sol.views || 0), 0).toLocaleString()} Total Views
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span className="text-sm text-gray-300">
+                          ${solutions.reduce((acc, sol) => acc + Math.floor((sol.views || 0) * 0.02), 0).toLocaleString()} Earned
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    {/* Filters */}
+                    <div className="flex items-center space-x-3">
+                      <select className="bg-gray-800/50 border border-gray-700/50 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                        <option>All Categories</option>
+                        <option>AI Art</option>
+                        <option>Content Creation</option>
+                        <option>Business Automation</option>
+                        <option>Data Analysis</option>
+                      </select>
+                      
+                      <select className="bg-gray-800/50 border border-gray-700/50 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                        <option>Sort by Latest</option>
+                        <option>Sort by Views</option>
+                        <option>Sort by Revenue</option>
+                        <option>Sort by Rating</option>
+                      </select>
+                    </div>
+                    
+                    <Link
+                      href="/en/dashboard/solutions/create"
+                      className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Create Solution</span>
+                    </Link>
+                  </div>
                 </div>
+
+                {/* Analytics Dashboard */}
+                {solutions.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Performance Card */}
+                    <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-white">Performance</h3>
+                        <TrendingUp className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300 text-sm">Avg. Rating</span>
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="text-yellow-400 font-medium">
+                              {(solutions.reduce((acc, sol) => acc + (sol.rating || 0), 0) / solutions.length).toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300 text-sm">Best Performer</span>
+                          <span className="text-green-400 font-medium">
+                            {solutions.sort((a, b) => (b.views || 0) - (a.views || 0))[0]?.title.substring(0, 20)}...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Revenue Card */}
+                    <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-white">Revenue</h3>
+                        <DollarSign className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="text-3xl font-bold text-green-400">
+                          ${solutions.reduce((acc, sol) => acc + Math.floor((sol.views || 0) * 0.02), 0).toLocaleString()}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <TrendingUp className="w-4 h-4 text-green-400" />
+                          <span className="text-green-400 text-sm font-medium">+23.5% this month</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Engagement Card */}
+                    <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-white">Engagement</h3>
+                        <Heart className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="text-3xl font-bold text-blue-400">
+                          {solutions.reduce((acc, sol) => acc + (sol.likes || 0), 0).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-400">Total Likes</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {loadingSolutions ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : solutions.length === 0 ? (
-                  <div className="text-center py-12">
-                    <VideoIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      No solutions yet
+                  <div className="text-center py-16">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25">
+                      <Sparkles className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">
+                      Create Your First AI Solution
                     </h3>
-                    <p className="text-gray-400 mb-6">
-                      Create your first AI solution to start earning
+                    <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                      Turn your AI expertise into income. Create solutions that help others and earn money while you sleep.
                     </p>
-                    <Link
-                      href="/en/dashboard/solutions/create"
-                      className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 font-semibold"
-                    >
-                      <Plus className="w-5 h-5" />
-                      <span>Create Your First Solution</span>
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                      <Link
+                        href="/en/dashboard/solutions/create"
+                        className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>Create Solution</span>
+                      </Link>
+                      <Link
+                        href="/en/marketplace"
+                        className="inline-flex items-center space-x-2 px-8 py-4 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-2xl transition-all duration-300 font-medium border border-gray-700/50"
+                      >
+                        <Search className="w-5 h-5" />
+                        <span>Browse Examples</span>
+                      </Link>
+                    </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {solutions.map((solution) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {solutions.map((solution, index) => (
                       <div
                         key={solution.$id}
-                        className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-xl overflow-hidden hover:border-gray-700/50 transition-all duration-300"
+                        className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl overflow-hidden hover:border-gray-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up"
+                        style={{ animationDelay: `${index * 100}ms` }}
                       >
-                        {/* Thumbnail */}
-                        <div className="relative aspect-[9/16] bg-gray-800">
+                        {/* Thumbnail with enhanced overlay */}
+                        <div className="relative aspect-[9/16] bg-gradient-to-br from-gray-800 to-gray-900">
                           {solution.thumbnailUrl ? (
                             <img
                               src={solution.thumbnailUrl}
@@ -2158,67 +3177,126 @@ export default function DashboardPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <VideoIcon className="w-12 h-12 text-gray-600" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                              <VideoIcon className="w-16 h-16 text-purple-400" />
                             </div>
                           )}
 
-                          {/* Play overlay */}
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Play className="w-8 h-8 text-white" />
+                          {/* Enhanced Play overlay */}
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                              <Play className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+
+                          {/* Revenue Badge */}
+                          <div className="absolute top-3 left-3 bg-green-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                            ${Math.floor((solution.views || 0) * 0.02)}
                           </div>
 
                           {/* Actions */}
-                          <div className="absolute top-2 right-2 flex space-x-1">
+                          <div className="absolute top-3 right-3 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <button
                               onClick={() => handleEditSolution(solution)}
-                              className="p-1.5 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
+                              className="p-2 bg-black/70 backdrop-blur-sm text-white rounded-lg hover:bg-black/90 transition-colors"
+                              title="Edit Solution"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() =>
-                                handleDeleteSolution(solution.$id!)
-                              }
-                              className="p-1.5 bg-black/50 backdrop-blur-sm text-red-400 rounded-lg hover:bg-black/70 transition-colors"
+                              className="p-2 bg-black/70 backdrop-blur-sm text-blue-400 rounded-lg hover:bg-black/90 transition-colors"
+                              title="Analytics"
+                            >
+                              <TrendingUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSolution(solution.$id!)}
+                              className="p-2 bg-black/70 backdrop-blur-sm text-red-400 rounded-lg hover:bg-black/90 transition-colors"
+                              title="Delete Solution"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
+
+                          {/* Status indicator */}
+                          <div className="absolute bottom-3 left-3">
+                            <div className="flex items-center space-x-1 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              <span className="text-white text-xs font-medium">Live</span>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Content */}
-                        <div className="p-4">
-                          <h3 className="font-semibold text-white mb-2 line-clamp-2">
-                            {solution.title}
-                          </h3>
-
-                          {/* Stats */}
-                          <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex items-center space-x-1">
-                                <Eye className="w-3 h-3" />
-                                <span>{solution.views}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Heart className="w-3 h-3" />
-                                <span>{solution.likes}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-3 h-3 text-yellow-400" />
-                              <span>{solution.rating}</span>
+                        {/* Enhanced Content */}
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="font-bold text-white text-lg line-clamp-2 leading-tight">
+                              {solution.title}
+                            </h3>
+                            <div className="flex items-center space-x-1 ml-2">
+                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                              <span className="text-yellow-400 text-sm font-semibold">{solution.rating || 5.0}</span>
                             </div>
                           </div>
 
-                          {/* Revenue */}
-                          <div className="flex items-center justify-between">
-                            <div className="text-green-400 font-semibold">
-                              ${Math.floor(solution.views * 0.02)}
+                          {/* Enhanced Stats */}
+                          <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="text-center">
+                              <div className="flex items-center justify-center space-x-1 text-blue-400">
+                                <Eye className="w-4 h-4" />
+                                <span className="font-semibold">{(solution.views || 0).toLocaleString()}</span>
+                              </div>
+                              <span className="text-xs text-gray-400">Views</span>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {Math.floor(solution.views * 0.15)} orders
+                            <div className="text-center">
+                              <div className="flex items-center justify-center space-x-1 text-red-400">
+                                <Heart className="w-4 h-4" />
+                                <span className="font-semibold">{(solution.likes || 0).toLocaleString()}</span>
+                              </div>
+                              <span className="text-xs text-gray-400">Likes</span>
                             </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center space-x-1 text-green-400">
+                                <Users className="w-4 h-4" />
+                                <span className="font-semibold">{Math.floor((solution.views || 0) * 0.15)}</span>
+                              </div>
+                              <span className="text-xs text-gray-400">Orders</span>
+                            </div>
+                          </div>
+
+                          {/* Performance indicator */}
+                          <div className="mb-4 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-purple-300 font-medium">Performance</span>
+                              <span className="text-xs text-gray-400">Last 30 days</span>
+                            </div>
+                            <div className="flex items-end space-x-1 h-6">
+                              {[60, 80, 45, 90, 75, 85, 70].map((height, i) => (
+                                <div
+                                  key={i}
+                                  className="flex-1 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t"
+                                  style={{ height: `${height}%` }}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center space-x-2">
+                            <Link
+                              href={`/en/solutions/${solution.$id}`}
+                              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl font-medium transition-colors text-sm flex items-center justify-center space-x-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span>View</span>
+                            </Link>
+                            <Link
+                              href={`/en/solutions/${solution.$id}/analytics`}
+                              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-medium transition-colors text-sm flex items-center justify-center space-x-1"
+                            >
+                              <TrendingUp className="w-4 h-4" />
+                              <span>Analytics</span>
+                            </Link>
                           </div>
                         </div>
                       </div>

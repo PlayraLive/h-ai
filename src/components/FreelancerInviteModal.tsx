@@ -160,13 +160,13 @@ export default function FreelancerInviteModal({
         <div className="relative p-6 border-b border-gray-700/50 bg-gradient-to-r from-purple-600/10 to-blue-600/10">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5 rounded-t-3xl"></div>
           <div className="relative flex items-center justify-between">
-            <div>
+          <div>
               <h2 className="text-2xl font-bold text-white flex items-center mb-2">
                 <div className="p-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl mr-4">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                Подобрать фрилансеров
-              </h2>
+              Подобрать фрилансеров
+            </h2>
               <p className="text-gray-300 text-lg">
                 AI-рекомендации для проекта: <span className="text-purple-400 font-semibold">{jobTitle}</span>
               </p>
@@ -180,13 +180,13 @@ export default function FreelancerInviteModal({
                   {selectedFreelancers.length}
                 </span>
               </div>
-            </div>
-            <button
-              onClick={onClose}
+          </div>
+          <button
+            onClick={onClose}
               className="p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-2xl transition-all duration-300 hover:scale-110"
-            >
+          >
               <X className="w-6 h-6 text-gray-300" />
-            </button>
+          </button>
           </div>
         </div>
 
@@ -242,23 +242,23 @@ export default function FreelancerInviteModal({
           
           <div className="flex flex-wrap items-center gap-4 mt-4">
             <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.verified}
-                onChange={(e) => setFilters(prev => ({ ...prev, verified: e.target.checked }))}
+                <input
+                  type="checkbox"
+                  checked={filters.verified}
+                  onChange={(e) => setFilters(prev => ({ ...prev, verified: e.target.checked }))}
                 className="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-2"
-              />
-              <span>Только верифицированные</span>
-            </label>
+                />
+                <span>Только верифицированные</span>
+              </label>
             <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.available}
-                onChange={(e) => setFilters(prev => ({ ...prev, available: e.target.checked }))}
+                <input
+                  type="checkbox"
+                  checked={filters.available}
+                  onChange={(e) => setFilters(prev => ({ ...prev, available: e.target.checked }))}
                 className="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-2"
-              />
-              <span>Только доступные</span>
-            </label>
+                />
+                <span>Только доступные</span>
+              </label>
             
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">Мин. рейтинг:</span>
@@ -356,7 +356,7 @@ export default function FreelancerInviteModal({
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-gray-700/50 bg-gray-800/20">
           <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-400">
+          <div className="text-sm text-gray-400">
               Выбрано: <span className="text-white font-semibold">{selectedFreelancers.length}</span> фрилансер{selectedFreelancers.length !== 1 ? 'ов' : ''}
             </div>
             {selectedFreelancers.length > 0 && (
@@ -442,7 +442,7 @@ function FreelancerCard({ freelancer, isSelected, onSelect, jobSkills, matchScor
           {freelancer.avatar ? (
             <img
               src={freelancer.avatar}
-              alt={freelancer.name}
+          alt={freelancer.name}
               className={cn(
                 "object-cover ring-2 ring-gray-600/50",
                 viewMode === 'grid' ? "w-20 h-20 rounded-2xl" : "w-16 h-16 rounded-xl"
@@ -553,18 +553,18 @@ function FreelancerCard({ freelancer, isSelected, onSelect, jobSkills, matchScor
             </div>
             <div className="flex flex-wrap gap-1">
               {matchingSkills.slice(0, 4).map((skill) => (
-                <span
-                  key={skill}
+              <span
+                key={skill}
                   className="px-2 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 text-xs rounded-lg border border-purple-500/30"
-                >
-                  {skill}
-                </span>
-              ))}
+              >
+                {skill}
+              </span>
+            ))}
               {matchingSkills.length > 4 && (
                 <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded-lg">
                   +{matchingSkills.length - 4}
-                </span>
-              )}
+              </span>
+            )}
             </div>
           </div>
         </div>
