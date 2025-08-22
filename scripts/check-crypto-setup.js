@@ -52,7 +52,7 @@ try {
   const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
   const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
   
-  const requiredDeps = ['wagmi', 'viem', '@tanstack/react-query', 'connectkit'];
+  const requiredDeps = ['wagmi', 'viem', '@tanstack/react-query', '@reown/appkit'];
   const missingDeps = requiredDeps.filter(dep => !deps[dep]);
   
   if (missingDeps.length === 0) {
@@ -100,7 +100,7 @@ if (!allFilesExist) {
 }
 
 if (!requiredDepsInstalled) {
-  console.log('❗ Установить зависимости: npm install wagmi viem @tanstack/react-query connectkit --legacy-peer-deps');
+  console.log('❗ Установить зависимости: npm install wagmi viem @tanstack/react-query @reown/appkit --legacy-peer-deps');
 }
 
 if (!envExists) {

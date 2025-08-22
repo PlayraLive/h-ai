@@ -790,7 +790,7 @@ export default function EnhancedMessagesPage() {
         messageType: attachedFiles.length > 0 ? 'file' : 'text',
         attachments: fileUrls,
         metadata: {
-          senderName: user.name || 'Вы',
+        senderName: user.name || 'Вы',
           senderAvatar: user.avatar
         }
       });
@@ -897,13 +897,13 @@ export default function EnhancedMessagesPage() {
             }
             
             const aiResponse = await messagingService.sendMessage({
-              conversationId: conversationId,
+          conversationId: conversationId,
               senderId: receiverId,
               receiverId: user.$id,
               content: aiResponseContent,
               messageType: 'ai_response',
               metadata: {
-                senderName,
+              senderName,
                 senderAvatar,
                 isAIResponse: true
               }
